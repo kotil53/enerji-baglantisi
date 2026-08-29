@@ -92,7 +92,7 @@ Birincil: **Oyunlar → Bulmaca**  ·  İkincil: **Oyunlar → Kelime/Beceri** (
       → GitHub repo **Settings → Pages → Deploy from a branch → main / /docs** ile aç.
 - [x] Uygulama ikonu — `store/assets/icon-512.png` (Play), `store/assets/icon-1024.png` (App Store). Alfa yok.
 - [x] Feature graphic 1024×500 — `store/assets/feature-graphic.png` (kaynak: `feature-graphic.svg`).
-- [x] Telefon ekran görüntüleri — `store/screenshots/01-oynanis.png`, `02-menu.png`, `03-kilitli-parcalar.png` (1280×2560, 2:1). Play min 2; 4+ önerilir → gerçek cihazdan birkaç tane daha ekle (kazanma ekranı, günlük mod).
+- [x] Telefon ekran görüntüleri — `store/screenshots/01-oynanis.png`, `02-menu.png`, `03-kilitli-parcalar.png`, `04-gunluk-mod.png` (1280×2560, 2:1). Play min 2, 4+ önerilir → istersen gerçek cihazdan "kazanma anı" karesi ekle.
 - [ ] `enerji-bulmaca.html` içinde `ADS_CFG.TEST_MODE = false` (yayın build'inden önce).
 - [ ] `git tag v1.0.0 && git push origin v1.0.0` → imzalı AAB → Console'a yükle.
 
