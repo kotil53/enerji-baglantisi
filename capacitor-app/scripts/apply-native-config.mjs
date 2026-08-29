@@ -19,7 +19,7 @@
 //
 // Kullanım:  node scripts/apply-native-config.mjs
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -99,14 +99,19 @@ patch(podfile, (pf) => {
   return out;
 });
 
-// Podfile değiştiyse Pods'u yeniden kur (yalnız CocoaPods varsa — Windows/Android CI'da atlanır)
+// Podfile değiştiyse Pods'u yeniden kur (yalnız CocoaPods varsa — Windows/Android CI'da atlanır).
+// `cap add ios` ilk pod install'da Podfile.lock'a UMP 3.x kilitliyor; düz `pod install`
+// kilide karşı downgrade edemez → lock + Pods/ silinip tam yeniden çözüm yaptırılır.
 if (podfileChanged) {
   let hasPod = true;
   try { execSync("pod --version", { stdio: "ignore" }); }
   catch { hasPod = false; console.warn("  ! pod install atlandı — CocoaPods bulunamadı"); }
   if (hasPod) {
-    console.log("  pod install (Podfile değişti)…");
-    execSync("pod install", { cwd: join(root, "ios/App"), stdio: "inherit" });  // hata olursa script çöksün
+    const appDir = join(root, "ios/App");
+    rmSync(join(appDir, "Podfile.lock"), { force: true });
+    rmSync(join(appDir, "Pods"), { recursive: true, force: true });
+    console.log("  pod install (Podfile.lock + Pods/ silindi, yeniden çözülüyor)…");
+    execSync("pod install", { cwd: appDir, stdio: "inherit" });  // hata olursa script çöksün
   }
 }
 
