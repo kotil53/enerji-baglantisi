@@ -215,13 +215,18 @@ manifest'inden otomatik birleşir, `AndroidManifest.xml`'e elle ekleme gerekmez)
 | 4103 | +7 gün 19:00 | "Uzun zaman oldu. Kaldığın yerden devam et" |
 | 4110 | +1 gün 10:00 | "Bugünün günlük bulmacası hazır" |
 
-- **Varsayılan kapalı.** Menüdeki **Hatırlatıcılar → Açık** ile açılır; ilk açılışta
-  sistem izni istenir (Android 13+ `POST_NOTIFICATIONS` / iOS).
+- **Varsayılan açık.** İlk açılışta sistem izin penceresi otomatik gösterilir
+  (Android 13+ `POST_NOTIFICATIONS` / iOS). İzin bir kez sorulur (`notify.asked`);
+  reddedilirse ayar sessizce kapanır ve menü bunu yansıtır. Kullanıcı menüdeki
+  **Hatırlatıcılar → Kapalı** ile istediği an durdurur.
 - Her uygulama açılışında ve öne gelişinde (`App` `resume`) hatırlatıcılar
   **sıfırdan planlanır** → bildirim yalnızca oyuncu o kadar gün oynamadıysa düşer.
 - Tarayıcıda veya eklenti yokken menü grubu **soluk** görünür, kod no-op olur.
 - Ayarlar oyun içinde `Notify` modülünde (`../enerji-bulmaca.html`): `_ids`,
   `schedule()` içindeki `at(gün, saat)` çağrıları ve mesaj metinleri.
+- İzin penceresini "ilk seviye bitince" göstermek (opt-in oranı için daha iyi)
+  istersen: `Notify.init()` içindeki otomatik `_request()` çağrısını `onWin()`
+  içine taşı — mantık aynı kalır.
 
 ## Notlar
 
