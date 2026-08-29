@@ -1,0 +1,42 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wire" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3ad6c2"/>
+      <stop offset="1" stop-color="#ffce3a"/>
+    </linearGradient>
+    <radialGradient id="src" cx="0.35" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#8bffe9"/>
+      <stop offset="1" stop-color="#11b39d"/>
+    </radialGradient>
+    <radialGradient id="bulb" cx="0.4" cy="0.35" r="0.8">
+      <stop offset="0" stop-color="#fff7cf"/>
+      <stop offset="1" stop-color="#ffc531"/>
+    </radialGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="26" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- zemin -->
+  <rect width="1024" height="1024" fill="#0a0e1a"/>
+  <rect x="112" y="112" width="800" height="800" rx="180" fill="#0e1526" stroke="#20304e" stroke-width="6"/>
+
+  <!-- kablo (dirsek): kaynak -> ampul -->
+  <g filter="url(#glow)" fill="none" stroke="url(#wire)" stroke-width="76" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M360 360 H648 V648"/>
+  </g>
+
+  <!-- enerji kaynağı -->
+  <g filter="url(#glow)">
+    <rect x="286" y="286" width="148" height="148" rx="40" fill="url(#src)" stroke="#0b7d70" stroke-width="10"/>
+    <path d="M372 314 L410 372 L378 378 L400 438 L336 372 L368 366 Z" fill="#06342f"/>
+  </g>
+
+  <!-- ampul -->
+  <g filter="url(#glow)">
+    <circle cx="648" cy="648" r="104" fill="url(#bulb)"/>
+    <path d="M604 664 Q648 588 692 664" fill="none" stroke="#b06a12" stroke-width="14" stroke-linecap="round"/>
+    <rect x="618" y="742" width="60" height="34" rx="8" fill="#caa24a"/>
+  </g>
+</svg>

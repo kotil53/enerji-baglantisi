@@ -1,0 +1,30 @@
+# ── Bağımlılıklar ────────────────────────────────────────────────
+node_modules/
+
+# ── Capacitor: komutla yeniden üretilen her şey ──────────────────
+# www/  -> sync.mjs (enerji-bulmaca.html'den kopyalanır)
+# android/, ios/  -> `npx cap add` ile üretilir
+capacitor-app/www/
+capacitor-app/android/
+capacitor-app/ios/
+
+# ── Derleme çıktıları ────────────────────────────────────────────
+capacitor-app/**/build/
+capacitor-app/**/.gradle/
+*.apk
+*.aab
+*.ipa
+*.xcarchive
+
+# ── İmzalama sırları (asla commit'lenmez) ────────────────────────
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+key.properties
+
+# ── IDE / OS ─────────────────────────────────────────────────────
+.idea/
+.DS_Store
+Thumbs.db
+*.log

@@ -1,0 +1,45 @@
+<svg width="2732" height="2732" viewBox="0 0 2732 2732" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="0.5" cy="0.42" r="0.75">
+      <stop offset="0" stop-color="#16223f"/>
+      <stop offset="1" stop-color="#0a0e1a"/>
+    </radialGradient>
+    <linearGradient id="wire" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3ad6c2"/>
+      <stop offset="1" stop-color="#ffce3a"/>
+    </linearGradient>
+    <radialGradient id="src" cx="0.35" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#8bffe9"/>
+      <stop offset="1" stop-color="#11b39d"/>
+    </radialGradient>
+    <radialGradient id="bulb" cx="0.4" cy="0.35" r="0.8">
+      <stop offset="0" stop-color="#fff7cf"/>
+      <stop offset="1" stop-color="#ffc531"/>
+    </radialGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="34" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="2732" height="2732" fill="url(#bg)"/>
+
+  <!-- ortalanmış amblem (~560px kutu) -->
+  <g transform="translate(1366 1300)">
+    <g filter="url(#glow)" fill="none" stroke="url(#wire)" stroke-width="82" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-150 -150 H150 V150"/>
+    </g>
+    <g filter="url(#glow)">
+      <rect x="-230" y="-230" width="160" height="160" rx="42" fill="url(#src)" stroke="#0b7d70" stroke-width="10"/>
+      <path d="M-140 -202 L-100 -142 L-134 -136 L-110 -74 L-176 -142 L-142 -150 Z" fill="#06342f"/>
+    </g>
+    <g filter="url(#glow)">
+      <circle cx="150" cy="150" r="112" fill="url(#bulb)"/>
+      <path d="M104 168 Q150 86 196 168" fill="none" stroke="#b06a12" stroke-width="15" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <text x="1366" y="1740" text-anchor="middle"
+        font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="132" font-weight="800"
+        letter-spacing="6" fill="#e8eefc">ENERJİ BAĞLANTISI</text>
+</svg>

@@ -1,0 +1,2337 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<!--
+  =========================================================================
+  VIEWPORT / MOBİL AYARLARI
+  - width=device-width + initial-scale=1 : gerçek cihaz genişliğini kullan
+  - maximum-scale=1, user-scalable=no    : çift dokunuş / pinch zoom kapalı
+  - viewport-fit=cover                    : iOS çentik (safe-area) desteği
+  =========================================================================
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<!-- Cordova/Capacitor ile paketlendiğinde tam ekran davranışı -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="format-detection" content="telephone=no">
+<title>Enerji Bağlantısı</title>
+
+<style>
+  /* =======================================================================
+     GENEL SIFIRLAMA + KAYDIRMA ENGELLEME
+     - html/body sabitlenir, overflow gizlenir  -> sayfa asla kaymaz
+     - touch-action:none                         -> tarayıcı dokunma
+       jestlerini (kaydırma/zoom) devralmaz, oyun alanı serbest kalır
+     - overscroll-behavior:none                  -> iOS/Android "lastik"
+       kaydırma efekti kapalı
+     ======================================================================= */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #0a0e1a;
+    overscroll-behavior: none;
+    touch-action: none;                 /* KRİTİK: kablolara dokununca sayfa kaymaz */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;  /* dokunma parlaması yok */
+    -webkit-touch-callout: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* Uygulama kabuğu: dikey yığın (HUD üstte, oyun alanı altta) */
+  #app {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    /* iOS çentik/gezinme çubuğu güvenli alanları */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    background:
+      radial-gradient(1200px 800px at 20% -10%, #14203c 0%, rgba(20,32,60,0) 60%),
+      radial-gradient(1000px 700px at 110% 120%, #1a1330 0%, rgba(26,19,48,0) 55%),
+      #0a0e1a;
+  }
+
+  /* ---------- ÜST BİLGİ ÇUBUĞU (HUD) ---------- */
+  #hud {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 14px;
+    color: #cdd6f4;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  #hud .left  { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; overflow: hidden; }
+  #hud .lvl   { font-size: 15px; color: #e8eefc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #hud .moves { font-size: 12px; color: #8b93b5; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #hud .right { display: flex; gap: 7px; flex: 0 0 auto; }
+
+  /* HUD düğmeleri: dokunmatik için yeterince büyük (min 40px) */
+  .btn {
+    -webkit-appearance: none;
+    appearance: none;
+    border: 1px solid #2a3550;
+    background: #141d33;
+    color: #cdd6f4;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    font-size: 18px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform .08s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn:active { transform: scale(0.92); background: #1c2842; border-color: #3b4a70; }
+  /* İpucu düğmesi: ödüllü reklam kancası — amber vurgu ile ayrışır */
+  .btn.hint { border-color: #5a4a1e; background: #2a2410; color: #ffd23f; }
+  .btn.hint:active { background: #342c14; border-color: #7a6526; }
+
+  /* ---------- OYUN SAHNESİ (canvas'ı ortalar) ---------- */
+  #stage {
+    flex: 1 1 auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* flex çocuğunun küçülebilmesi için gerekli (yoksa taşma olur) */
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Canvas: boyutu JS ile ayarlanır; touch-action:none burada da tekrar */
+  #game {
+    display: block;
+    touch-action: none;
+    border-radius: 16px;
+    background: rgba(8, 12, 24, 0.55);
+    box-shadow:
+      0 0 0 1px rgba(60, 80, 120, 0.25),
+      0 20px 60px -20px rgba(0, 0, 0, 0.8),
+      inset 0 0 60px -20px rgba(80, 140, 255, 0.15);
+  }
+
+  /* İlk seviyede görünen küçük ipucu */
+  #hint {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    padding: 8px 14px;
+    background: rgba(14, 20, 36, 0.9);
+    border: 1px solid #263250;
+    border-radius: 999px;
+    color: #9aa7cc;
+    font-size: 12.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+  #hint.show { opacity: 1; }
+
+  /* ---------- ALT BİLDİRİM (toast) ---------- */
+  #toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom) + 16px);
+    transform: translateX(-50%) translateY(8px);
+    max-width: 86vw;
+    padding: 9px 16px;
+    background: rgba(18, 26, 44, 0.96);
+    border: 1px solid #2c3a58;
+    border-radius: 999px;
+    color: #dfe6f7;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .25s ease, transform .25s ease;
+    z-index: 30;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- MENÜ / AYARLAR KATMANI ---------- */
+  #menu {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 14px);
+    background: rgba(6, 9, 18, 0.78);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .28s ease;
+  }
+  #menu.show { opacity: 1; pointer-events: auto; }
+  #menu .card {
+    width: 100%;
+    max-width: 380px;
+    max-height: 100%;
+    overflow-y: auto;
+    background: linear-gradient(180deg, #141d33, #0e1526);
+    border: 1px solid #2a3550;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+  }
+  #menu h2 { margin: 2px 0 3px; font-size: 20px; letter-spacing: 1px; color: #eaf1ff; text-align: center; }
+  #menu .sub { margin: 0 0 14px; text-align: center; color: #8b93b5; font-size: 12px; }
+  #menu .grp { margin: 13px 0; }
+  #menu .grp > .lbl {
+    display: block; margin-bottom: 7px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.2px;
+    text-transform: uppercase; color: #6f7aa0;
+  }
+  #menu .row { display: flex; gap: 8px; }
+  #menu .seg {
+    flex: 1; padding: 11px 6px;
+    border: 1px solid #2a3550; border-radius: 12px;
+    background: #101a30; color: #c3ccea;
+    font-size: 13.5px; font-weight: 700; text-align: center;
+    cursor: pointer; touch-action: manipulation;
+    transition: background .15s ease, border-color .15s ease, color .15s ease, transform .08s ease;
+  }
+  #menu .seg.on {
+    background: linear-gradient(135deg, #3ad0c0, #2a95e8);
+    border-color: transparent; color: #04121f;
+  }
+  #menu .seg:active { transform: scale(0.97); }
+  #menu .stats {
+    margin: 16px 0 2px; padding: 12px; border-radius: 12px;
+    background: #0d1526; border: 1px solid #212c46;
+    color: #aeb8d8; font-size: 13px; line-height: 1.65; text-align: center;
+  }
+  #menu .stats b { color: #ffe08a; }
+  #menu button.big, #menu button.ghost {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; cursor: pointer; touch-action: manipulation;
+  }
+  #menu button.big {
+    margin-top: 14px; padding: 14px; border: none; border-radius: 14px;
+    background: linear-gradient(135deg, #4dd0c3, #2b9df0);
+    color: #04121f; font-size: 16px; font-weight: 800; letter-spacing: 0.5px;
+  }
+  #menu button.big:active { transform: scale(0.97); }
+  #menu button.ghost {
+    margin-top: 8px; padding: 11px; border: 1px solid #333c5c; border-radius: 12px;
+    background: transparent; color: #9aa5c8; font-size: 13px; font-weight: 600;
+  }
+  #menu button.ghost:active { background: rgba(255, 255, 255, 0.04); }
+
+  /* =======================================================================
+     AÇILIŞ ANİMASYONU  (#intro)
+     - Uygulama SOĞUK başlangıcında bir kez oynar (webview yeniden yüklenmez,
+       yani öne/arkaya alma tekrar tetiklemez).
+     - Tamamen CSS + inline SVG: harici görsel/kütüphane yok, ilk boyamada hazır.
+     - ~2.2 sn sonra ya da ekrana dokununca kapanır (bkz. sayfa sonundaki script).
+     - Arka planı #app ile birebir aynı -> kaybolurken dikiş izi olmaz.
+     - prefers-reduced-motion: hareket kapanır, yalnız hızlı bir görünürlük.
+     ======================================================================= */
+  #intro {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
+    background:
+      radial-gradient(1200px 800px at 20% -10%, #14203c 0%, rgba(20,32,60,0) 60%),
+      radial-gradient(1000px 700px at 110% 120%, #1a1330 0%, rgba(26,19,48,0) 55%),
+      #0a0e1a;
+    transition: opacity .5s ease;
+  }
+  #intro.hide { opacity: 0; pointer-events: none; }
+
+  #intro .logo {
+    width: min(74vw, 300px);
+    height: auto;
+    overflow: visible;
+    animation: introPop .55s cubic-bezier(.2, 1.25, .35, 1) both;
+  }
+  /* kablo soldan sağa "çizilerek" belirir */
+  #intro .wire-live {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: introDraw .95s ease-out .35s forwards;
+  }
+  /* kablo çizildikten sonra akan enerji parıltısı (döngü) */
+  #intro .wire-flow {
+    stroke-dasharray: 6 94;
+    stroke-dashoffset: 100;
+    opacity: 0;
+    animation: introFlow 1s linear 1.4s infinite;
+  }
+  /* enerji ampule ulaşınca ampul yanar + halka atar */
+  #intro .bulb-lit  { opacity: 0; animation: introFade .45s ease-out 1.3s forwards; }
+  #intro .bulb-ring {
+    opacity: 0;
+    transform-box: view-box;
+    transform-origin: 204px 60px;
+    animation: introRing .75s ease-out 1.3s forwards;
+  }
+
+  #intro .title {
+    font-size: clamp(19px, 6.2vw, 30px);
+    font-weight: 800;
+    letter-spacing: 5px;
+    color: #eaf1ff;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: introRise .6s ease-out .5s forwards;
+  }
+  #intro .tagline {
+    margin-top: -12px;
+    font-size: clamp(11px, 3.4vw, 13px);
+    font-weight: 500;
+    color: #8b93b5;
+    text-align: center;
+    opacity: 0;
+    animation: introFade .6s ease-out 1s forwards;
+  }
+  #intro .skip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(env(safe-area-inset-bottom) + 20px);
+    transform: translateX(-50%);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #46527a;
+    opacity: 0;
+    animation: introFade .5s ease-out 1.6s forwards;
+  }
+
+  @keyframes introPop  { from { opacity: 0; transform: scale(.35); } to { opacity: 1; transform: scale(1); } }
+  @keyframes introDraw { to { stroke-dashoffset: 0; } }
+  @keyframes introFlow { 0% { stroke-dashoffset: 100; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+  @keyframes introRing { from { opacity: .6; transform: scale(.35); } to { opacity: 0; transform: scale(2); } }
+  @keyframes introRise { to { opacity: 1; transform: translateY(0); } }
+  @keyframes introFade { to { opacity: 1; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    #intro .logo,
+    #intro .wire-live,
+    #intro .wire-flow,
+    #intro .bulb-lit,
+    #intro .bulb-ring,
+    #intro .title,
+    #intro .tagline,
+    #intro .skip { animation: none !important; }
+    #intro .wire-live { stroke-dashoffset: 0; }
+    #intro .wire-flow { display: none; }
+    #intro .bulb-lit,
+    #intro .title,
+    #intro .tagline,
+    #intro .skip { opacity: 1; }
+    #intro .title { transform: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- ÜST BİLGİ: seviye no + hamle sayacı + kontrol düğmeleri -->
+  <div id="hud">
+    <div class="left">
+      <span class="lvl"   id="lvlLabel">Seviye 1</span>
+      <span class="moves" id="movesLabel">0 hamle</span>
+    </div>
+    <div class="right">
+      <button class="btn hint" id="hintBtn" title="İpucu (reklam)"    aria-label="İpucu">&#x1F4A1;</button>
+      <button class="btn" id="undoBtn"  title="Geri al"          aria-label="Geri al">&#x21b6;</button>
+      <button class="btn" id="soundBtn" title="Ses aç/kapat"     aria-label="Ses">&#x1F50A;</button>
+      <button class="btn" id="resetBtn" title="Seviyeyi sıfırla" aria-label="Seviyeyi sıfırla">&#x21ba;</button>
+      <button class="btn" id="menuBtn"  title="Menü"             aria-label="Menü">&#x2630;</button>
+    </div>
+  </div>
+
+  <!-- OYUN ALANI -->
+  <div id="stage">
+    <canvas id="game"></canvas>
+    <div id="hint">Kablolara dokunarak döndür &bull; enerjiyi ampule ulaştır</div>
+  </div>
+
+  <!-- MENÜ / AYARLAR -->
+  <div id="menu">
+    <div class="card">
+      <h2>ENERJİ BAĞLANTISI</h2>
+      <p class="sub" id="menuSub">Kabloları döndür, enerjiyi ampule ulaştır</p>
+
+      <div class="grp">
+        <span class="lbl">Mod</span>
+        <div class="row" id="modeRow">
+          <div class="seg" data-mode="endless">Sonsuz</div>
+          <div class="seg" data-mode="daily">Günlük</div>
+        </div>
+      </div>
+
+      <div class="grp" id="diffGrp">
+        <span class="lbl">Zorluk</span>
+        <div class="row" id="diffRow">
+          <div class="seg" data-diff="rahat">Rahat</div>
+          <div class="seg" data-diff="normal">Normal</div>
+          <div class="seg" data-diff="zor">Zor</div>
+        </div>
+      </div>
+
+      <div class="grp" id="notifyGrp">
+        <span class="lbl">Hatırlatıcılar</span>
+        <div class="row" id="notifyRow">
+          <div class="seg" data-notify="on">Açık</div>
+          <div class="seg" data-notify="off">Kapalı</div>
+        </div>
+      </div>
+
+      <div class="stats" id="menuStats">—</div>
+
+      <button class="big"   id="menuPrimary">Devam Et</button>
+      <button class="ghost" id="menuSkip">Bu seviyeyi geç</button>
+      <button class="ghost" id="menuWipe">Bu moddaki ilerlemeyi sıfırla</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ===========================================================================
+     AÇILIŞ ANİMASYONU — uygulama ilk açıldığında görünen kısa marka animasyonu.
+     Kaynak (⚡) -> kablo çizilir -> enerji akar -> ampul (💡) yanar -> kaybolur.
+     Stil + zamanlama <style> içindeki #intro bloğunda. Kapatma: alttaki script.
+     =========================================================================== -->
+<div id="intro" aria-label="Enerji Bağlantısı">
+  <svg class="logo" viewBox="0 0 240 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <radialGradient id="introSrc" cx="35%" cy="30%" r="75%">
+        <stop offset="0" stop-color="#7bffe6"/>
+        <stop offset="1" stop-color="#12b7a0"/>
+      </radialGradient>
+      <radialGradient id="introBulb" cx="50%" cy="45%" r="60%">
+        <stop offset="0" stop-color="#fff7cf"/>
+        <stop offset="1" stop-color="#ffc531"/>
+      </radialGradient>
+    </defs>
+
+    <!-- kablo izi (sönük taban) -->
+    <path d="M41 60 H96 V30 H150 V60 H196" stroke="#2a3048" stroke-width="7"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- kablo parıltısı (geniş, soluk amber) -->
+    <path class="wire-live" d="M41 60 H96 V30 H150 V60 H196" pathLength="100"
+          stroke="#ff9a1f" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" opacity="0.25"/>
+    <!-- kablo (parlak amber, çizilerek belirir) -->
+    <path class="wire-live" d="M41 60 H96 V30 H150 V60 H196" pathLength="100"
+          stroke="#ffb733" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- akan enerji noktası -->
+    <path class="wire-flow" d="M41 60 H96 V30 H150 V60 H196" pathLength="100"
+          stroke="#fffdf2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- KAYNAK düğümü (⚡) -->
+    <g>
+      <rect x="11" y="45" width="30" height="30" rx="9" fill="url(#introSrc)" stroke="#0c7d70" stroke-width="2"/>
+      <path d="M27.5 49 L20 61.5 L25.5 61.5 L23 72 L33 58 L27 58 Z" fill="#06342f"/>
+    </g>
+
+    <!-- AMPUL — sönük taban (hep görünür) -->
+    <circle cx="204" cy="60" r="13" fill="#141a2b" stroke="#464c6b" stroke-width="2"/>
+    <path d="M198 63 Q204 52 210 63" stroke="#3a4060" stroke-width="2" stroke-linecap="round"/>
+    <rect x="200" y="74" width="8" height="5" rx="1.5" fill="#2c3350"/>
+
+    <!-- AMPUL — yanmış hâli (enerji ulaşınca belirir) -->
+    <g class="bulb-lit">
+      <circle cx="204" cy="60" r="20" fill="#ffcf3f" opacity="0.28"/>
+      <circle cx="204" cy="60" r="13" fill="url(#introBulb)"/>
+      <path d="M198 63 Q204 52 210 63" stroke="#b06a12" stroke-width="2" stroke-linecap="round"/>
+      <rect x="200" y="74" width="8" height="5" rx="1.5" fill="#caa24a"/>
+      <g stroke="#ffe078" stroke-width="2" stroke-linecap="round">
+        <line x1="204" y1="34" x2="204" y2="40"/>
+        <line x1="204" y1="80" x2="204" y2="86"/>
+        <line x1="178" y1="60" x2="184" y2="60"/>
+        <line x1="224" y1="60" x2="230" y2="60"/>
+        <line x1="186" y1="42" x2="190" y2="46"/>
+        <line x1="222" y1="42" x2="218" y2="46"/>
+        <line x1="190" y1="78" x2="186" y2="74"/>
+        <line x1="218" y1="78" x2="222" y2="74"/>
+      </g>
+    </g>
+    <circle class="bulb-ring" cx="204" cy="60" r="13" fill="none" stroke="#ffd23f" stroke-width="2"/>
+  </svg>
+
+  <div class="title">ENERJİ BAĞLANTISI</div>
+  <div class="tagline">Kabloları döndür, enerjiyi ampule ulaştır</div>
+  <div class="skip">dokun &#9656; geç</div>
+</div>
+
+<script>
+/* Açılış animasyonunu kapatır: ~2.2 sn sonra ya da ilk dokunuşta.
+   Bittiğinde DOM'dan tamamen kaldırır -> arkadaki oyuna dokunuşları engellemez. */
+(function () {
+  var intro = document.getElementById("intro");
+  if (!intro) return;
+  var closed = false;
+  function close() {
+    if (closed) return;
+    closed = true;
+    intro.classList.add("hide");
+    setTimeout(function () { if (intro.parentNode) intro.parentNode.removeChild(intro); }, 550);
+  }
+  var reduce = false;
+  try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+  setTimeout(close, reduce ? 500 : 2200);
+  intro.addEventListener("pointerdown", close, { passive: true });
+})();
+</script>
+
+<script>
+"use strict";
+/* =========================================================================
+   ENERJİ BAĞLANTISI — tek dosyalık kablo döndürme bulmacası
+   -------------------------------------------------------------------------
+   Kısa özet:
+   - Izgara (grid) üzerinde her hücrede bir kablo parçası var.
+   - Parçanın bağlantı yönleri (Kuzey/Doğu/Güney/Batı) vardır.
+   - Parçaya DOKUNULDUĞUNDA parça saat yönünde 90 derece döner.
+   - Enerji kaynağından (⚡) çıkan hat, uyumlu bağlantılar üzerinden
+     akar; ampule (💡) ulaşırsa seviye tamamlanır.
+   - Kilitli parçalar (🔒) döndürülemez. Çıkmaz uçlar oyuncuyu şaşırtır.
+   - Ampul yandığında kısa bir animasyonla bir sonraki seviyeye geçilir.
+   - SONSUZ oyun: sabit seviye yok. Her seviye rastgele üretilir ve
+     giderek zorlaşır (ızgara büyür, hat uzar, kilit + çıkmaz sokak artar).
+
+   Teknik:
+   - Render: HTML5 Canvas (harici kütüphane yok).
+   - Girdi: Pointer Events (touchstart/mousedown yerine tek API) -> gecikmesiz.
+   - Responsive: her yeniden boyutlandırmada canvas ızgarayı ekrana sığdırır.
+   - Seviye üretimi: bkz. bölüm (2) — çözülebilirlik garanti edilir.
+   ========================================================================= */
+(function () {
+
+  /* ----------------------------------------------------------------------
+     0) SİSTEMLER — kalıcı kayıt, ses, titreşim, rastgelelik, mod/zorluk
+     ---------------------------------------------------------------------- */
+
+  // --- Kalıcı kayıt: localStorage (gizli sekmede sessizce devre dışı kalır) ---
+  var Store = {
+    _p: "enerji.v1.",
+    get: function (k, d) {
+      try {
+        var v = localStorage.getItem(this._p + k);
+        return v == null ? d : JSON.parse(v);
+      } catch (e) { return d; }
+    },
+    set: function (k, v) {
+      try { localStorage.setItem(this._p + k, JSON.stringify(v)); } catch (e) {}
+    }
+  };
+
+  // --- Ses: WebAudio ile sentezlenir (harici ses dosyası yok) ---
+  var Sound = {
+    ac: null,
+    muted: Store.get("muted", false),
+    // AudioContext yalnızca ilk dokunuşta açılabilir (mobil otomatik-oynatma politikası)
+    ensure: function () {
+      try {
+        if (!this.ac) {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return null;
+          this.ac = new AC();
+        }
+        if (this.ac.state === "suspended") this.ac.resume();
+      } catch (e) { this.ac = null; }
+      return this.ac;
+    },
+    blip: function (freq, dur, type, vol, slideTo) {
+      if (this.muted) return;
+      var ac = this.ensure(); if (!ac) return;
+      var t = ac.currentTime;
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.type = type || "square";
+      o.frequency.setValueAtTime(freq, t);
+      if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol || 0.14, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(ac.destination);
+      o.start(t); o.stop(t + dur + 0.02);
+    },
+    rotate: function () { this.blip(300 + rndInt(50), 0.055, "square", 0.09); },
+    locked: function () { this.blip(160, 0.13, "sawtooth", 0.11, 95); },
+    undo:   function () { this.blip(260, 0.05, "square", 0.07); },
+    win:    function () {
+      var s = this, notes = [523, 659, 784, 1047];
+      notes.forEach(function (f, i) { setTimeout(function () { s.blip(f, 0.16, "triangle", 0.13); }, i * 70); });
+    },
+    star:   function (i) { this.blip(680 + i * 240, 0.12, "triangle", 0.12); },
+    toggle: function () {
+      this.muted = !this.muted;
+      Store.set("muted", this.muted);
+      if (!this.muted) this.blip(660, 0.08, "triangle", 0.12);
+      return this.muted;
+    }
+  };
+
+  // --- Titreşim: Capacitor Haptics varsa onu, yoksa navigator.vibrate ---
+  function capPlugin(name) {
+    return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins[name]) || null;
+  }
+  var Haptic = {
+    _v: function (p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} },
+    light:   function () { var h = capPlugin("Haptics"); if (h && h.impact) h.impact({ style: "LIGHT" }); else this._v(8); },
+    error:   function () { var h = capPlugin("Haptics"); if (h && h.notification) h.notification({ type: "ERROR" }); else this._v([0, 18, 45, 18]); },
+    success: function () { var h = capPlugin("Haptics"); if (h && h.notification) h.notification({ type: "SUCCESS" }); else this._v([0, 22, 30, 45]); }
+  };
+
+  /* --------------------------------------------------------------------
+     BİLDİRİMLER — yerel hatırlatıcılar (@capacitor/local-notifications)
+     --------------------------------------------------------------------
+     Sunucu YOK: yalnızca cihazda planlanan "geri dön" hatırlatıcıları.
+     Her uygulama açılışında/öne gelişinde sıfırdan planlanır -> bildirim
+     ancak oyuncu bir süredir oynamadıysa tetiklenir (1 / 3 / 7. gün +
+     ertesi gün günlük bulmaca). Varsayılan KAPALI; menüden açılır ve
+     ilk açılışta sistem izni istenir (Android 13+ / iOS).
+     Tarayıcıda veya eklenti yüklü değilken tüm modül sessizce no-op olur.
+     -------------------------------------------------------------------- */
+  var Notify = {
+    enabled: Store.get("notify.enabled", false),
+    CH: "enerji-hatirlatici",
+    _ids: [4101, 4102, 4103, 4110],
+
+    _plugin: function () { return capPlugin("LocalNotifications"); },
+    available: function () { return !!this._plugin(); },
+
+    // Uygulama açılışında bir kez (bkz. initNative)
+    init: function () {
+      var LN = this._plugin();
+      if (!LN) return;
+      var self = this;
+
+      // Android bildirim kanalı (yoksa oluşturulur; iOS'ta yok sayılır)
+      try {
+        if (LN.createChannel) LN.createChannel({
+          id: this.CH, name: "Hatırlatıcılar",
+          description: "Oyuna geri dönme hatırlatıcıları",
+          importance: 3, visibility: 1
+        });
+      } catch (e) {}
+
+      // Bildirime dokununca uygulama zaten öne gelir; ekstra iş yok
+      try { if (LN.addListener) LN.addListener("localNotificationActionPerformed", function () {}); } catch (e) {}
+
+      // Uygulama öne geldiğinde hatırlatıcıları tazele (webview yeniden yüklenmez)
+      try {
+        var ap = capPlugin("App");
+        if (ap && ap.addListener) ap.addListener("resume", function () { if (self.enabled) self.schedule(); });
+      } catch (e) {}
+
+      // Açılışta: izin hâlâ duruyorsa planla, geri alınmışsa ayarı kapat
+      if (this.enabled) {
+        this._granted().then(function (ok) {
+          if (ok) self.schedule();
+          else { self.enabled = false; Store.set("notify.enabled", false); }
+        });
+      }
+    },
+
+    _granted: function () {
+      var LN = this._plugin();
+      if (!LN || !LN.checkPermissions) return Promise.resolve(false);
+      return LN.checkPermissions()
+        .then(function (r) { return !!r && r.display === "granted"; })
+        .catch(function () { return false; });
+    },
+
+    _request: function () {
+      var LN = this._plugin(), self = this;
+      if (!LN) return Promise.resolve(false);
+      return this._granted().then(function (ok) {
+        if (ok || !LN.requestPermissions) return ok;
+        return LN.requestPermissions()
+          .then(function (r) { return !!r && r.display === "granted"; })
+          .catch(function () { return false; });
+      });
+    },
+
+    // Menüdeki Açık/Kapalı -> izin iste + planla / iptal et
+    set: function (on) {
+      var self = this;
+      if (!this.available()) { showToast("Bildirimler yalnızca uygulamada çalışır"); return; }
+      if (!on) {
+        this.enabled = false; Store.set("notify.enabled", false);
+        this.cancelAll();
+        syncMenu(); showToast("Bildirimler kapalı", 900);
+        return;
+      }
+      this._request().then(function (ok) {
+        self.enabled = ok; Store.set("notify.enabled", ok);
+        syncMenu();
+        if (ok) { self.schedule(); showToast("Bildirimler açık", 900); }
+        else showToast("Bildirim izni verilmedi");
+      });
+    },
+
+    cancelAll: function () {
+      var LN = this._plugin();
+      if (!LN || !LN.cancel) return;
+      try {
+        LN.cancel({ notifications: this._ids.map(function (id) { return { id: id }; }) }).catch(function () {});
+      } catch (e) {}
+    },
+
+    // "Bir süredir oynamadın" merdiveni — her çağrıda sıfırdan planlanır
+    schedule: function () {
+      var LN = this._plugin();
+      if (!LN || !LN.schedule || !this.enabled) return;
+      this.cancelAll();
+
+      function at(days, hour) {
+        var d = new Date();
+        d.setDate(d.getDate() + days);
+        d.setHours(hour, 0, 0, 0);
+        return d;
+      }
+      function pick(a) { return a[(Math.random() * a.length) | 0]; }
+
+      var comeBack = [
+        "Enerji seni bekliyor ⚡ Yeni bir bulmaca çözelim mi?",
+        "Kablolar yine karıştı 🔌 Birkaç seviye seni özledi.",
+        "Beynini çalıştıracak bir bulmaca hazır 💡"
+      ];
+      var list = [
+        { id: this._ids[0], title: "Enerji Bağlantısı", body: pick(comeBack),                              schedule: { at: at(1, 19) } },
+        { id: this._ids[1], title: "Enerji Bağlantısı", body: "İki gün oldu — seriyi bozma! 🔥",           schedule: { at: at(3, 19) } },
+        { id: this._ids[2], title: "Enerji Bağlantısı", body: "Uzun zaman oldu. Kaldığın yerden devam et 🧩", schedule: { at: at(7, 19) } },
+        { id: this._ids[3], title: "Günlük bulmaca hazır", body: "Bugünün günlük bulmacası seni bekliyor 📅",  schedule: { at: at(1, 10) } }
+      ];
+      for (var i = 0; i < list.length; i++) list[i].channelId = this.CH;
+
+      try { LN.schedule({ notifications: list }).catch(function () {}); } catch (e) {}
+    }
+  };
+
+  /* --------------------------------------------------------------------
+     REKLAM (AdMob) — geçiş (seviyeler arası) + ödüllü (💡 ipucu / seviye geç)
+     --------------------------------------------------------------------
+     Tarayıcıda veya @capacitor-community/admob yüklü değilken window.Capacitor
+     .Plugins.AdMob tanımsızdır -> tüm modül sessizce no-op olur, oyun aynen
+     çalışır. Ödüllü reklam hazır değilse ödül yine verilir (oyuncu engellenmez).
+     Ayarlar aşağıdaki ADS_CFG'de; gerçek reklam ID'leri AD_UNITS.live'de.
+     -------------------------------------------------------------------- */
+  var ADS_CFG = {
+    TEST_MODE: true,                 // false -> AD_UNITS.live + canlı reklam
+    INTERSTITIAL_EVERY: 3,           // sonsuz modda kaç seviye tamamlamada bir geçiş reklamı
+    INTERSTITIAL_MIN_LEVEL: 3,       // bu seviyeye kadar geçiş reklamı gösterme
+    INTERSTITIAL_COOLDOWN_MS: 75000  // iki geçiş reklamı arası en az süre
+  };
+  // Google'ın RESMİ TEST reklam birimleri. Yayına çıkmadan AD_UNITS.live'i doldur
+  // ve ADS_CFG.TEST_MODE = false yap. App ID'ler native tarafta ayarlanır (bkz. README).
+  var AD_UNITS = {
+    test: {
+      android: { interstitial: "ca-app-pub-3940256099942544/1033173712", rewarded: "ca-app-pub-3940256099942544/5224354917" },
+      ios:     { interstitial: "ca-app-pub-3940256099942544/4411468910", rewarded: "ca-app-pub-3940256099942544/1712485313" }
+    },
+    live: {
+      android: { interstitial: "", rewarded: "" },
+      ios:     { interstitial: "", rewarded: "" }
+    }
+  };
+
+  var Ads = {
+    removed: Store.get("ads.removed", false),   // ileride "Reklamsız" satın alımı için kanca
+    ready: false,
+    _ids: null,
+    _int: { loaded: false, loading: false, lastAt: 0 },
+    _rew: { loaded: false, loading: false, cb: null, earned: false },
+    _completed: 0,
+
+    _plugin: function () { return capPlugin("AdMob"); },
+
+    // Uygulama açılışında bir kez çağrılır (bkz. initNative)
+    init: function () {
+      var AdMob = this._plugin();
+      if (this.removed || !AdMob) return;
+      var self = this;
+      var plat = (window.Capacitor && Capacitor.getPlatform && Capacitor.getPlatform()) || "android";
+      var pack = ADS_CFG.TEST_MODE ? AD_UNITS.test : AD_UNITS.live;
+      self._ids = pack[plat === "ios" ? "ios" : "android"] || pack.android;
+
+      // iOS izleme izni (ATT) -> yoksa / reddedilirse sessizce devam
+      var att = AdMob.requestTrackingAuthorization
+        ? AdMob.requestTrackingAuthorization().catch(function () {})
+        : Promise.resolve();
+
+      att.then(function () {
+        // GDPR onay formu (UMP) -> yalnız gerekliyse
+        if (!AdMob.requestConsentInfo) return;
+        return AdMob.requestConsentInfo().then(function (info) {
+          if (info && info.isConsentFormAvailable && info.status === "REQUIRED" && AdMob.showConsentForm) {
+            return AdMob.showConsentForm().catch(function () {});
+          }
+        }).catch(function () {});
+      }).then(function () {
+        return AdMob.initialize({ initializeForTesting: ADS_CFG.TEST_MODE });
+      }).then(function () {
+        self.ready = true;
+        self._bind(AdMob);
+        self._prepInt();
+        self._prepRew();
+      }).catch(function () {});
+    },
+
+    _bind: function (AdMob) {
+      var self = this;
+      var on = function (ev, fn) {
+        try { var p = AdMob.addListener(ev, fn); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+      };
+      on("interstitialAdLoaded",       function () { self._int.loaded = true;  self._int.loading = false; });
+      on("interstitialAdFailedToLoad", function () { self._int.loaded = false; self._int.loading = false; });
+      on("interstitialAdDismissed",    function () { self._int.loaded = false; self._int.lastAt = Date.now(); self._prepInt(); });
+      on("interstitialAdFailedToShow", function () { self._int.loaded = false; self._prepInt(); });
+
+      on("onRewardedVideoAdLoaded",       function () { self._rew.loaded = true;  self._rew.loading = false; });
+      on("onRewardedVideoAdFailedToLoad", function () { self._rew.loaded = false; self._rew.loading = false; });
+      on("onRewardedVideoAdReward",       function () { self._rew.earned = true; });
+      on("onRewardedVideoAdDismissed",    function () { self._rew.loaded = false; self._consume(false); self._prepRew(); });
+      on("onRewardedVideoAdFailedToShow", function () { self._rew.loaded = false; self._consume(true);  self._prepRew(); });
+    },
+
+    // Ödül callback'ini bir kez çalıştırır (force=true -> kazanılmasa da ver)
+    _consume: function (force) {
+      var cb = this._rew.cb;
+      if (!cb) return;
+      var earned = this._rew.earned;
+      this._rew.cb = null;
+      this._rew.earned = false;
+      if (force || earned) {
+        this._int.lastAt = Date.now();     // ödüllü izlendi -> geçiş reklamını da ötele
+        try { cb(); } catch (e) {}
+      }
+    },
+
+    _prepInt: function () {
+      var AdMob = this._plugin();
+      if (this.removed || !AdMob || !this._ids || !this._ids.interstitial) return;
+      if (this._int.loaded || this._int.loading) return;
+      this._int.loading = true;
+      var self = this;
+      AdMob.prepareInterstitial({ adId: this._ids.interstitial, isTesting: ADS_CFG.TEST_MODE }).then(
+        function () { self._int.loaded = true;  self._int.loading = false; },
+        function () { self._int.loaded = false; self._int.loading = false; }
+      );
+    },
+
+    _prepRew: function () {
+      var AdMob = this._plugin();
+      if (this.removed || !AdMob || !this._ids || !this._ids.rewarded) return;
+      if (this._rew.loaded || this._rew.loading) return;
+      this._rew.loading = true;
+      var self = this;
+      AdMob.prepareRewardVideoAd({ adId: this._ids.rewarded, isTesting: ADS_CFG.TEST_MODE }).then(
+        function () { self._rew.loaded = true;  self._rew.loading = false; },
+        function () { self._rew.loaded = false; self._rew.loading = false; }
+      );
+    },
+
+    // Seviye tamamlanınca / atlanınca çağrılır. Koşullar tutarsa geçiş reklamı gösterir.
+    levelAdvanced: function () {
+      this._completed++;
+      if (this.removed || !this.ready) return;
+      if (cfg.mode !== "endless") return;
+      if (game.li < ADS_CFG.INTERSTITIAL_MIN_LEVEL) return;
+      if (this._completed % ADS_CFG.INTERSTITIAL_EVERY !== 0) return;
+      this._showInt();
+    },
+
+    // Modülo/seviye koşulu yok (yalnız cooldown + hazır olma) — ör. günlük seti bitişi
+    interstitialNow: function () {
+      if (this.removed || !this.ready) return;
+      this._showInt();
+    },
+
+    _showInt: function () {
+      var AdMob = this._plugin();
+      if (!AdMob || !this._int.loaded) { this._prepInt(); return; }
+      if (Date.now() - this._int.lastAt < ADS_CFG.INTERSTITIAL_COOLDOWN_MS) return;
+      this._int.loaded = false;
+      this._int.lastAt = Date.now();
+      var self = this;
+      AdMob.showInterstitial().catch(function () { self._prepInt(); });
+    },
+
+    // Ödüllü reklam. Reklam yoksa/hazır değilse ödül yine verilir (oyuncu engellenmez).
+    // promptText verilirse gösterimden önce onay sorulur.
+    rewarded: function (cb, promptText) {
+      var AdMob = this._plugin();
+      if (this.removed || !this.ready || !AdMob || !this._rew.loaded) { try { cb(); } catch (e) {} return; }
+      if (promptText && !window.confirm(promptText)) return;
+      var self = this;
+      this._rew.cb = cb;
+      this._rew.earned = false;
+      AdMob.showRewardVideoAd().then(function (item) {
+        // Asıl sinyal "onRewardedVideoAdReward" olayı; bu yalnızca yedek kontrol
+        if (item && item.amount > 0) self._rew.earned = true;
+        // "Dismissed" olayı gelmezse yedek: kısa süre sonra ödülü teslim et
+        setTimeout(function () { if (self._rew.cb) self._consume(false); }, 1600);
+      }, function () {
+        self._rew.loaded = false;
+        self._consume(true);           // gösterilemedi -> ödülü yine ver
+        self._prepRew();
+      });
+    }
+  };
+
+  // --- Rastgelelik: sonsuz modda Math.random; günlük modda tohumlu (herkeste aynı) ---
+  var RNG = Math.random;                 // aktif üreteç (buildLevel geçici olarak değiştirir)
+  function rnd()     { return RNG(); }
+  function rndInt(k) { return Math.floor(RNG() * k); }
+  // mulberry32 — küçük, hızlı, tohumlanabilir sözde-rastgele üreteç
+  function mulberry32(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hashStr(s) {
+    var h = 2166136261 >>> 0;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function todayKey() {
+    var d = new Date();
+    return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  }
+  function prettyDate() {
+    try { return new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long" }); }
+    catch (e) { return todayKey(); }
+  }
+
+  // --- Mod & zorluk yapılandırması ---
+  var DAILY_COUNT = 7;                   // günlük bulmacadaki seviye sayısı
+  // Her zorluk seviye parametrelerini ölçekler (bkz. levelParams)
+  var DIFFS = {
+    rahat:  { nAdj: -1, grow: 3, sizeCap: 6, lenK: 0.62, brK: 0.5, lockK: 0.4, decoyK: 0.85 },
+    normal: { nAdj:  0, grow: 2, sizeCap: 8, lenK: 1.0,  brK: 1.0, lockK: 1.0, decoyK: 1.0  },
+    zor:    { nAdj:  2, grow: 2, sizeCap: 9, lenK: 1.35, brK: 1.5, lockK: 1.5, decoyK: 1.15 }
+  };
+  var DIFF_LABEL = { rahat: "Rahat", normal: "Normal", zor: "Zor" };
+
+  var cfg = {
+    mode: Store.get("mode", "endless"),   // "endless" | "daily"
+    diff: Store.get("diff", "normal")     // "rahat" | "normal" | "zor"
+  };
+  if (!DIFFS[cfg.diff]) cfg.diff = "normal";
+  if (cfg.mode !== "daily") cfg.mode = "endless";
+
+  // endless kayıt anahtarı ön eki (mod + zorluk başına ayrı ilerleme)
+  function ekey(sfx) { return "endless." + cfg.diff + "." + sfx; }
+  function dkey(sfx) { return "daily." + todayKey() + "." + sfx; }
+
+  /* ----------------------------------------------------------------------
+     1) YÖN SABİTLERİ
+     0=Kuzey(N) 1=Doğu(E) 2=Güney(S) 3=Batı(W)
+     DR/DC: bir yöndeki komşu hücrenin satır/sütun farkı
+     OPP  : karşı yön (bağlantıların eşleşmesi için)
+     ---------------------------------------------------------------------- */
+  var N = 0, E = 1, S = 2, W = 3;
+  var DR = [-1, 0, 1, 0];   // N, E, S, W için satır değişimi
+  var DC = [0, 1, 0, -1];   // N, E, S, W için sütun değişimi
+  function opp(d) { return (d + 2) & 3; }
+
+  /* ----------------------------------------------------------------------
+     2) SONSUZ SEVİYE ÜRETİCİ  (rastgele + gittikçe zorlaşan)
+     --------------------------------------------------------------------
+     Sabit seviye listesi YOK. Her seviye, o anki seviye numarasına (n)
+     göre PROSEDÜREL üretilir ve şu unsurlarla zorlaşır:
+       - ızgara büyür               (3x3 -> ... -> 8x8)
+       - ana enerji hattı uzar / daha çok kıvrılır
+       - T dallanmaları + çıkmaz sokaklar artar
+       - kilitli (döndürülemez) parça sayısı artar
+       - yanıltıcı (dekor) parça yoğunluğu artar
+
+     Üretim yöntemi çözülebilirliği GARANTİ eder:
+       1) Kaynaktan ampule kadar rastgele, kendine değmeyen bir yol çiz.
+       2) Yol hücrelerine giriş+çıkış bağlantılarını ver (çözülmüş hal).
+       3) Bazı yol hücrelerinden çıkmaz sokaklara T dalları çıkar.
+       4) Kalan hücrelere yanıltıcı parçalar serpiştir.
+       5) Bazı parçaları "çözülmüş" yönünde kilitle.
+       6) Kilitsiz her parçayı rastgele döndür (bkz. scrambleRot).
+     Çözüm = tüm kilitsiz parçaları 0 dönüşe getirmek -> her zaman mümkün.
+     Üretilen ızgara biçimi: satır dizisi; her hücre { d:[yönler], role, lock }.
+     ---------------------------------------------------------------------- */
+
+  // Fisher-Yates karıştırma (aktif RNG ile -> günlük modda tohumlu)
+  function shuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(RNG() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function clampI(v, a, b) { return v < a ? a : (v > b ? b : v); }
+
+  // (r,c) hücresinden komşu (r2,c2) hücresine bakan yön
+  function dirBetween(r, c, r2, c2) {
+    if (r2 === r - 1) return N;
+    if (c2 === c + 1) return E;
+    if (r2 === r + 1) return S;
+    return W;
+  }
+
+  // Bir hücrenin ziyaret edilmemiş, sınır içi komşu sayısı
+  function freeNbr(vis, size, r, c) {
+    var n = 0;
+    for (var d = 0; d < 4; d++) {
+      var nr = r + DR[d], nc = c + DC[d];
+      if (nr < 0 || nc < 0 || nr >= size || nc >= size) continue;
+      if (!vis[nr][nc]) n++;
+    }
+    return n;
+  }
+
+  // Seviye numarasına (n = 1,2,3,...) VE seçili zorluğa göre parametreler.
+  // Zorluk (DIFFS) hem "etkin seviye no"yu kaydırır (nAdj) hem de büyüklük,
+  // hat uzunluğu, dallanma, kilit ve dekor yoğunluğunu çarpanla ölçekler.
+  function levelParams(n) {
+    var D = DIFFS[cfg.diff] || DIFFS.normal;
+    var nn = Math.max(1, n + D.nAdj);
+    var total, size = Math.min(3 + Math.floor((nn - 1) / D.grow), D.sizeCap);
+    total = size * size;
+    var minLen = Math.min(
+      Math.max(3, Math.round((size * 1.2 + (nn - 1) * 0.9) * D.lenK)),
+      Math.floor(total * 0.72)
+    );
+    var branches    = Math.min(Math.round(Math.floor(nn / 3) * D.brK), Math.floor(total / 6));
+    var pathLocks   = clampI(Math.round(Math.floor((nn - 2) / 2) * D.lockK), 0, 14);
+    var branchLocks = nn < 6 ? 0 : Math.floor(branches / 2);
+    var decoyProb   = Math.min((0.14 + nn * 0.035) * D.decoyK, 0.6);
+    var longBranch  = nn >= 5;   // 2 hücrelik uzun çıkmaz sokaklara izin ver
+
+    // AMPUL SAYISI — seviye ilerledikçe 1 -> 2 -> 3. Etkin seviye no (nn) zorluğa
+    // göre kaydığından "zor"da erken, "rahat"da geç gelir. Küçük ızgarada tek kalır.
+    var bulbs = 1;
+    if (nn >= 7)  bulbs = 2;
+    if (nn >= 14) bulbs = 3;
+    if (size <= 4)      bulbs = 1;
+    else if (size <= 6) bulbs = Math.min(bulbs, 2);
+    // Her ek ampul ana hattan çıkan bir sapma ile beslenir -> yeterli sapma ayır.
+    if (bulbs > 1) branches = Math.max(branches, bulbs - 1);
+
+    return {
+      size: size, minLen: minLen, branches: branches, bulbs: bulbs,
+      pathLocks: pathLocks, branchLocks: branchLocks,
+      decoyProb: decoyProb, longBranch: longBranch
+    };
+  }
+
+  // Rastgele, kendine değmeyen yol (rastgele DFS). En uzun denemeyi döndürür.
+  function randomPath(size, minLen) {
+    var best = null;
+    for (var attempt = 0; attempt < 60; attempt++) {
+      var vis = [];
+      for (var i = 0; i < size; i++) {
+        vis.push([]);
+        for (var j = 0; j < size; j++) vis[i].push(false);
+      }
+
+      // rastgele bir kenar hücresinden başla
+      var sr, sc;
+      if (rnd() < 0.5) { sr = (rnd() < 0.5) ? 0 : size - 1; sc = rndInt(size); }
+      else             { sc = (rnd() < 0.5) ? 0 : size - 1; sr = rndInt(size); }
+
+      var path = [[sr, sc]];
+      vis[sr][sc] = true;
+      var cr = sr, cc = sc;
+      var hardCap = Math.floor(size * size * 0.78);
+
+      while (path.length < hardCap) {
+        var opts = [];
+        for (var d = 0; d < 4; d++) {
+          var nr = cr + DR[d], nc = cc + DC[d];
+          if (nr < 0 || nc < 0 || nr >= size || nc >= size) continue;
+          if (vis[nr][nc]) continue;
+          opts.push([nr, nc]);
+        }
+        if (!opts.length) break;
+        shuffle(opts);
+        // çoğunlukla "koridoru açık tutan" (en çok boş komşusu olan) hücreye git
+        // -> yol duvar boyunca kıvrılıp uzar
+        if (rnd() < 0.72) {
+          opts.sort(function (a, b) {
+            return freeNbr(vis, size, b[0], b[1]) - freeNbr(vis, size, a[0], a[1]);
+          });
+        }
+        cr = opts[0][0]; cc = opts[0][1];
+        vis[cr][cc] = true;
+        path.push([cr, cc]);
+      }
+
+      if (!best || path.length > best.length) best = path;
+      if (best.length >= minLen && best.length >= 3) break;
+    }
+    // güvenlik ağı: yol çok kısaysa elle 3 hücrelik yol
+    if (!best || best.length < 3) best = [[0, 0], [0, 1], [0, 2]];
+    return best;
+  }
+
+  // n. seviyenin ızgara tanımını üretir (buildLevel'in beklediği biçim)
+  function generateLevel(n) {
+    var P = levelParams(n);
+    var size = P.size;
+    var path = randomPath(size, P.minLen);
+    var L = path.length;
+    var r, c, d, i;
+
+    // boş ızgara + "yol/dal" işaret matrisi
+    var g = [], onPath = [];
+    for (r = 0; r < size; r++) {
+      var row = [], mrow = [];
+      for (c = 0; c < size; c++) { row.push({ d: [], role: null, lock: false, matters: false }); mrow.push(0); }
+      g.push(row); onPath.push(mrow);
+    }
+
+    // 1) YOL: her hücreye önceki + sonraki hücreye bakan bağlantılar.
+    //    matters=true  -> bu parçanın yönü kazanmak için ÖNEMLİ (yıldız/par hesabı)
+    for (i = 0; i < L; i++) {
+      var pr = path[i][0], pc = path[i][1];
+      onPath[pr][pc] = 1;
+      g[pr][pc].matters = true;
+      if (i > 0)     g[pr][pc].d.push(dirBetween(pr, pc, path[i - 1][0], path[i - 1][1]));
+      if (i < L - 1) g[pr][pc].d.push(dirBetween(pr, pc, path[i + 1][0], path[i + 1][1]));
+    }
+    g[path[0][0]][path[0][1]].role = "src";
+    g[path[L - 1][0]][path[L - 1][1]].role = "bulb";
+
+    // 2) DALLAR (sapmalar): bazı yol hücrelerini T yapıp kısa bir sapma çıkar.
+    //    Bir kısmı EK AMPUL ile biter (bkz. 2b), kalanı klasik çıkmaz sokaktır.
+    //    Her sapma ana hattan ayrı beslendiği için her ampul bağımsız çözülür.
+    var spurs = [], made = 0, mids = [];       // spurs: her eleman sapmanın hücre listesi (host hariç, uçtan uca)
+    for (i = 1; i < L - 1; i++) mids.push(i);
+    shuffle(mids);
+    for (var mi = 0; mi < mids.length && made < P.branches; mi++) {
+      var hi = mids[mi];
+      var hr = path[hi][0], hc = path[hi][1];
+      var host = g[hr][hc];
+      if (host.d.length !== 2) continue;          // yalnız düz/köşe -> T'ye dönüşür
+      var free = [];
+      for (d = 0; d < 4; d++) {
+        if (host.d.indexOf(d) !== -1) continue;
+        var xr = hr + DR[d], xc = hc + DC[d];
+        if (xr < 0 || xc < 0 || xr >= size || xc >= size) continue;
+        if (onPath[xr][xc] || g[xr][xc].d.length) continue;
+        free.push(d);
+      }
+      if (!free.length) continue;
+      var bd = free[rndInt(free.length)];
+      host.d.push(bd);                             // host artık T birleşim
+      var br = hr + DR[bd], bc = hc + DC[bd];
+      onPath[br][bc] = 2;
+      g[br][bc].d.push(opp(bd));                   // sapmanın ilk hücresi (geri bakar)
+      var spurCells = [[br, bc]];
+
+      // uzun sapma: bir hücre daha uzat (üst seviyeler)
+      if (P.longBranch && rnd() < 0.5) {
+        var ext = [];
+        for (d = 0; d < 4; d++) {
+          if (d === opp(bd)) continue;
+          var yr = br + DR[d], yc = bc + DC[d];
+          if (yr < 0 || yc < 0 || yr >= size || yc >= size) continue;
+          if (onPath[yr][yc] || g[yr][yc].d.length) continue;
+          ext.push(d);
+        }
+        if (ext.length) {
+          var ed = ext[rndInt(ext.length)];
+          g[br][bc].d.push(ed);                    // ara parça (köşe/düz olur)
+          var tr = br + DR[ed], tc = bc + DC[ed];
+          onPath[tr][tc] = 2;
+          g[tr][tc].d.push(opp(ed));
+          spurCells.push([tr, tc]);
+        }
+      }
+      spurs.push(spurCells);
+      made++;
+    }
+
+    // 2b) EK AMPULLER: sapmaların ilk (P.bulbs - 1) tanesini ampule çevir.
+    //     Uç hücre "bulb" rolü alır; sapmanın TÜM hücreleri "matters" olur
+    //     (par / yıldız / ipucu hesabı ana hatla aynı şekilde işlesin diye).
+    //     Yeterli sapma üretilemediyse seviye daha az ampulle çözülebilir kalır.
+    var extraBulbs = Math.max(0, (P.bulbs || 1) - 1);
+    shuffle(spurs);
+    var branchCells = [];
+    for (var si = 0; si < spurs.length; si++) {
+      var sp = spurs[si];
+      if (si < extraBulbs) {
+        var term = sp[sp.length - 1];
+        g[term[0]][term[1]].role = "bulb";
+        for (var sk = 0; sk < sp.length; sk++) g[sp[sk][0]][sp[sk][1]].matters = true;
+      } else {
+        for (var sk2 = 0; sk2 < sp.length; sk2++) branchCells.push(sp[sk2]);
+      }
+    }
+
+    // 3) YANILTICI (dekor) parçalar: boş hücrelere rastgele serpiştir
+    for (r = 0; r < size; r++) {
+      for (c = 0; c < size; c++) {
+        if (onPath[r][c] || g[r][c].d.length) continue;
+        if (rnd() >= P.decoyProb) continue;
+        var roll = rnd();
+        var cnt = (roll > 0.80) ? 3 : (roll > 0.45 ? 2 : 1);
+        var all = [0, 1, 2, 3]; shuffle(all);
+        g[r][c].d = all.slice(0, cnt);
+      }
+    }
+
+    // 4) KİLİTLER: "çözülmüş" yönde kilitlenir -> çözülebilirlik bozulmaz
+    var lp = clampI(P.pathLocks, 0, Math.floor((L - 2) / 4));  // yolun en çok ~%25'i
+    var pool = [];
+    for (i = 1; i < L - 1; i++) pool.push(path[i]);
+    shuffle(pool);
+    for (i = 0; i < lp && i < pool.length; i++) g[pool[i][0]][pool[i][1]].lock = true;
+
+    shuffle(branchCells);                                       // bazı çıkmaz sokakları da kilitle
+    for (i = 0; i < P.branchLocks && i < branchCells.length; i++)
+      g[branchCells[i][0]][branchCells[i][1]].lock = true;
+
+    return g;
+  }
+
+  /* ----------------------------------------------------------------------
+     3) OYUN DURUMU + DOM erişimi
+     ---------------------------------------------------------------------- */
+  var canvas = document.getElementById("game");
+  var ctx    = canvas.getContext("2d");
+  var stage  = document.getElementById("stage");
+  var lvlLabel   = document.getElementById("lvlLabel");
+  var movesLabel = document.getElementById("movesLabel");
+  var hintEl     = document.getElementById("hint");
+  var toastEl    = document.getElementById("toast");
+  var menuEl     = document.getElementById("menu");
+  var soundBtn   = document.getElementById("soundBtn");
+
+  var ROT_DUR = 150;   // dönüş animasyonu süresi (ms)
+  var WIN_HOLD = 1150; // ampul yandıktan sonra sonraki seviyeye geçiş beklemesi (ms)
+
+  var cell = 60;       // bir hücrenin piksel boyutu (layout() hesaplar)
+  var menuOpen = false;
+
+  var game = {
+    li: 0,            // SONSUZ mod seviye indeksi (0 -> "Seviye 1")
+    dailyIdx: 0,      // GÜNLÜK mod: bugünkü bulmaca dizisindeki sıra (0..DAILY_COUNT-1)
+    dailyDone: false, // bugünkü günlük tamamlandı mı
+    rows: 3, cols: 3,
+    size: 3,          // ızgara kenarı (kare)
+    bulbCount: 1,     // bu seviyedeki ampul sayısı (seviye ilerledikçe 1 -> 2 -> 3)
+    cells: [],        // 2B dizi: hücre nesneleri
+    savedRots: [],    // "sıfırla" için başlangıç karıştırması
+    moves: 0,
+    par: 1,           // teorik en az dokunuş (yıldız hesabı)
+    stars: 0,         // son seviyede kazanılan yıldız
+    newBest: false,   // son seviyede kişisel rekor kırıldı mı
+    undo: [],         // geri-al yığını: { c: hücre, from: eski dönüş }
+    phase: "play",    // "play" | "win" | "done" (günlük bitti)
+    phaseAt: 0,       // faz başlangıç zamanı
+    introAt: 0,       // seviye açılış (fade-in) zamanı
+    firstMove: false
+  };
+  // O anki 1-tabanlı seviye numarası (üretici bu numarayı kullanır)
+  function levelNo() { return cfg.mode === "daily" ? game.dailyIdx + 1 : game.li + 1; }
+
+  var lastNow = performance.now();
+
+  /* ----------------------------------------------------------------------
+     4) YARDIMCI FONKSİYONLAR
+     ---------------------------------------------------------------------- */
+
+  // Parçanın GÜNCEL bağlantı yönleri = temel yönler + dönüş
+  function rotDirs(c) {
+    var out = [];
+    for (var i = 0; i < c.d.length; i++) out.push((c.d[i] + c.rot) & 3);
+    return out;
+  }
+
+  // Bir parça için karıştırma dönüşü seç.
+  // Kilitli / kaynak / ampul / boş / artı parçalar dönmez (0 kalır).
+  // Düz kablo simetrik olduğundan yalnız 1 veya 3; diğerleri 1..3.
+  // Böylece karıştırılabilir her parça BAŞLANGIÇTA mutlaka yanlış konumda olur.
+  function scrambleRot(c) {
+    var n = c.d.length;
+    if (c.role || c.lock || n === 0 || n === 4) return 0;
+    var straight = (n === 2 && ((c.d[0] + 2) & 3) === c.d[1]);
+    if (straight) return [1, 3][rndInt(2)];
+    return 1 + rndInt(3);
+  }
+
+  // Yuvarlatılmış dikdörtgen yolu (eski Safari'de ctx.roundRect yok)
+  function rr(x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y,     x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x,     y + h, r);
+    ctx.arcTo(x,     y + h, x,     y,     r);
+    ctx.arcTo(x,     y,     x + w, y,     r);
+    ctx.closePath();
+  }
+
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+  function easeOutBack(t) {
+    var s = 1.70158;
+    return 1 + (s + 1) * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2);
+  }
+  function clamp01(v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
+
+  /* ----------------------------------------------------------------------
+     5) SEVİYE KURULUMU
+     ---------------------------------------------------------------------- */
+  function buildLevel() {
+    var n = levelNo();
+
+    // GÜNLÜK mod: üretimi tarihe göre tohumla -> herkeste aynı bulmaca.
+    // SONSUZ mod: RNG = Math.random (her seferinde farklı).
+    var prevRNG = RNG;
+    if (cfg.mode === "daily") {
+      RNG = mulberry32(hashStr(todayKey()) ^ Math.imul(n, 2654435761));
+    }
+
+    var src = generateLevel(n);
+    game.rows = src.length;
+    game.cols = src[0].length;
+    game.size = game.rows;
+
+    game.cells = src.map(function (row, ri) {
+      return row.map(function (spec, ci) {
+        var c = {
+          d: spec.d.slice(),
+          role: spec.role || null,
+          lock: !!spec.lock,
+          matters: !!spec.matters,   // yönü kazanmak için önemli mi (par/yıldız)
+          rot: 0,
+          ri: ri, ci: ci,
+          animAt: -99999,     // son dönüş zamanı (animasyon için)
+          shakeAt: -99999,    // kilitli parçaya dokununca titreme
+          hintAt: -99999,     // ipucu ile düzeltildiğinde kısa halka animasyonu
+          lit: false,         // enerji var mı (mantıksal)
+          glow: 0,            // enerji parlaklığı (0..1, yumuşak geçiş)
+          litSince: -1,       // enerji başlangıç anı (yayılma gecikmesi için)
+          litDelay: 0
+        };
+        c.lock = c.lock || !!c.role;          // kaynak/ampul her zaman kilitli
+        c.rot  = scrambleRot(c);              // karıştır
+        return c;
+      });
+    });
+
+    // "Sıfırla" düğmesi için başlangıç karıştırmasını sakla
+    game.savedRots = game.cells.map(function (row) {
+      return row.map(function (c) { return c.rot; });
+    });
+
+    ensureUnsolved(performance.now());       // taze seviye asla çözülü başlamasın
+
+    RNG = prevRNG;                           // RNG'yi eski haline döndür
+
+    // Bu seviyedeki ampul sayısı (HUD göstergesi için)
+    game.bulbCount = 0;
+    for (var brc = 0; brc < game.rows; brc++)
+      for (var bcc = 0; bcc < game.cols; bcc++)
+        if (game.cells[brc][bcc].role === "bulb") game.bulbCount++;
+
+    game.par = computePar();
+    game.moves = 0;
+    game.stars = 0;
+    game.newBest = false;
+    game.undo = [];
+    game.firstMove = false;
+    game.phase = "play";
+    game.phaseAt = performance.now();
+    game.introAt = performance.now();
+
+    // Kaldığı yer + en iyi seviye kaydı (yalnız sonsuz mod)
+    if (cfg.mode === "endless") {
+      Store.set(ekey("lastLevel"), game.li);
+      if (game.li + 1 > Store.get(ekey("bestLevel"), 0)) Store.set(ekey("bestLevel"), game.li + 1);
+    }
+
+    updateHud();
+    layout();
+
+    // İpucu yalnızca en baştaki seviyede (sonsuz mod)
+    if (cfg.mode === "endless" && game.li === 0) hintEl.classList.add("show");
+    else hintEl.classList.remove("show");
+  }
+
+  // "Par" = kilitsiz, ÖNEMLİ (yol) parçaları çözmek için gereken en az dokunuş.
+  // Dönüş yalnızca saat yönü olduğundan bir parçayı s dönüşünden hedefe getirmek
+  // (4 - s) % 4 dokunuş ister; düz kablo simetrik olduğu için s % 2 yeterli.
+  function computePar() {
+    var par = 0;
+    for (var r = 0; r < game.rows; r++) {
+      for (var c = 0; c < game.cols; c++) {
+        var cl = game.cells[r][c];
+        if (!cl.matters || cl.role || cl.lock || cl.d.length === 0) continue;
+        var s = cl.rot & 3;
+        var straight = (cl.d.length === 2 && ((cl.d[0] + 2) & 3) === cl.d[1]);
+        par += straight ? (s % 2) : ((4 - s) % 4);
+      }
+    }
+    return Math.max(1, par);
+  }
+
+  // Hamle sayısına göre yıldız (3/2/1). Par'a yakınlık ödüllendirilir.
+  function starsFor(moves, par) {
+    if (moves <= par + Math.max(1, Math.round(par * 0.15))) return 3;
+    if (moves <= Math.round(par * 1.7) + 3) return 2;
+    return 1;
+  }
+
+  // Taze üretilen seviye çözülü gelirse garantili boz.
+  // Nadir durum: bir T birleşim, karıştırmada 90°/180° dönmüş ALTERNATİF
+  // çalışan yönüne denk gelebilir. Kaynak->ampul rotası tek olduğundan,
+  // ana hat (matters) üzerindeki tek bir kilitsiz parçayı rotayı bozan bir
+  // yöne çevirmek yeterli ve KESİNDİR (parça 4 yönün en çok 2'sinde çalışır).
+  function ensureUnsolved(now) {
+    var r, c;
+    if (!computePower(now, true)) { saveScramble(); return; }   // zaten çözülü değil
+
+    var pool = [];
+    for (r = 0; r < game.rows; r++)
+      for (c = 0; c < game.cols; c++) {
+        var cl = game.cells[r][c];
+        if (cl.matters && !cl.role && !cl.lock && cl.d.length > 0) pool.push(cl);
+      }
+    shuffle(pool);   // hangi parçanın bozulacağı seviyeden seviyeye değişsin
+
+    var broke = false;
+    for (var pi = 0; pi < pool.length && !broke; pi++) {
+      var p = pool[pi], r0 = p.rot;
+      for (var add = 1; add <= 3 && !broke; add++) {
+        p.rot = (r0 + add) & 3;
+        if (!computePower(now, true)) broke = true;   // rota bozuldu -> tamam
+      }
+      if (!broke) p.rot = r0;
+    }
+    saveScramble();
+    computePower(now, true);
+  }
+  function saveScramble() {
+    game.savedRots = game.cells.map(function (row) {
+      return row.map(function (x) { return x.rot; });
+    });
+  }
+
+  // Aktif seviyeyi başlangıç karıştırmasına döndür (aynı bulmaca)
+  function resetLevel() {
+    if (menuOpen) return;
+    for (var r = 0; r < game.rows; r++) {
+      for (var c = 0; c < game.cols; c++) {
+        var cellObj = game.cells[r][c];
+        cellObj.rot = game.savedRots[r][c];
+        cellObj.animAt = -99999;
+        cellObj.hintAt = -99999;
+      }
+    }
+    game.moves = 0;
+    game.stars = 0;
+    game.undo = [];
+    game.phase = "play";
+    game.phaseAt = performance.now();
+    game.introAt = performance.now();
+    computePower(performance.now(), true);
+    updateHud();
+    Sound.undo();
+  }
+
+  /* ----------------------------------------------------------------------
+     6) ENERJİ HESABI (BFS ile yayılma)
+     Kaynaktan başlar; iki komşu ancak birbirine bakan bağlantıları
+     varsa akım geçirir. Ampule ulaşılırsa true döner.
+     instant=true -> parlaklık anında ayarlanır (seviye açılışı/sıfırlama)
+     ---------------------------------------------------------------------- */
+  function computePower(now, instant) {
+    var rows = game.rows, cols = game.cols, cells = game.cells;
+    var r, c;
+
+    for (r = 0; r < rows; r++)
+      for (c = 0; c < cols; c++) { cells[r][c]._pw = false; cells[r][c]._dist = 0; }
+
+    // Kaynağı bul
+    var sr = -1, sc = -1;
+    for (r = 0; r < rows; r++)
+      for (c = 0; c < cols; c++)
+        if (cells[r][c].role === "src") { sr = r; sc = c; }
+    if (sr < 0) return false;
+
+    // Genişlik öncelikli arama
+    var queue = [[sr, sc]];
+    cells[sr][sc]._pw = true;
+    while (queue.length) {
+      var item = queue.shift();
+      var cr = item[0], cc = item[1];
+      var cur = cells[cr][cc];
+      var dirs = rotDirs(cur);
+      for (var i = 0; i < dirs.length; i++) {
+        var d = dirs[i];
+        var nr = cr + DR[d], nc = cc + DC[d];
+        if (nr < 0 || nc < 0 || nr >= rows || nc >= cols) continue;
+        var nb = cells[nr][nc];
+        if (nb._pw || nb.d.length === 0) continue;
+        // komşuda geri bakan (karşı yön) bir bağlantı olmalı
+        if (rotDirs(nb).indexOf(opp(d)) === -1) continue;
+        nb._pw = true;
+        nb._dist = cur._dist + 1;
+        queue.push([nr, nc]);
+      }
+    }
+
+    // Parlaklık hedeflerini güncelle + ampul kontrolü (TÜM ampuller yanmalı)
+    var bulbTotal = 0, bulbLit = 0;
+    for (r = 0; r < rows; r++) {
+      for (c = 0; c < cols; c++) {
+        var cell2 = cells[r][c];
+        if (cell2._pw !== cell2.lit) {
+          cell2.lit = cell2._pw;
+          if (cell2.lit) {
+            // yeni yandı: kaynaktan uzaklığa göre küçük gecikme -> "yayılma" hissi
+            cell2.litSince = instant ? (now - 5000) : now;
+            cell2.litDelay = instant ? 0 : cell2._dist * 26;
+          } else {
+            cell2.litSince = -1;
+          }
+        }
+        if (cell2.role === "bulb") { bulbTotal++; if (cell2._pw) bulbLit++; }
+      }
+    }
+    if (instant) {
+      for (r = 0; r < rows; r++)
+        for (c = 0; c < cols; c++)
+          game.cells[r][c].glow = game.cells[r][c].lit ? 1 : 0;
+    }
+    return bulbTotal > 0 && bulbLit === bulbTotal;
+  }
+
+  /* ----------------------------------------------------------------------
+     7) RESPONSIVE YERLEŞİM
+     Kullanılabilir alana (sahne) göre en büyük kare hücre boyutunu bulur;
+     canvas hem dikey hem yatay ekranda TAŞMADAN sığar.
+     devicePixelRatio ile keskin çizim (2.5 ile sınırlı -> performans).
+     ---------------------------------------------------------------------- */
+  function layout() {
+    var availW = stage.clientWidth;
+    var availH = stage.clientHeight;
+    if (availW <= 0 || availH <= 0) return;   // ilk boyanmada 0 olabilir
+
+    var pad = 12;  // kenar boşluğu
+    var cw = (availW - pad * 2) / game.cols;
+    var ch = (availH - pad * 2) / game.rows;
+    cell = Math.max(28, Math.floor(Math.min(cw, ch)));
+
+    var w = cell * game.cols;
+    var h = cell * game.rows;
+
+    var dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    canvas.style.width  = w + "px";
+    canvas.style.height = h + "px";
+    canvas.width  = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    // Bundan sonra tüm çizimler CSS pikseli cinsinden yapılır
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  /* ----------------------------------------------------------------------
+     8) ÇİZİM
+     ---------------------------------------------------------------------- */
+
+  // Bir parçanın o anki görsel açısı (dönüş animasyonu dahil)
+  function currentAngle(c, now) {
+    var base = c.rot * (Math.PI / 2);
+    var dt = now - c.animAt;
+    if (dt < ROT_DUR) {
+      var t = easeOutCubic(dt / ROT_DUR);
+      // her zaman hedefin 90° gerisinden hedefe doğru (+90° görsel dönüş)
+      return base - (Math.PI / 2) * (1 - t);
+    }
+    return base;
+  }
+
+  // Tek bir kol (merkezden kenara kablo)
+  function drawArm(d, half, lw, glow, now) {
+    var ex = [0, half, 0, -half][d];
+    var ey = [-half, 0, half, 0][d];
+
+    // sönük taban katman (her zaman)
+    ctx.lineCap = "round";
+    ctx.lineWidth = lw;
+    ctx.strokeStyle = "#2a3048";
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
+
+    ctx.lineWidth = lw * 0.4;
+    ctx.strokeStyle = "#39415f";
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
+
+    // enerjili katman (glow oranında karışır)
+    if (glow > 0.02) {
+      ctx.globalAlpha = glow;
+
+      ctx.shadowColor = "#ff9a1f";
+      // gölge bulanıklığı en pahalı canvas işlemi -> büyük ızgarada üst sınır koy
+      ctx.shadowBlur = Math.min(cell * 0.32, 13);
+      ctx.lineWidth = lw;
+      ctx.strokeStyle = "#ffb733";
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.lineWidth = lw * 0.44;
+      ctx.strokeStyle = "#fff2bf";
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
+
+      // akan enerji noktaları (kesikli çizgi kaydırma) -> minik hücrelerde atla
+      if (cell >= 26) {
+        ctx.lineWidth = lw * 0.28;
+        ctx.strokeStyle = "#fffdf2";
+        ctx.setLineDash([cell * 0.03, cell * 0.14]);
+        ctx.lineDashOffset = -(now * 0.05) % 1000;
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // Kaynak düğümü (⚡ enerji ünitesi)
+  function drawSource() {
+    var s = cell * 0.30;
+    var g = ctx.createRadialGradient(0, 0, 2, 0, 0, s);
+    g.addColorStop(0, "#7bffe6");
+    g.addColorStop(1, "#12b7a0");
+    ctx.fillStyle = g;
+    ctx.strokeStyle = "#0c7d70";
+    ctx.lineWidth = cell * 0.05;
+    rr(-s, -s, s * 2, s * 2, s * 0.42);
+    ctx.fill();
+    ctx.stroke();
+
+    // şimşek simgesi
+    ctx.fillStyle = "#06342f";
+    ctx.beginPath();
+    ctx.moveTo(-s * 0.18, -s * 0.62);
+    ctx.lineTo( s * 0.34, -s * 0.06);
+    ctx.lineTo( s * 0.04, -s * 0.02);
+    ctx.lineTo( s * 0.22,  s * 0.62);
+    ctx.lineTo(-s * 0.34,  s * 0.02);
+    ctx.lineTo(-s * 0.02, -s * 0.02);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Ampul düğümü (💡 hedef)
+  function drawBulb(glow, now) {
+    var R = cell * 0.20;
+    if (glow > 0.35) {
+      var pulse = 1 + 0.06 * Math.sin(now / 170);
+      ctx.save();
+      ctx.scale(pulse, pulse);
+      ctx.shadowColor = "#ffcf3f";
+      ctx.shadowBlur = Math.min(cell * 0.55 * glow, 22);
+      var g = ctx.createRadialGradient(0, 0, 1, 0, 0, R);
+      g.addColorStop(0, "#fff7cf");
+      g.addColorStop(1, "#ffc531");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // ışınlar
+      ctx.strokeStyle = "rgba(255,224,120," + glow.toFixed(2) + ")";
+      ctx.lineWidth = cell * 0.03;
+      ctx.lineCap = "round";
+      for (var i = 0; i < 8; i++) {
+        var a = i * Math.PI / 4;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * R * 1.25, Math.sin(a) * R * 1.25);
+        ctx.lineTo(Math.cos(a) * R * 1.65, Math.sin(a) * R * 1.65);
+        ctx.stroke();
+      }
+      ctx.restore();
+    } else {
+      ctx.fillStyle = "#141a2b";
+      ctx.strokeStyle = "#464c6b";
+      ctx.lineWidth = cell * 0.035;
+      ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    // flaman
+    ctx.strokeStyle = glow > 0.35 ? "#b06a12" : "#3a4060";
+    ctx.lineWidth = cell * 0.03;
+    ctx.beginPath();
+    ctx.moveTo(-R * 0.4, R * 0.15);
+    ctx.quadraticCurveTo(0, -R * 0.5, R * 0.4, R * 0.15);
+    ctx.stroke();
+    // duy
+    ctx.fillStyle = glow > 0.35 ? "#caa24a" : "#2c3350";
+    rr(-R * 0.5, R * 0.75, R, R * 0.5, 2);
+    ctx.fill();
+  }
+
+  // Kilit rozeti (döndürülemeyen parça)
+  function drawLockBadge(shaking) {
+    var bx = -cell / 2 + cell * 0.17;
+    var by = -cell / 2 + cell * 0.15;
+    var w = cell * 0.16, h = cell * 0.13;
+    ctx.fillStyle = shaking ? "#ff6b81" : "#8b95bf";
+    // gövde
+    rr(bx - w / 2, by, w, h, cell * 0.02);
+    ctx.fill();
+    // kelepçe
+    ctx.strokeStyle = shaking ? "#ff6b81" : "#8b95bf";
+    ctx.lineWidth = cell * 0.028;
+    ctx.beginPath();
+    ctx.arc(bx, by, w * 0.42, Math.PI, 0);
+    ctx.stroke();
+  }
+
+  // Tek bir hücreyi çiz
+  function drawCell(c, now) {
+    var cx = c.ci * cell + cell / 2;
+    var cy = c.ri * cell + cell / 2;
+    var half = cell / 2;                 // kollar tam kenara ulaşır -> komşularla birleşir
+    var lw = Math.max(3, cell * 0.15);   // kablo kalınlığı
+    var inset = cell * 0.055;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    // kilitli parçaya dokununca yatay titreme
+    var sdt = now - c.shakeAt;
+    if (sdt < 240) {
+      var k2 = (1 - sdt / 240);
+      ctx.translate(Math.sin(sdt / 240 * Math.PI * 5) * cell * 0.06 * k2, 0);
+    }
+
+    // hücre zemini (dönmez)
+    rr(-half + inset, -half + inset, cell - inset * 2, cell - inset * 2, cell * 0.16);
+    ctx.fillStyle = c.lock ? "#0f1830" : "#0c1322";
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = c.lock ? "#27374f" : "#182238";
+    ctx.stroke();
+
+    if (c.d.length > 0) {
+      // kablo + düğüm (parçanın dönüşü kadar döndür)
+      ctx.save();
+      ctx.rotate(currentAngle(c, now));
+
+      var g = c.glow;
+      for (var i = 0; i < c.d.length; i++) drawArm(c.d[i], half, lw, g, now);
+
+      if (c.role === "src") {
+        drawSource();
+      } else if (c.role === "bulb") {
+        drawBulb(g, now);
+      } else {
+        // merkez düğüm
+        ctx.fillStyle = "#333a55";
+        ctx.beginPath(); ctx.arc(0, 0, lw * 0.62, 0, Math.PI * 2); ctx.fill();
+        if (g > 0.02) {
+          ctx.globalAlpha = g;
+          ctx.fillStyle = "#ffdf8a";
+          ctx.beginPath(); ctx.arc(0, 0, lw * 0.62, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        // çıkmaz uç kapağı (tek bağlantılı, rol yok)
+        if (c.d.length === 1) {
+          var d = c.d[0];
+          var ex = [0, half, 0, -half][d];
+          var ey = [-half, 0, half, 0][d];
+          ctx.fillStyle = g > 0.5 ? "#ffd66b" : "#3a4060";
+          ctx.beginPath();
+          ctx.arc(ex * 0.82, ey * 0.82, lw * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
+    // kilit rozeti (ekran hizasında, dönmez)
+    if (c.lock && !c.role) drawLockBadge(sdt < 240);
+
+    // ipucu halkası (kısa süreli, ekran hizasında) — ödüllü reklamla düzeltilen parça
+    var hdt = now - c.hintAt;
+    if (hdt >= 0 && hdt < 900) {
+      var hk = hdt / 900;
+      ctx.globalAlpha = (1 - hk) * 0.85;
+      ctx.strokeStyle = "#ffd23f";
+      ctx.lineWidth = Math.max(2, cell * 0.05);
+      ctx.beginPath();
+      ctx.arc(0, 0, cell * 0.26 + hk * cell * 0.34, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  // Kazanma kaplaması: onay + yıldızlar + (varsa) yeni rekor
+  function drawWinOverlay(now) {
+    var W = game.cols * cell, H = game.rows * cell, M = Math.min(W, H);
+    var el = now - game.phaseAt;
+    var t = clamp01(el / 280);
+    ctx.fillStyle = "rgba(6,9,18," + (0.76 * t).toFixed(3) + ")";
+    ctx.fillRect(0, 0, W, H);
+
+    var s = easeOutBack(clamp01(el / 430));
+    ctx.save();
+    ctx.translate(W / 2, H / 2 - M * 0.12);
+    ctx.scale(s, s);
+    var R = M * 0.11;
+    ctx.fillStyle = "#2ecc71";
+    ctx.shadowColor = "rgba(46,204,113,0.6)";
+    ctx.shadowBlur = 26;
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = R * 0.16;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(-R * 0.42, 0);
+    ctx.lineTo(-R * 0.08, R * 0.36);
+    ctx.lineTo(R * 0.46, -R * 0.34);
+    ctx.stroke();
+    ctx.restore();
+
+    // yıldızlar (sırayla açılır)
+    var starR = M * 0.062, gap = starR * 2.5, baseY = H / 2 + M * 0.03;
+    for (var i = 0; i < 3; i++) {
+      var sx = W / 2 + (i - 1) * gap;
+      var filled = i < game.stars;
+      var pop = clamp01((el - (240 + i * 150)) / 240);
+      if (filled) {
+        drawStar(sx, baseY, starR * (0.5 + 0.5 * easeOutBack(pop)), "#ffd23f", "#ff9e12");
+      } else {
+        drawStar(sx, baseY, starR, "rgba(255,255,255,0.10)", "rgba(255,255,255,0.18)");
+      }
+    }
+
+    ctx.fillStyle = "#eaf2ff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "800 " + Math.round(M * 0.07) + "px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+    var head = cfg.mode === "daily"
+      ? "GÜNLÜK " + (game.dailyIdx + 1) + "/" + DAILY_COUNT
+      : "SEVİYE " + (game.li + 1) + " TAMAM";
+    ctx.fillText(head, W / 2, H / 2 + M * 0.19);
+
+    ctx.font = "600 " + Math.round(M * 0.044) + "px system-ui, -apple-system, sans-serif";
+    ctx.fillStyle = game.newBest ? "#7BFFB0" : "#9fb0d8";
+    var sub = game.newBest
+      ? "Yeni rekor! " + game.moves + " hamle"
+      : game.moves + " hamle  (en iyi: " + game.par + ")";
+    ctx.fillText(sub, W / 2, H / 2 + M * 0.28);
+  }
+
+  /* ----------------------------------------------------------------------
+     9) ANA DÖNGÜ
+     ---------------------------------------------------------------------- */
+  function frame() {
+    requestAnimationFrame(frame);
+    var now = performance.now();
+    var dt = Math.min(50, now - lastNow);
+    lastNow = now;
+
+    // Parlaklık yumuşak geçişi (yayılma gecikmesi ile)
+    for (var r = 0; r < game.rows; r++) {
+      for (var c = 0; c < game.cols; c++) {
+        var cl = game.cells[r][c];
+        if (cl.lit) {
+          if (now - cl.litSince >= cl.litDelay)
+            cl.glow += (1 - cl.glow) * Math.min(1, dt / 150);
+        } else {
+          cl.glow += (0 - cl.glow) * Math.min(1, dt / 130);
+        }
+      }
+    }
+
+    // Kazanma -> kısa bekleme sonrası bir sonraki seviye (menü açıkken beklet)
+    if (game.phase === "win" && !menuOpen && now - game.phaseAt > WIN_HOLD) {
+      if (cfg.mode === "daily") {
+        if (game.dailyDone) {
+          game.phase = "done";                 // günlük bitti: donmuş bitiş ekranı
+          game.phaseAt = now;
+          Ads.interstitialNow();               // günlük set bitti -> tek geçiş reklamı
+        } else {
+          game.dailyIdx++;
+          buildLevel();
+        }
+      } else {
+        game.li++;
+        buildLevel();
+        Ads.levelAdvanced();                   // koşullar tutarsa geçiş reklamı
+      }
+    }
+
+    // --- çiz ---
+    ctx.clearRect(0, 0, game.cols * cell + 2, game.rows * cell + 2);
+
+    var intro = clamp01((now - game.introAt) / 350);   // seviye açılış fade-in
+    ctx.globalAlpha = intro;
+
+    // dış çerçeve
+    rr(1, 1, game.cols * cell - 2, game.rows * cell - 2, cell * 0.14);
+    ctx.strokeStyle = "#223049";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    for (var rr2 = 0; rr2 < game.rows; rr2++)
+      for (var cc2 = 0; cc2 < game.cols; cc2++)
+        drawCell(game.cells[rr2][cc2], now);
+
+    ctx.globalAlpha = 1;
+
+    if (game.phase === "win") drawWinOverlay(now);
+    else if (game.phase === "done") drawDoneOverlay(now);
+  }
+
+  // 5 köşeli yıldız (merkez x,y; dış yarıçap r)
+  function drawStar(x, y, r, fill, stroke) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.beginPath();
+    for (var i = 0; i < 10; i++) {
+      var rad = (i % 2 === 0) ? r : r * 0.44;
+      var a = -Math.PI / 2 + i * Math.PI / 5;
+      ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+    }
+    ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = r * 0.14; ctx.stroke(); }
+    ctx.restore();
+  }
+
+  // GÜNLÜK bulmaca tamamlandı ekranı (donmuş; menüden çıkılır)
+  function drawDoneOverlay(now) {
+    var W = game.cols * cell, H = game.rows * cell, M = Math.min(W, H);
+    ctx.fillStyle = "rgba(6,9,18,0.88)";
+    ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffe08a";
+    ctx.font = "800 " + Math.round(M * 0.085) + "px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+    ctx.fillText("GÜNLÜK TAMAM", W / 2, H / 2 - M * 0.14);
+    var st = Store.get(dkey("stars"), 0), mv = Store.get(dkey("moves"), 0);
+    // yıldız özeti (DAILY_COUNT * 3 üzerinden)
+    ctx.fillStyle = "#cdd6f4";
+    ctx.font = "700 " + Math.round(M * 0.055) + "px system-ui, -apple-system, sans-serif";
+    ctx.fillText("★ " + st + " / " + (DAILY_COUNT * 3) + "   ·   " + mv + " hamle", W / 2, H / 2);
+    ctx.fillStyle = "#8b93b5";
+    ctx.font = "500 " + Math.round(M * 0.04) + "px system-ui, -apple-system, sans-serif";
+    ctx.fillText("Menü ☰ ile Sonsuz Mod'a geçebilirsin", W / 2, H / 2 + M * 0.13);
+    ctx.fillText("Yeni günlük bulmaca yarın", W / 2, H / 2 + M * 0.2);
+  }
+
+  /* ----------------------------------------------------------------------
+     10) GİRDİ — Pointer Events (dokunma + fare + kalem tek API)
+     - pointerdown kullanılır -> 300ms tıklama gecikmesi YOK
+     - preventDefault -> tarayıcı jesti/again kaydırma engellenir
+     ---------------------------------------------------------------------- */
+  function onPointerDown(e) {
+    e.preventDefault();
+    Sound.ensure();                                   // ilk dokunuşta ses motorunu aç (mobil)
+    if (menuOpen || game.phase !== "play") return;
+    // seviye açılış animasyonu bitmeden girişi yok say
+    if (performance.now() - game.introAt < 220) return;
+
+    var rect = canvas.getBoundingClientRect();
+    // canvas CSS pikseli cinsinde koordinat
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    var col = Math.floor(x / cell);
+    var row = Math.floor(y / cell);
+    if (row < 0 || col < 0 || row >= game.rows || col >= game.cols) return;
+
+    var c = game.cells[row][col];
+    if (!c || c.d.length === 0) return;              // boş hücre
+
+    if (c.lock) {                                     // kilitli -> titreme + geri bildirim
+      c.shakeAt = performance.now();
+      Haptic.error();
+      Sound.locked();
+      return;
+    }
+
+    // geri-al için önceki durumu kaydet (yığın sınırı: 300)
+    game.undo.push({ c: c, from: c.rot });
+    if (game.undo.length > 300) game.undo.shift();
+
+    // 90° saat yönünde döndür
+    c.rot = (c.rot + 1) & 3;
+    c.animAt = performance.now();
+    game.moves++;
+    Haptic.light();
+    Sound.rotate();
+    if (!game.firstMove) {
+      game.firstMove = true;
+      hintEl.classList.remove("show");               // ilk hamlede ipucunu gizle
+    }
+    updateHud();
+
+    // Enerjiyi yeniden hesapla; ampul yandıysa kazanma fazına geç
+    if (computePower(performance.now(), false)) onWin();
+  }
+
+  // Son dönüşü geri al
+  function doUndo() {
+    if (menuOpen || game.phase !== "play" || !game.undo.length) return;
+    var u = game.undo.pop();
+    u.c.rot = u.from & 3;
+    u.c.animAt = performance.now();
+    game.moves = Math.max(0, game.moves - 1);
+    Haptic.light();
+    Sound.undo();
+    computePower(performance.now(), false);
+    updateHud();
+  }
+
+  /* İPUCU — ödüllü reklam karşılığı ÖNEMLİ (yol) bir kabloyu doğru yönüne çevirir.
+     Reklam yoksa/hazır değilse ücretsiz verilir (oyuncu engellenmesin).
+     Düzeltme bir hamle sayılır; seviyeyi bitiriyorsa normal kazanma akışı işler. */
+  function useHint() {
+    if (menuOpen || game.phase !== "play") return;
+    var cands = [];
+    for (var r = 0; r < game.rows; r++) {
+      for (var c = 0; c < game.cols; c++) {
+        var cl = game.cells[r][c];
+        if (!cl.matters || cl.role || cl.lock || cl.d.length === 0) continue;
+        var straight = (cl.d.length === 2 && ((cl.d[0] + 2) & 3) === cl.d[1]);
+        var wrong = straight ? ((cl.rot & 1) !== 0) : ((cl.rot & 3) !== 0);
+        if (wrong) cands.push(cl);
+      }
+    }
+    if (!cands.length) { showToast("Çözüme çok yakınsın", 1100); return; }
+    var target = cands[rndInt(cands.length)];
+    Ads.rewarded(function () {
+      target.rot = 0;                       // üreticinin "çözülmüş" yönü
+      target.animAt = performance.now();
+      target.hintAt = performance.now();
+      game.moves++;
+      Haptic.light();
+      Sound.rotate();
+      updateHud();
+      showToast("İpucu: bir kablo düzeltildi", 1100);
+      if (computePower(performance.now(), false)) onWin();
+    }, "İpucu için kısa bir reklam izlensin mi?\nKarşılığında bir kablo doğru yönüne çevrilir.");
+  }
+
+  // Ampul yandı: yıldız hesapla, kaydet, geri bildirim ver
+  function onWin() {
+    game.phase = "win";
+    game.phaseAt = performance.now();
+    game.stars = starsFor(game.moves, game.par);
+    Haptic.success();
+    Sound.win();
+    for (var i = 0; i < game.stars; i++) {
+      (function (i) { setTimeout(function () { Sound.star(i); }, 280 + i * 150); })(i);
+    }
+
+    if (cfg.mode === "endless") {
+      var lv = game.li + 1;
+      var pb = Store.get(ekey("best." + lv), 1e9);
+      if (game.moves < pb) { Store.set(ekey("best." + lv), game.moves); game.newBest = true; }
+      var ps = Store.get(ekey("stars." + lv), 0);
+      if (game.stars > ps) {
+        Store.set(ekey("stars." + lv), game.stars);
+        Store.set(ekey("totalStars"), Store.get(ekey("totalStars"), 0) + (game.stars - ps));
+      }
+    } else {
+      // GÜNLÜK: birikimli hamle + yıldız
+      Store.set(dkey("moves"), Store.get(dkey("moves"), 0) + game.moves);
+      Store.set(dkey("stars"), Store.get(dkey("stars"), 0) + game.stars);
+      if (game.dailyIdx + 1 >= DAILY_COUNT) { Store.set(dkey("done"), true); game.dailyDone = true; }
+      else { Store.set(dkey("idx"), game.dailyIdx + 1); }
+    }
+  }
+
+  /* ----------------------------------------------------------------------
+     11) HUD GÜNCELLE
+     ---------------------------------------------------------------------- */
+  var _lvlTxt = "", _mvTxt = "";
+  function updateHud() {
+    var l, m;
+    var bulbTag = game.bulbCount > 1 ? "  ·  💡×" + game.bulbCount : "";
+    if (cfg.mode === "daily") {
+      l = "Günlük " + Math.min(game.dailyIdx + 1, DAILY_COUNT) + " / " + DAILY_COUNT;
+      m = game.moves + " hamle  ·  " + game.size + "×" + game.size + bulbTag;
+    } else {
+      l = "Seviye " + (game.li + 1);
+      var best = Store.get(ekey("bestLevel"), 0);
+      m = game.moves + " hamle  ·  " + game.size + "×" + game.size + bulbTag +
+          (best > game.li + 1 ? "  ·  rekor S" + best : "");
+    }
+    if (l !== _lvlTxt) { lvlLabel.textContent = l; _lvlTxt = l; }
+    if (m !== _mvTxt)  { movesLabel.textContent = m; _mvTxt = m; }
+  }
+
+  /* ----------------------------------------------------------------------
+     11b) MENÜ + MOD/ZORLUK + BİLDİRİM
+     ---------------------------------------------------------------------- */
+  var toastTmr = 0;
+  function showToast(txt, ms) {
+    toastEl.textContent = txt;
+    toastEl.classList.add("show");
+    clearTimeout(toastTmr);
+    toastTmr = setTimeout(function () { toastEl.classList.remove("show"); }, ms || 1900);
+  }
+
+  function refreshSoundBtn() {
+    soundBtn.textContent = Sound.muted ? "🔇" : "🔊";  // 🔇 / 🔊
+  }
+
+  // Menü içeriğini o anki duruma göre güncelle
+  function syncMenu() {
+    var i, segs = menuEl.querySelectorAll("[data-mode]");
+    for (i = 0; i < segs.length; i++)
+      segs[i].classList.toggle("on", segs[i].getAttribute("data-mode") === cfg.mode);
+    segs = menuEl.querySelectorAll("[data-diff]");
+    for (i = 0; i < segs.length; i++)
+      segs[i].classList.toggle("on", segs[i].getAttribute("data-diff") === cfg.diff);
+
+    // bildirim aç/kapat durumu (eklenti yoksa grup soluk)
+    var non = Notify.enabled ? "on" : "off";
+    segs = menuEl.querySelectorAll("[data-notify]");
+    for (i = 0; i < segs.length; i++)
+      segs[i].classList.toggle("on", segs[i].getAttribute("data-notify") === non);
+    document.getElementById("notifyGrp").style.opacity = Notify.available() ? "1" : "0.4";
+
+    // zorluk yalnız sonsuz modda anlamlı
+    document.getElementById("diffGrp").style.opacity = (cfg.mode === "endless") ? "1" : "0.4";
+    document.getElementById("menuSkip").style.display = (cfg.mode === "endless") ? "" : "none";
+
+    var stats;
+    if (cfg.mode === "daily") {
+      var done = !!Store.get(dkey("done"), false);
+      stats = "Günlük bulmaca &bull; " + prettyDate() + "<br>" +
+              "İlerleme: <b>" + Math.min(game.dailyIdx + (done ? 1 : 0), DAILY_COUNT) + " / " + DAILY_COUNT + "</b>" +
+              "<br>Toplam yıldız: <b>&#9733; " + Store.get(dkey("stars"), 0) + "</b>";
+    } else {
+      stats = "Zorluk: <b>" + DIFF_LABEL[cfg.diff] + "</b>" +
+              "<br>Ulaşılan en yüksek: <b>Seviye " + Math.max(Store.get(ekey("bestLevel"), 0), game.li + 1) + "</b>" +
+              "<br>Toplam yıldız: <b>&#9733; " + Store.get(ekey("totalStars"), 0) + "</b>";
+    }
+    document.getElementById("menuStats").innerHTML = stats;
+
+    var prim = document.getElementById("menuPrimary");
+    if (cfg.mode === "daily" && !!Store.get(dkey("done"), false)) {
+      prim.textContent = "Sonsuz Mod'a Geç";
+    } else {
+      prim.textContent = "Devam Et";
+    }
+  }
+
+  function openMenu()  { menuOpen = true;  syncMenu(); menuEl.classList.add("show"); }
+  function closeMenu() { menuOpen = false; menuEl.classList.remove("show"); }
+
+  function applyMode(mo) {
+    cfg.mode = mo; Store.set("mode", mo);
+    if (mo === "daily") startDaily();
+    else {
+      game.li = Store.get(ekey("lastLevel"), 0);
+      buildLevel();
+      showToast("Sonsuz mod");
+    }
+  }
+  function applyDiff(d) {
+    if (!DIFFS[d]) return;
+    cfg.diff = d; Store.set("diff", d);
+    cfg.mode = "endless"; Store.set("mode", "endless");
+    game.li = Store.get(ekey("lastLevel"), 0);
+    buildLevel();
+    showToast("Zorluk: " + DIFF_LABEL[d]);
+  }
+  function startDaily() {
+    var done = !!Store.get(dkey("done"), false);
+    game.dailyDone = done;
+    game.dailyIdx = done ? DAILY_COUNT - 1 : clampI(Store.get(dkey("idx"), 0), 0, DAILY_COUNT - 1);
+    buildLevel();
+    if (done) { game.phase = "done"; game.phaseAt = performance.now(); showToast("Bugünkü günlük bitti — yarın yenisi!"); }
+    else showToast("Günlük bulmaca • " + prettyDate());
+  }
+
+  // Bir moddaki tüm ilerlemeyi sil
+  function wipeProgress() {
+    var pre = "enerji.v1." + (cfg.mode === "daily" ? "daily." : "endless." + cfg.diff);
+    try {
+      var kill = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf(pre) === 0) kill.push(k);
+      }
+      kill.forEach(function (k) { localStorage.removeItem(k); });
+    } catch (e) {}
+    if (cfg.mode === "daily") startDaily();
+    else { game.li = 0; buildLevel(); }
+    syncMenu();
+    showToast("İlerleme sıfırlandı");
+  }
+
+  /* ----------------------------------------------------------------------
+     12) OLAY BAĞLAMA
+     ---------------------------------------------------------------------- */
+
+  // Canvas dokunma girdisi (passive:false -> preventDefault çalışır)
+  canvas.addEventListener("pointerdown", onPointerDown, { passive: false });
+
+  // Ek güvenlik: canvas üstünde parmak sürüklemesi sayfayı kaydırmasın
+  document.addEventListener("touchmove", function (e) {
+    if (e.target === canvas) e.preventDefault();
+  }, { passive: false });
+
+  // iOS pinch-zoom jestlerini kapat
+  ["gesturestart", "gesturechange", "gestureend"].forEach(function (t) {
+    document.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false });
+  });
+
+  // Çift dokunuşla yakınlaştırmayı engelle
+  var lastTouchEnd = 0;
+  document.addEventListener("touchend", function (e) {
+    var n = Date.now();
+    if (n - lastTouchEnd < 300) e.preventDefault();
+    lastTouchEnd = n;
+  }, { passive: false });
+
+  // Uzun basış menüsünü kapat
+  canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+  // HUD düğmeleri
+  document.getElementById("undoBtn").addEventListener("click", doUndo);
+  document.getElementById("hintBtn").addEventListener("click", useHint);
+  document.getElementById("resetBtn").addEventListener("click", resetLevel);
+  soundBtn.addEventListener("click", function () {
+    Sound.ensure();
+    Sound.toggle();
+    refreshSoundBtn();
+    showToast(Sound.muted ? "Ses kapalı" : "Ses açık", 900);
+  });
+  document.getElementById("menuBtn").addEventListener("click", function () {
+    menuOpen ? closeMenu() : openMenu();
+  });
+
+  // Menü içi kontroller
+  menuEl.addEventListener("click", function (e) {
+    var t = e.target;
+    if (t === menuEl) { closeMenu(); return; }              // arka plana dokunma -> kapat
+    if (t.hasAttribute && t.hasAttribute("data-mode")) { closeMenu(); applyMode(t.getAttribute("data-mode")); return; }
+    if (t.hasAttribute && t.hasAttribute("data-diff")) {
+      if (cfg.mode === "endless") { closeMenu(); applyDiff(t.getAttribute("data-diff")); }
+      return;
+    }
+    if (t.hasAttribute && t.hasAttribute("data-notify")) {   // menüyü açık tut: ayar
+      Notify.set(t.getAttribute("data-notify") === "on");
+      return;
+    }
+  });
+  document.getElementById("menuPrimary").addEventListener("click", function () {
+    if (cfg.mode === "daily" && !!Store.get(dkey("done"), false)) { closeMenu(); applyMode("endless"); }
+    else closeMenu();
+  });
+  document.getElementById("menuSkip").addEventListener("click", function () {
+    closeMenu();
+    if (cfg.mode !== "endless") return;
+    Ads.rewarded(function () {
+      game.li++; buildLevel(); Ads.levelAdvanced();
+    });
+  });
+  document.getElementById("menuWipe").addEventListener("click", function () {
+    if (window.confirm("Bu moddaki tüm ilerleme silinsin mi?")) { closeMenu(); wipeProgress(); }
+  });
+
+  // Yeniden boyutlandırma / yön değişimi -> yeniden yerleşim
+  var resizeRAF = 0;
+  function scheduleLayout() {
+    if (resizeRAF) cancelAnimationFrame(resizeRAF);
+    resizeRAF = requestAnimationFrame(function () { resizeRAF = 0; layout(); });
+  }
+  window.addEventListener("resize", scheduleLayout);
+  window.addEventListener("orientationchange", function () {
+    setTimeout(scheduleLayout, 60);   // bazı cihazlarda ölçüler geç güncellenir
+  });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleLayout);
+  }
+  // Sahne kutusu değişimini de izle (klavye açılması vb.)
+  if (window.ResizeObserver) {
+    new ResizeObserver(scheduleLayout).observe(stage);
+  }
+
+  /* ----------------------------------------------------------------------
+     12b) CAPACITOR / NATİF ENTEGRASYON (yalnız uygulama olarak paketlenince)
+     Tarayıcıda window.Capacitor tanımsızdır -> tüm bu blok sessizce atlanır.
+     ---------------------------------------------------------------------- */
+  (function initNative() {
+    if (!window.Capacitor) return;
+    try { var sp = capPlugin("SplashScreen"); if (sp && sp.hide) sp.hide(); } catch (e) {}
+    try {
+      var sb = capPlugin("StatusBar");
+      if (sb) {
+        if (sb.setStyle) sb.setStyle({ style: "DARK" });
+        if (sb.setBackgroundColor) sb.setBackgroundColor({ color: "#0a0e1a" });
+      }
+    } catch (e) {}
+    try {
+      var ap = capPlugin("App");
+      if (ap && ap.addListener) {
+        // Android geri tuşu: menü açıksa kapat, değilse menüyü aç
+        ap.addListener("backButton", function () { menuOpen ? closeMenu() : openMenu(); });
+      }
+    } catch (e) {}
+    try { Ads.init(); } catch (e) {}      // AdMob: onay + ATT + reklamları ön-yükle
+    try { Notify.init(); } catch (e) {}   // Yerel hatırlatıcılar: kanal + (açıksa) planla
+  })();
+
+  /* ----------------------------------------------------------------------
+     13) BAŞLAT
+     ---------------------------------------------------------------------- */
+  refreshSoundBtn();
+  if (cfg.mode === "daily") {
+    startDaily();
+  } else {
+    game.li = Store.get(ekey("lastLevel"), 0);
+    buildLevel();
+  }
+  // İlk açılış: modu/zorluğu tanıtmak için menüyü göster
+  if (Store.get("seen", false) !== true) { Store.set("seen", true); openMenu(); }
+
+  requestAnimationFrame(function () { layout(); });  // ilk ölçüler hazır olunca
+  requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>

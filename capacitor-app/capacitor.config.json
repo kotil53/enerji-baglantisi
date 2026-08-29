@@ -1,0 +1,30 @@
+{
+  "appId": "com.enerji.baglantisi",
+  "appName": "Enerji Bağlantısı",
+  "webDir": "www",
+  "backgroundColor": "#0a0e1aff",
+  "android": {
+    "backgroundColor": "#0a0e1aff",
+    "allowMixedContent": false
+  },
+  "ios": {
+    "backgroundColor": "#0a0e1aff",
+    "contentInset": "always"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 700,
+      "launchAutoHide": true,
+      "backgroundColor": "#0a0e1a",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP",
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0a0e1a",
+      "overlaysWebView": false
+    }
+  }
+}
