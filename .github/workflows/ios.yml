@@ -29,9 +29,9 @@ jobs:
     env:
       ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: npm
