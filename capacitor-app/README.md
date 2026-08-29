@@ -118,7 +118,7 @@ hesabı bilgisi gerektirir; hazır olduğunda ekleriz.
 |----|-------|
 | Uygulama adı / kimliği / arka plan | `capacitor.config.json` |
 | CI derleme akışları | `.github/workflows/android.yml`, `ios.yml` |
-| Native son-rötuş (AdMob App ID, sürüm) | `scripts/apply-native-config.mjs` |
+| Native son-rötuş (AdMob App ID, sürüm, UMP pod sabiti) | `scripts/apply-native-config.mjs` |
 | Açılış ekranı süresi, durum çubuğu | `capacitor.config.json > plugins` |
 | İkon / splash kaynak görselleri | `assets/icon.svg`, `assets/splash.svg` → `npm run assets` |
 | Oyun kodu | `../enerji-bulmaca.html` (tek kaynak) |

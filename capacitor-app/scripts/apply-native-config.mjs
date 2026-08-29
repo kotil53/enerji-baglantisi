@@ -7,6 +7,9 @@
 //      (yoksa Android'de uygulama açılışta çöker)
 //   2. iOS: NSUserTrackingUsageDescription (ATT metni)
 //   3. Android: build.gradle içinde versionCode / versionName
+//   4. iOS: Podfile'a GoogleUserMessagingPlatform 2.6.0 sabiti (+ gerekiyorsa
+//      pod install) — admob 6.2.0 eski UMP 2.x API'si kullanır, CocoaPods
+//      varsayılanı UMP 3.x pod Swift derlemesini kırar
 //
 // Ortam değişkenleri (hepsi opsiyonel — verilmezse Google'ın TEST değerleri):
 //   ADMOB_APP_ID_ANDROID   varsayılan: ca-app-pub-3940256099942544~3347511713
@@ -17,6 +20,7 @@
 // Kullanım:  node scripts/apply-native-config.mjs
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -74,5 +78,36 @@ patch(plist, (p) => {
   log(`Info.plist            +GADApplicationIdentifier (${ADMOB_IOS}) +ATT`);
   return p.slice(0, idx) + keys + p.slice(idx);
 });
+
+// admob 6.2.0 -> UMP 2.x API. CocoaPods varsayılanı UMP 3.x (sembol rename) ->
+// CapacitorCommunityAdmob pod Swift derlemesi kırılır. GMA 11.3.0 yalnız
+// "GoogleUserMessagingPlatform >= 1.1" istediği için son 2.x'e (2.6.0) sabitle.
+const podfile = join(root, "ios/App/Podfile");
+let podfileChanged = false;
+patch(podfile, (pf) => {
+  if (pf.includes("GoogleUserMessagingPlatform")) return pf;
+  const pin = `  pod 'GoogleUserMessagingPlatform', '2.6.0'\n`;
+  let out;
+  if (pf.includes("# Add your Pods here")) {
+    out = pf.replace("# Add your Pods here\n", "# Add your Pods here\n" + pin);
+  } else {
+    const m = pf.match(/(target 'App' do\n\s*capacitor_pods\n)/);
+    if (!m) { console.warn("  ! Podfile: enjeksiyon noktası bulunamadı"); return pf; }
+    out = pf.replace(m[0], m[0] + pin);
+  }
+  if (out !== pf) { podfileChanged = true; log("Podfile              +GoogleUserMessagingPlatform 2.6.0 (UMP 2.x sabiti)"); }
+  return out;
+});
+
+// Podfile değiştiyse Pods'u yeniden kur (yalnız CocoaPods varsa — Windows/Android CI'da atlanır)
+if (podfileChanged) {
+  let hasPod = true;
+  try { execSync("pod --version", { stdio: "ignore" }); }
+  catch { hasPod = false; console.warn("  ! pod install atlandı — CocoaPods bulunamadı"); }
+  if (hasPod) {
+    console.log("  pod install (Podfile değişti)…");
+    execSync("pod install", { cwd: join(root, "ios/App"), stdio: "inherit" });  // hata olursa script çöksün
+  }
+}
 
 console.log(touched ? `✓ Native yapılandırma uygulandı (${touched} değişiklik)` : "✓ Native yapılandırma zaten güncel");
