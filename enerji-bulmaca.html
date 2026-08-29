@@ -751,16 +751,17 @@
     INTERSTITIAL_MIN_LEVEL: 3,       // bu seviyeye kadar geçiş reklamı gösterme
     INTERSTITIAL_COOLDOWN_MS: 75000  // iki geçiş reklamı arası en az süre
   };
-  // Google'ın RESMİ TEST reklam birimleri. Yayına çıkmadan AD_UNITS.live'i doldur
-  // ve ADS_CFG.TEST_MODE = false yap. App ID'ler native tarafta ayarlanır (bkz. README).
+  // "interstitial" = geçiş reklamı, "rewarded" slotu = ÖDÜLLÜ GEÇİŞ (rewarded interstitial) birimi.
+  // test: Google'ın RESMİ test birimleri. live: kendi AdMob birim ID'lerin.
+  // Yayına çıkarken ADS_CFG.TEST_MODE = false yap. App ID'ler native tarafta (bkz. README).
   var AD_UNITS = {
     test: {
-      android: { interstitial: "ca-app-pub-3940256099942544/1033173712", rewarded: "ca-app-pub-3940256099942544/5224354917" },
-      ios:     { interstitial: "ca-app-pub-3940256099942544/4411468910", rewarded: "ca-app-pub-3940256099942544/1712485313" }
+      android: { interstitial: "ca-app-pub-3940256099942544/1033173712", rewarded: "ca-app-pub-3940256099942544/5354046379" },
+      ios:     { interstitial: "ca-app-pub-3940256099942544/4411468910", rewarded: "ca-app-pub-3940256099942544/6978759866" }
     },
     live: {
-      android: { interstitial: "", rewarded: "" },
-      ios:     { interstitial: "", rewarded: "" }
+      android: { interstitial: "ca-app-pub-8703431820946387/7643757074", rewarded: "ca-app-pub-8703431820946387/2183169533" },
+      ios:     { interstitial: "ca-app-pub-8703431820946387/8748577885", rewarded: "ca-app-pub-8703431820946387/1980366859" }
     }
   };
 
@@ -816,11 +817,11 @@
       on("interstitialAdDismissed",    function () { self._int.loaded = false; self._int.lastAt = Date.now(); self._prepInt(); });
       on("interstitialAdFailedToShow", function () { self._int.loaded = false; self._prepInt(); });
 
-      on("onRewardedVideoAdLoaded",       function () { self._rew.loaded = true;  self._rew.loading = false; });
-      on("onRewardedVideoAdFailedToLoad", function () { self._rew.loaded = false; self._rew.loading = false; });
-      on("onRewardedVideoAdReward",       function () { self._rew.earned = true; });
-      on("onRewardedVideoAdDismissed",    function () { self._rew.loaded = false; self._consume(false); self._prepRew(); });
-      on("onRewardedVideoAdFailedToShow", function () { self._rew.loaded = false; self._consume(true);  self._prepRew(); });
+      on("onRewardedInterstitialAdLoaded",       function () { self._rew.loaded = true;  self._rew.loading = false; });
+      on("onRewardedInterstitialAdFailedToLoad", function () { self._rew.loaded = false; self._rew.loading = false; });
+      on("onRewardedInterstitialAdReward",       function () { self._rew.earned = true; });
+      on("onRewardedInterstitialAdDismissed",    function () { self._rew.loaded = false; self._consume(false); self._prepRew(); });
+      on("onRewardedInterstitialAdFailedToShow", function () { self._rew.loaded = false; self._consume(true);  self._prepRew(); });
     },
 
     // Ödül callback'ini bir kez çalıştırır (force=true -> kazanılmasa da ver)
@@ -854,7 +855,7 @@
       if (this._rew.loaded || this._rew.loading) return;
       this._rew.loading = true;
       var self = this;
-      AdMob.prepareRewardVideoAd({ adId: this._ids.rewarded, isTesting: ADS_CFG.TEST_MODE }).then(
+      AdMob.prepareRewardInterstitialAd({ adId: this._ids.rewarded, isTesting: ADS_CFG.TEST_MODE }).then(
         function () { self._rew.loaded = true;  self._rew.loading = false; },
         function () { self._rew.loaded = false; self._rew.loading = false; }
       );
@@ -895,8 +896,8 @@
       var self = this;
       this._rew.cb = cb;
       this._rew.earned = false;
-      AdMob.showRewardVideoAd().then(function (item) {
-        // Asıl sinyal "onRewardedVideoAdReward" olayı; bu yalnızca yedek kontrol
+      AdMob.showRewardInterstitialAd().then(function (item) {
+        // Asıl sinyal "onRewardedInterstitialAdReward" olayı; bu yalnızca yedek kontrol
         if (item && item.amount > 0) self._rew.earned = true;
         // "Dismissed" olayı gelmezse yedek: kısa süre sonra ödülü teslim et
         setTimeout(function () { if (self._rew.cb) self._consume(false); }, 1600);

@@ -175,13 +175,17 @@ Eklenti: `@capacitor-community/admob` (`package.json`'da tanımlı — `npm inst
 
 ### 2) Gerçek reklam birimleri
 
-Şu an Google'ın **resmi test reklam birimleri** kullanılıyor (kendi
-reklamlarını canlıda test etme — hesap kapatılır). Yayına hazır olunca:
+`AD_UNITS.live` **dolu** (`../enerji-bulmaca.html`): kendi AdMob birim ID'lerin.
+Reklam biçimleri: `interstitial` → **Geçiş**, `rewarded` slotu → **Ödüllü geçiş
+reklamı** (rewarded interstitial — kod `prepareRewardInterstitialAd` kullanır).
 
-1. `../enerji-bulmaca.html` içinde `AD_UNITS.live` bloğunu kendi
-   `interstitial` + `rewarded` birim ID'lerinle doldur.
-2. Aynı dosyada `ADS_CFG.TEST_MODE = false` yap.
-3. Native App ID'leri (yukarıda) kendi hesabınınkilerle değiştir.
+Yayına hazır olunca yapılacak **tek şey**:
+
+1. `../enerji-bulmaca.html` içinde `ADS_CFG.TEST_MODE = false` yap.
+   (Öncesinde `TEST_MODE: true` kalsın — kendi canlı reklamına tıklamak hesabı
+   kapatır; test modunda Google'ın test birimleri + `isTesting` kullanılır.)
+2. Native App ID'leri: CI'da `ADMOB_APP_ID_ANDROID` / `ADMOB_APP_ID_IOS`
+   secret'larını kendi App ID'lerinle (`ca-app-pub-…~…`) tanımla.
 
 ### 3) Ayarlar — `../enerji-bulmaca.html` > `ADS_CFG`
 
