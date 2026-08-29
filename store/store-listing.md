@@ -90,11 +90,16 @@ Birincil: **Oyunlar → Bulmaca**  ·  İkincil: **Oyunlar → Kelime/Beceri** (
 - [ ] **Gizlilik politikası URL'si** (zorunlu — AdMob var):
       `https://kotil53.github.io/enerji-baglantisi/privacy-policy.html`
       → GitHub repo **Settings → Pages → Deploy from a branch → main / /docs** ile aç.
-- [ ] Uygulama ikonu 512×512 PNG (Play) / 1024×1024 (App Store) — `capacitor-app/icons/` var, PNG'ye çevrilecek.
-- [ ] Feature graphic 1024×500 (Play) — tasarlanacak.
-- [ ] Telefon ekran görüntüleri (Play: en az 2; App Store: 6.7" ve 5.5" setleri) — emülatörden çekilecek.
+- [x] Uygulama ikonu — `store/assets/icon-512.png` (Play), `store/assets/icon-1024.png` (App Store). Alfa yok.
+- [x] Feature graphic 1024×500 — `store/assets/feature-graphic.png` (kaynak: `feature-graphic.svg`).
+- [x] Telefon ekran görüntüleri — `store/screenshots/01-oynanis.png`, `02-menu.png`, `03-kilitli-parcalar.png` (1280×2560, 2:1). Play min 2; 4+ önerilir → gerçek cihazdan birkaç tane daha ekle (kazanma ekranı, günlük mod).
 - [ ] `enerji-bulmaca.html` içinde `ADS_CFG.TEST_MODE = false` (yayın build'inden önce).
 - [ ] `git tag v1.0.0 && git push origin v1.0.0` → imzalı AAB → Console'a yükle.
+
+### Üretilen materyaller — `store/assets/` ve `store/screenshots/`
+`store/assets/*.png` `icon.svg` + `feature-graphic.svg`'den `sharp` ile üretildi;
+kaynakları değiştirip yeniden üretebilirsin. Ekran görüntüleri emülatörden (Pixel,
+1280×2856) alınıp 1280×2560'a (Play'in "uzun kenar ≤ 2× kısa kenar" kuralı) kırpıldı.
 
 ### İçerik derecelendirmesi (IARC anketi) — beklenen yanıtlar
 Şiddet: yok · Cinsellik: yok · Küfür: yok · Madde: yok · Kumar: yok
