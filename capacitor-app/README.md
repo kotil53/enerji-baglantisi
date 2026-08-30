@@ -72,6 +72,7 @@ sürüm kontrolüne alınmasına gerek yoktur.
 | **Android derleme** (`android.yml`) | her `push`/PR (`main`) | imzasız `app-debug.apk` | hayır |
 | ↳ release işi | `v*` tag'i **veya** elle "release" | imzalı `app-release.aab` + GitHub Release | evet (aşağıda) |
 | **iOS derleme** (`ios.yml`) | `push`/PR (`main`), tag | imzasız `App.xcarchive.zip` (derleme doğrulaması) | hayır |
+| ↳ release-ipa işi | `v*` tag'i **veya** elle "release" | imzalı App Store `.ipa` | evet (aşağıda) |
 
 Sürümleme: `versionCode` = GitHub `run_number`, `versionName` = tag'den (`v1.2.3`
 → `1.2.3`) ya da tag yoksa `0.0.0-ci.<run>`. `apply-native-config.mjs` bunları
@@ -89,9 +90,13 @@ Depo → **Settings → Secrets and variables → Actions → New repository sec
 | `ANDROID_KEY_PASSWORD` | release AAB için | anahtar parolası |
 | `ADMOB_APP_ID_ANDROID` | opsiyonel | canlı AdMob App ID (`ca-app-pub-…~…`); yoksa Google test ID'si |
 | `ADMOB_APP_ID_IOS` | opsiyonel | canlı AdMob App ID (iOS); yoksa Google test ID'si |
+| `APPSTORE_API_KEY_ID` | imzalı IPA için | App Store Connect API anahtarının Key ID'si |
+| `APPSTORE_API_ISSUER_ID` | imzalı IPA için | App Store Connect API Issuer ID (uuid) |
+| `APPSTORE_API_PRIVATE_KEY` | imzalı IPA için | `base64 -w0 AuthKey_XXXXXXXXXX.p8` çıktısı |
+| `APPSTORE_TEAM_ID` | imzalı IPA için | Apple Developer Team ID (10 karakter) |
 
-Keystore sırları tanımlı değilse release işi kendini atlar (uyarı basar) — debug
-APK yine üretilir.
+Keystore/API anahtarı sırları tanımlı değilse ilgili release işi kendini atlar
+(uyarı basar) — debug APK / imzasız archive yine üretilir.
 
 ### Yayına çıkış
 
@@ -104,13 +109,26 @@ git tag v1.0.0 && git push origin v1.0.0
 Canlı reklam için ayrıca `../enerji-bulmaca.html` içinde `AD_UNITS.live` +
 `ADS_CFG.TEST_MODE = false` (bkz. "Reklam (AdMob)").
 
-### iOS imzalı dağıtım (henüz kurulu değil)
+### iOS imzalı dağıtım
 
-`ios.yml` yalnızca **imzasız** archive üretir (derleme kırılmadı mı kontrolü).
-App Store'a yükleyen imzalı IPA için iş akışına şunlar eklenmeli: Apple dağıtım
-sertifikası (`.p12`) + provisioning profili sırları, `apple-actions/import-codesign-certs`
-adımı ve `xcodebuild -exportArchive` (`exportOptions.plist`). Bunlar Apple Developer
-hesabı bilgisi gerektirir; hazır olduğunda ekleriz.
+`release-ipa` işi, **App Store Connect API anahtarı** ile otomatik imzalama
+kullanır (`.p12`/Keychain gerekmez — Xcode CI runner'ında sertifika + provisioning
+profilini kendisi oluşturur/indirir, `-allowProvisioningUpdates` +
+`-authenticationKeyPath/-ID/-IssuerID`). Kurulum:
+
+1. developer.apple.com → **Certificates, Identifiers & Profiles → Identifiers** →
+   `com.enerji.baglantisi` için **App ID** kaydet (Explicit).
+2. App Store Connect → **Apps → New App** → aynı Bundle ID ile uygulamayı oluştur.
+3. App Store Connect → **Users and Access → Integrations → App Store Connect API**
+   → **App Manager** erişimli bir anahtar üret → `.p8` dosyasını indir (bir kez!),
+   Key ID + Issuer ID'yi not al.
+4. developer.apple.com → **Account → Membership details** → Team ID'yi not al.
+5. Yukarıdaki 4 secret'ı ekle (`APPSTORE_API_KEY_ID`, `APPSTORE_API_ISSUER_ID`,
+   `APPSTORE_API_PRIVATE_KEY` = `.p8`'in base64'ü, `APPSTORE_TEAM_ID`).
+
+`git tag v1.0.0 && git push origin v1.0.0` → `release-ipa` işi `enerji-baglantisi-ipa`
+artifact'ını üretir → indirip [App Store Connect](https://appstoreconnect.apple.com)'e
+(Transporter uygulaması ya da `xcrun altool`) yükle.
 
 ## Yapılandırma nerede?
 

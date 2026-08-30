@@ -1,8 +1,9 @@
 name: iOS derleme
 
-# Derlemenin bozulmadığını doğrular: imzasız Release archive üretir.
-# App Store'a yüklenebilir imzalı IPA için Apple sertifikası + provisioning
-# profili sırları gerekir — bkz. capacitor-app/README.md "CI / Otomatik derleme".
+# `archive` işi: her push/PR'da imzasız Release archive üretir (derleme bozulmadı mı
+# kontrolü, sır gerekmez). `release-ipa` işi: v* tag'i veya elle "release" ile, App
+# Store Connect API anahtarıyla imzalı, App Store'a yüklenebilir .ipa üretir — bkz.
+# capacitor-app/README.md "CI / Otomatik derleme".
 
 on:
   push:
@@ -15,6 +16,11 @@ on:
       - "capacitor-app/**"
       - ".github/workflows/ios.yml"
   workflow_dispatch:
+    inputs:
+      release:
+        description: "İmzalı App Store IPA üret (Apple API anahtarı sırları gerekir)"
+        type: boolean
+        default: false
 
 concurrency:
   group: ios-${{ github.ref }}
@@ -77,4 +83,134 @@ jobs:
         with:
           name: enerji-baglantisi-ios-xcarchive
           path: ${{ runner.temp }}/App.xcarchive.zip
+          if-no-files-found: error
+
+  # ── Tag (v*) veya elle "release": App Store Connect API anahtarıyla imzalı .ipa ──
+  release-ipa:
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release)
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: capacitor-app
+    env:
+      ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: İmzalama sırları var mı?
+        id: gate
+        env:
+          KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::APPSTORE_API_PRIVATE_KEY tanımlı değil — imzalı IPA derlemesi atlandı."
+          fi
+
+      - uses: actions/setup-node@v5
+        if: steps.gate.outputs.ok == 'true'
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: capacitor-app/package-lock.json
+
+      - name: Bağımlılıklar
+        if: steps.gate.outputs.ok == 'true'
+        run: npm ci
+
+      - name: Sürüm adını belirle
+        id: meta
+        if: steps.gate.outputs.ok == 'true'
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.0.0-ci.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Native projeyi üret (sync + cap add ios + native:config + pod install)
+        if: steps.gate.outputs.ok == 'true'
+        env:
+          APP_VERSION: ${{ steps.meta.outputs.version }}
+        run: npm run add:ios
+
+      - name: API anahtarını çöz
+        if: steps.gate.outputs.ok == 'true'
+        env:
+          KEY_B64: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+        # macOS'ta `base64 -d` bayrağı belirsiz (BSD sürümü farklı) -> Node ile çöz
+        run: |
+          mkdir -p "$RUNNER_TEMP/appstore"
+          node -e "
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const out = path.join(process.env.RUNNER_TEMP, 'appstore', 'AuthKey_' + process.env.KEY_ID + '.p8');
+            fs.writeFileSync(out, Buffer.from(process.env.KEY_B64, 'base64'));
+          "
+
+      - name: exportOptions.plist üret
+        if: steps.gate.outputs.ok == 'true'
+        env:
+          TEAM_ID: ${{ secrets.APPSTORE_TEAM_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/exportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+          </dict>
+          </plist>
+          PLIST
+
+      - name: İmzalı archive
+        if: steps.gate.outputs.ok == 'true'
+        working-directory: capacitor-app/ios/App
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          TEAM_ID: ${{ secrets.APPSTORE_TEAM_ID }}
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            archive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/appstore/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            MARKETING_VERSION="${{ steps.meta.outputs.version }}" \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+
+      - name: IPA'ya aktar (export)
+        if: steps.gate.outputs.ok == 'true'
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/exportOptions.plist" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/appstore/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.gate.outputs.ok == 'true'
+        with:
+          name: enerji-baglantisi-ipa
+          path: ${{ runner.temp }}/export/*.ipa
           if-no-files-found: error
