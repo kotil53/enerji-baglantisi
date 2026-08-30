@@ -174,6 +174,44 @@ jobs:
           echo "-- openssl ile içerik doğrulaması --"
           openssl pkey -in "$KEYFILE" -noout && echo "Anahtar formatı GEÇERLİ" || { echo "::error::.p8 içeriği geçersiz — APPSTORE_API_PRIVATE_KEY secret'ını kontrol et"; exit 1; }
 
+      - name: App Store Connect API erişim testi
+        if: steps.gate.outputs.ok == 'true'
+        # xcodebuild -allowProvisioningUpdates App Store Connect API'sine bağlanır;
+        # KEY_ID/ISSUER_ID/.p8 üçlüsü yanlış ya da rol yetersizse "archive" adımı
+        # "Communication with Apple failed ... (401)" ile kırılır. Burada aynı JWT'yi
+        # kurup Apple'ın döndürdüğü ham hatayı gösteriyoruz (KEY_ID / ISSUER_ID
+        # $GITHUB_ENV'den, KEYFILE bir önceki adımdan).
+        run: |
+          node -e "
+            const crypto = require('node:crypto');
+            const fs = require('node:fs');
+            const b64url = (b) => Buffer.from(b).toString('base64url');
+            const now = Math.floor(Date.now() / 1000);
+            const head = b64url(JSON.stringify({ alg: 'ES256', kid: process.env.KEY_ID, typ: 'JWT' }));
+            const body = b64url(JSON.stringify({ iss: process.env.ISSUER_ID, iat: now, exp: now + 1200, aud: 'appstoreconnect-v1' }));
+            const si = head + '.' + body;
+            const sig = crypto.createSign('SHA256').update(si).sign({ key: fs.readFileSync(process.env.KEYFILE), dsaEncoding: 'ieee-p1363' });
+            const jwt = si + '.' + b64url(sig);
+            (async () => {
+              const r = await fetch('https://api.appstoreconnect.apple.com/v1/apps?limit=200', { headers: { Authorization: 'Bearer ' + jwt } });
+              const t = await r.text();
+              console.log('KEY_ID=' + process.env.KEY_ID + '  ISSUER_ID=' + process.env.ISSUER_ID);
+              console.log('HTTP ' + r.status);
+              if (r.status !== 200) {
+                console.log(t);
+                console.log('::error::App Store Connect API ' + r.status + ' — API anahtarı reddedildi. Kontrol: (1) APPSTORE_API_KEY_ID App Store Connect > Users and Access > Integrations listesindeki Key ID ile birebir aynı mı, (2) APPSTORE_API_ISSUER_ID aynı sayfanın tepesindeki Issuer ID mi, (3) APPSTORE_API_PRIVATE_KEY o anahtarın .p8 dosyası mı, (4) anahtarın rolü Admin veya Developer mı, (5) anahtar iptal edilmemiş mi.');
+                process.exit(1);
+              }
+              const apps = JSON.parse(t).data.map((a) => a.attributes.bundleId);
+              console.log('Hesaptaki uygulama bundle ID leri: ' + (apps.join(', ') || '(yok)'));
+              if (apps.includes('com.enerji.baglantisi')) {
+                console.log('com.enerji.baglantisi kaydi VAR.');
+              } else {
+                console.log('::warning::com.enerji.baglantisi App Store Connect te kayitli degil — imzalama profili uretilse bile yukleme icin uygulama kaydi gerekir.');
+              }
+            })().catch((e) => { console.log('::error::API test istegi basarisiz: ' + e.message); process.exit(1); });
+          "
+
       - name: Distribution sertifikasını keychain'e içe aktar
         if: steps.gate.outputs.ok == 'true'
         env:
