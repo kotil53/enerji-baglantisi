@@ -94,6 +94,8 @@ Depo → **Settings → Secrets and variables → Actions → New repository sec
 | `APPSTORE_API_ISSUER_ID` | imzalı IPA için | App Store Connect API Issuer ID (uuid) |
 | `APPSTORE_API_PRIVATE_KEY` | imzalı IPA için | `base64 -w0 AuthKey_XXXXXXXXXX.p8` çıktısı |
 | `APPSTORE_TEAM_ID` | imzalı IPA için | Apple Developer Team ID (10 karakter) |
+| `APPSTORE_CERTIFICATE_P12` | imzalı IPA için | Apple Distribution sertifikası+key, `base64 -w0 ios_distribution.p12` çıktısı |
+| `APPSTORE_CERTIFICATE_PASSWORD` | imzalı IPA için | `.p12`'nin parolası |
 
 Keystore/API anahtarı sırları tanımlı değilse ilgili release işi kendini atlar
 (uyarı basar) — debug APK / imzasız archive yine üretilir.
@@ -111,10 +113,16 @@ Canlı reklam için ayrıca `../enerji-bulmaca.html` içinde `AD_UNITS.live` +
 
 ### iOS imzalı dağıtım
 
-`release-ipa` işi, **App Store Connect API anahtarı** ile otomatik imzalama
-kullanır (`.p12`/Keychain gerekmez — Xcode CI runner'ında sertifika + provisioning
-profilini kendisi oluşturur/indirir, `-allowProvisioningUpdates` +
-`-authenticationKeyPath/-ID/-IssuerID`). Kurulum:
+`release-ipa` işi **App Store Connect API anahtarı** (profil otomasyonu) +
+**önceden üretilmiş bir Distribution sertifikası** (`.p12`, geçici keychain'e
+aktarılır) kullanır. Sertifika neden önceden üretilir: GitHub'ın macOS runner'ı
+her çalıştırmada sıfırdan bir sanal makine olduğu için, Xcode bir sertifikayı
+`-allowProvisioningUpdates` ile otomatik oluştursa bile private key o runner'la
+birlikte yok olur — bir sonraki çalıştırma "zaten bir sertifikan var ama key'i
+yok" hatasına takılır. Provisioning **profili** için bu sorun yok (private key
+içermez), o yüzden profil hâlâ otomatik yönetiliyor.
+
+Kurulum:
 
 1. developer.apple.com → **Certificates, Identifiers & Profiles → Identifiers** →
    `com.enerji.baglantisi` için **App ID** kaydet (Explicit).
@@ -123,8 +131,23 @@ profilini kendisi oluşturur/indirir, `-allowProvisioningUpdates` +
    → **App Manager** erişimli bir anahtar üret → `.p8` dosyasını indir (bir kez!),
    Key ID + Issuer ID'yi not al.
 4. developer.apple.com → **Account → Membership details** → Team ID'yi not al.
-5. Yukarıdaki 4 secret'ı ekle (`APPSTORE_API_KEY_ID`, `APPSTORE_API_ISSUER_ID`,
-   `APPSTORE_API_PRIVATE_KEY` = `.p8`'in base64'ü, `APPSTORE_TEAM_ID`).
+5. Private key + CSR üret (Mac gerekmez):
+   ```bash
+   openssl genrsa -out ios_distribution.key 2048
+   openssl req -new -key ios_distribution.key -out ios_distribution.csr \
+     -subj "/emailAddress=<eposta>/CN=<ad soyad>/C=<ülke kodu>"
+   ```
+6. developer.apple.com → **Certificates → (+) → Apple Distribution** (Development
+   *değil*) → CSR'ı yükle → **Download** (`distribution.cer`).
+7. `.p12`'ye çevir:
+   ```bash
+   openssl x509 -inform DER -in distribution.cer -out ios_distribution.pem
+   openssl pkcs12 -export -inkey ios_distribution.key -in ios_distribution.pem \
+     -out ios_distribution.p12 -passout "pass:<parola>"
+   ```
+8. Yukarıdaki 6 secret'ı ekle (`APPSTORE_API_KEY_ID`, `APPSTORE_API_ISSUER_ID`,
+   `APPSTORE_API_PRIVATE_KEY` = `.p8`'in base64'ü, `APPSTORE_TEAM_ID`,
+   `APPSTORE_CERTIFICATE_P12` = `.p12`'nin base64'ü, `APPSTORE_CERTIFICATE_PASSWORD`).
 
 `git tag v1.0.0 && git push origin v1.0.0` → `release-ipa` işi `enerji-baglantisi-ipa`
 artifact'ını üretir → indirip [App Store Connect](https://appstoreconnect.apple.com)'e

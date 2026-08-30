@@ -170,6 +170,34 @@ jobs:
           echo "-- openssl ile içerik doğrulaması --"
           openssl pkey -in "$KEYFILE" -noout && echo "Anahtar formatı GEÇERLİ" || { echo "::error::.p8 içeriği geçersiz — APPSTORE_API_PRIVATE_KEY secret'ını kontrol et"; exit 1; }
 
+      - name: Distribution sertifikasını keychain'e içe aktar
+        if: steps.gate.outputs.ok == 'true'
+        env:
+          P12_B64: ${{ secrets.APPSTORE_CERTIFICATE_P12 }}
+          P12_PASSWORD: ${{ secrets.APPSTORE_CERTIFICATE_PASSWORD }}
+        # Ephemeral macOS runner'da sertifika+private key kalıcı değil -> her
+        # çalıştırmada aynı, önceden üretilmiş .p12'yi geçici bir keychain'e
+        # aktarıyoruz (GitHub'ın resmi Apple sertifika kurulum deseni).
+        run: |
+          if [ -z "$P12_B64" ]; then
+            echo "::error::APPSTORE_CERTIFICATE_P12 tanımlı değil"; exit 1
+          fi
+          export P12_PATH="$RUNNER_TEMP/dist_cert.p12"
+          node -e "
+            const fs = require('node:fs');
+            fs.writeFileSync(process.env.P12_PATH, Buffer.from(process.env.P12_B64, 'base64'));
+          "
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+          KEYCHAIN_PW="$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)"
+          security create-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN_PATH"
+          security import "$P12_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed 's/[\" ]//g')
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PW" "$KEYCHAIN_PATH"
+          echo "-- keychain'deki kimlikler --"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
       - name: exportOptions.plist üret
         if: steps.gate.outputs.ok == 'true'
         run: |
