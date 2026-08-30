@@ -191,6 +191,33 @@ jobs:
             const fs = require('node:fs');
             fs.writeFileSync(process.env.P12_PATH, Buffer.from(process.env.P12_B64, 'base64'));
           "
+          # GitHub secret kutusuna yapıştırırken sona kaçan \r\n, security import'ta
+          # "MAC verification failed during PKCS12 import (wrong password?)" olur.
+          P12_PW="$(printf '%s' "$P12_PASSWORD" | tr -d '\r\n')"
+
+          echo "-- .p12 tanı (openssl $(openssl version)) --"
+          echo "  boyut: $(wc -c < "$P12_PATH" | tr -d ' ') byte"
+          PEM="$RUNNER_TEMP/dist_cert.pem"
+          if   openssl pkcs12 -in "$P12_PATH" -passin "pass:$P12_PW" -nodes -legacy > "$PEM" 2>"$RUNNER_TEMP/o1.log"; then :
+          elif openssl pkcs12 -in "$P12_PATH" -passin "pass:$P12_PW" -nodes         > "$PEM" 2>"$RUNNER_TEMP/o2.log"; then :
+          else
+            echo "::error::openssl .p12'yi açamadı — APPSTORE_CERTIFICATE_PASSWORD yanlış veya APPSTORE_CERTIFICATE_P12 base64'ü bozuk/eksik"
+            sed 's/^/    /' "$RUNNER_TEMP/o1.log" "$RUNNER_TEMP/o2.log" 2>/dev/null || true
+            exit 1
+          fi
+          echo "  openssl p12'yi açtı — parola DOĞRU"
+          grep -q 'BEGIN .*PRIVATE KEY' "$PEM" \
+            || { echo "::error::.p12 içinde private key YOK — yalnız sertifika var; anahtarı da içeren .p12 gerekli"; exit 1; }
+
+          # macOS `security` importer'ı OpenSSL 3.x'in AES-256/SHA-256 p12'sini okuyamaz
+          # ("MAC verification failed"); legacy (PBE-SHA1-3DES + SHA1 MAC) yeniden paketle.
+          LEGACY="$RUNNER_TEMP/dist_cert_legacy.p12"
+          if   openssl pkcs12 -export -legacy -in "$PEM" -out "$LEGACY" -passout "pass:$P12_PW" -name "Apple Distribution" 2>/dev/null; then P12_PATH="$LEGACY"; echo "  -> legacy .p12 hazır (-legacy)"
+          elif openssl pkcs12 -export -in "$PEM" -out "$LEGACY" -passout "pass:$P12_PW" -name "Apple Distribution" -certpbe PBE-SHA1-3DES -keypbe PBE-SHA1-3DES -macalg sha1 2>/dev/null; then P12_PATH="$LEGACY"; echo "  -> legacy .p12 hazır (-certpbe/-keypbe)"
+          else echo "  legacy yeniden paketleme atlandı — özgün .p12 kullanılacak"
+          fi
+          rm -f "$PEM"
+
           KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
           # Geçici keychain parolası — at-değer, gizli olması gerekmiyor. ESKİ HÂLİ
           # `tr -dc … < /dev/urandom | head -c 32` idi; macOS bash 3.2 + pipefail
@@ -200,7 +227,7 @@ jobs:
           security create-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN_PATH"
-          security import "$P12_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security import "$P12_PATH" -P "$P12_PW" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
           # partition list'i arama listesini değiştirmeden ÖNCE ayarla (resmi sıra);
           # hemen öncesinde bir kez daha unlock -> kilitli keychain GUI prompt'unu önler.
           security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN_PATH"
