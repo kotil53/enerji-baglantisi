@@ -182,35 +182,44 @@ jobs:
         # kurup Apple'ın döndürdüğü ham hatayı gösteriyoruz (KEY_ID / ISSUER_ID
         # $GITHUB_ENV'den, KEYFILE bir önceki adımdan).
         run: |
-          node -e "
-            const crypto = require('node:crypto');
-            const fs = require('node:fs');
-            const b64url = (b) => Buffer.from(b).toString('base64url');
-            const now = Math.floor(Date.now() / 1000);
-            const head = b64url(JSON.stringify({ alg: 'ES256', kid: process.env.KEY_ID, typ: 'JWT' }));
-            const body = b64url(JSON.stringify({ iss: process.env.ISSUER_ID, iat: now, exp: now + 1200, aud: 'appstoreconnect-v1' }));
-            const si = head + '.' + body;
-            const sig = crypto.createSign('SHA256').update(si).sign({ key: fs.readFileSync(process.env.KEYFILE), dsaEncoding: 'ieee-p1363' });
-            const jwt = si + '.' + b64url(sig);
-            (async () => {
-              const r = await fetch('https://api.appstoreconnect.apple.com/v1/apps?limit=200', { headers: { Authorization: 'Bearer ' + jwt } });
-              const t = await r.text();
-              console.log('KEY_ID=' + process.env.KEY_ID + '  ISSUER_ID=' + process.env.ISSUER_ID);
-              console.log('HTTP ' + r.status);
-              if (r.status !== 200) {
-                console.log(t);
-                console.log('::error::App Store Connect API ' + r.status + ' — API anahtarı reddedildi. Kontrol: (1) APPSTORE_API_KEY_ID App Store Connect > Users and Access > Integrations listesindeki Key ID ile birebir aynı mı, (2) APPSTORE_API_ISSUER_ID aynı sayfanın tepesindeki Issuer ID mi, (3) APPSTORE_API_PRIVATE_KEY o anahtarın .p8 dosyası mı, (4) anahtarın rolü Admin veya Developer mı, (5) anahtar iptal edilmemiş mi.');
-                process.exit(1);
-              }
-              const apps = JSON.parse(t).data.map((a) => a.attributes.bundleId);
-              console.log('Hesaptaki uygulama bundle ID leri: ' + (apps.join(', ') || '(yok)'));
-              if (apps.includes('com.enerji.baglantisi')) {
-                console.log('com.enerji.baglantisi kaydi VAR.');
-              } else {
-                console.log('::warning::com.enerji.baglantisi App Store Connect te kayitli degil — imzalama profili uretilse bile yukleme icin uygulama kaydi gerekir.');
-              }
-            })().catch((e) => { console.log('::error::API test istegi basarisiz: ' + e.message); process.exit(1); });
-          "
+          cat > "$RUNNER_TEMP/asc_test.mjs" <<'EOF'
+          import crypto from 'node:crypto';
+          import fs from 'node:fs';
+          const b64url = (b) => Buffer.from(b).toString('base64url');
+          const KEY_ID = (process.env.KEY_ID || '').trim();
+          const ISSUER_ID = (process.env.ISSUER_ID || '').trim();
+          const pem = fs.readFileSync(process.env.KEYFILE);
+          console.log(`KEY_ID uzunlugu: ${KEY_ID.length} (Key ID normalde 10 karakter)`);
+          console.log(`ISSUER_ID uzunlugu: ${ISSUER_ID.length} (Issuer ID normalde 36 karakter, UUID)`);
+          console.log(`.p8 boyutu: ${pem.length} byte  ilk satir: ${pem.toString('utf8').split(/\r?\n/)[0]}`);
+          const now = Math.floor(Date.now() / 1000);
+          const makeJwt = (extra) => {
+            const head = b64url(JSON.stringify({ alg: 'ES256', kid: KEY_ID, typ: 'JWT' }));
+            const body = b64url(JSON.stringify({ iat: now, exp: now + 900, aud: 'appstoreconnect-v1', ...extra }));
+            const si = `${head}.${body}`;
+            const sig = crypto.createSign('SHA256').update(si).sign({ key: pem, dsaEncoding: 'ieee-p1363' });
+            if (sig.length !== 64) console.log(`UYARI: ES256 imza uzunlugu ${sig.length}, 64 bekleniyordu`);
+            return `${si}.${b64url(sig)}`;
+          };
+          const tryJwt = async (label, jwt) => {
+            const r = await fetch('https://api.appstoreconnect.apple.com/v1/apps?limit=200', { headers: { Authorization: `Bearer ${jwt}` } });
+            const t = await r.text();
+            console.log(`[${label}] HTTP ${r.status}`);
+            if (r.status === 200) return JSON.parse(t);
+            console.log('  ' + t.replace(/\s+/g, ' ').slice(0, 300));
+            return null;
+          };
+          let data = await tryJwt('team-key (iss)', makeJwt({ iss: ISSUER_ID }));
+          if (!data) data = await tryJwt('individual-key (sub:user)', makeJwt({ sub: 'user' }));
+          if (!data) {
+            console.log('::error::App Store Connect API her iki JWT biciminde de 401. APPSTORE_API_KEY_ID ile APPSTORE_API_PRIVATE_KEY (.p8) ayni anahtardan degil, APPSTORE_API_ISSUER_ID yanlis, ya da anahtar iptal edilmis. Cozum: App Store Connect > Users and Access > Integrations > App Store Connect API bolumunde anahtari silip Admin roluyle yeniden olustur, yeni .p8 indir, ve UC secret i birlikte guncelle.');
+            process.exit(1);
+          }
+          const apps = data.data.map((a) => a.attributes.bundleId);
+          console.log('Hesaptaki uygulamalar: ' + (apps.join(', ') || '(yok)'));
+          console.log(apps.includes('com.enerji.baglantisi') ? 'com.enerji.baglantisi kaydi VAR.' : '::warning::com.enerji.baglantisi App Store Connect te kayitli degil (yukleme icin gerekir).');
+          EOF
+          node "$RUNNER_TEMP/asc_test.mjs"
 
       - name: Distribution sertifikasını keychain'e içe aktar
         if: steps.gate.outputs.ok == 'true'
