@@ -162,9 +162,11 @@ jobs:
           "
           chmod 600 "$KEYFILE"
           echo "KEYFILE=$KEYFILE" >> "$GITHUB_ENV"
-          echo "-- dosya yolu (uzunluk kontrolü dahil) --"
-          printf '%s' "$KEYFILE" | cat -A | tail -c 80   # gizli \n/\r varsa $ / ^M olarak görünür
-          echo
+          echo "-- secret uzunluğu: ${#KEY_B64} karakter (beklenen ~344) --"
+          echo "-- çözülen dosya: $(wc -c < "$KEYFILE" | tr -d ' ') byte (beklenen ~256) --"
+          echo "-- ilk/son satır (BEGIN/END PRIVATE KEY görünmeli) --"
+          head -1 "$KEYFILE"
+          tail -1 "$KEYFILE"
           echo "-- openssl ile içerik doğrulaması --"
           openssl pkey -in "$KEYFILE" -noout && echo "Anahtar formatı GEÇERLİ" || { echo "::error::.p8 içeriği geçersiz — APPSTORE_API_PRIVATE_KEY secret'ını kontrol et"; exit 1; }
 
