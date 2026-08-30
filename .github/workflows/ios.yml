@@ -102,7 +102,6 @@ jobs:
         id: gate
         env:
           KEY_B64: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-          KEY_ID_RAW: ${{ secrets.APPSTORE_API_KEY_ID }}
           ISSUER_ID_RAW: ${{ secrets.APPSTORE_API_ISSUER_ID }}
           TEAM_ID_RAW: ${{ secrets.APPSTORE_TEAM_ID }}
         run: |
@@ -114,8 +113,10 @@ jobs:
           # GitHub secret kutusuna yapıştırırken sona kaçan \n/\r ve boşlukları temizle —
           # dosya yoluna karışırsa xcodebuild "keyPathInvalidFormat" ile kırılıyor.
           trim() { printf '%s' "$1" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'; }
+          # KEY_ID gizli değil (AuthKey_<KEY_ID>.p8 dosya adının kendisi) — secret yerine
+          # sabit. APPSTORE_API_PRIVATE_KEY bu Key ID'ye ait .p8 olmalı (AuthKey_Z4B2M8QU2M.p8).
           {
-            echo "KEY_ID=$(trim "$KEY_ID_RAW")"
+            echo "KEY_ID=Z4B2M8QU2M"
             echo "ISSUER_ID=$(trim "$ISSUER_ID_RAW")"
             echo "TEAM_ID=$(trim "$TEAM_ID_RAW")"
           } >> "$GITHUB_ENV"
