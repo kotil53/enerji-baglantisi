@@ -273,10 +273,14 @@ jobs:
             -authenticationKeyID "$KEY_ID" \
             -authenticationKeyIssuerID "$ISSUER_ID" \
             CODE_SIGN_STYLE=Automatic \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM="$TEAM_ID" \
             MARKETING_VERSION="${{ steps.meta.outputs.version }}" \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+          # NOT: `CODE_SIGN_IDENTITY="Apple Distribution"` bilerek verilmiyor — komut
+          # satırındaki build setting TÜM hedeflere (App + Pods) uygulanır, Pod'lar
+          # "Automatic" imzalı olduğu için "conflicting provisioning settings" hatası
+          # verir. `archive` action'ı otomatik imzayla zaten Distribution sertifikasını
+          # seçer (keychain'e .p12 aktarıldı); son App Store imzasını -exportArchive yapar.
 
       - name: IPA'ya aktar (export)
         if: steps.gate.outputs.ok == 'true'
