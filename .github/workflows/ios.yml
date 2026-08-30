@@ -192,15 +192,27 @@ jobs:
             fs.writeFileSync(process.env.P12_PATH, Buffer.from(process.env.P12_B64, 'base64'));
           "
           KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
-          KEYCHAIN_PW="$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32)"
+          # Geçici keychain parolası — at-değer, gizli olması gerekmiyor. ESKİ HÂLİ
+          # `tr -dc … < /dev/urandom | head -c 32` idi; macOS bash 3.2 + pipefail
+          # altında SIGPIPE yüzünden BOŞ dönebiliyor -> set-key-partition-list boş
+          # parolayla GUI parola diyaloğu açıp ~20 dk asılı kalıyordu (iş iptali).
+          KEYCHAIN_PW="$(uuidgen)"
           security create-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN_PATH"
           security import "$P12_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          # partition list'i arama listesini değiştirmeden ÖNCE ayarla (resmi sıra);
+          # hemen öncesinde bir kez daha unlock -> kilitli keychain GUI prompt'unu önler.
+          security unlock-keychain -p "$KEYCHAIN_PW" "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -k "$KEYCHAIN_PW" "$KEYCHAIN_PATH"
           security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed 's/[\" ]//g')
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PW" "$KEYCHAIN_PATH"
           echo "-- keychain'deki kimlikler --"
-          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+          IDENT_OUT="$(security find-identity -v -p codesigning "$KEYCHAIN_PATH")"
+          echo "$IDENT_OUT"
+          echo "$IDENT_OUT" | grep -qE '[1-9][0-9]* valid identities found' || {
+            echo "::error::Geçici keychain'de imzalama kimliği yok — APPSTORE_CERTIFICATE_P12 / _PASSWORD secret'larını kontrol et"
+            exit 1
+          }
 
       - name: exportOptions.plist üret
         if: steps.gate.outputs.ok == 'true'
