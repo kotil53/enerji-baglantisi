@@ -155,12 +155,15 @@ jobs:
         # macOS'ta `base64 -d` bayrağı belirsiz (BSD sürümü farklı) -> Node ile çöz.
         # KEY_ID artık gate adımında temizlenmiş (GITHUB_ENV) -> düz $KEY_ID kullanılır.
         run: |
-          mkdir -p "$RUNNER_TEMP/private_keys"
           export KEYFILE="$RUNNER_TEMP/private_keys/AuthKey_${KEY_ID}.p8"
+          echo "-- hedef dosya: $KEYFILE --"
           node -e "
             const fs = require('node:fs');
+            const path = require('node:path');
+            fs.mkdirSync(path.dirname(process.env.KEYFILE), { recursive: true });
             fs.writeFileSync(process.env.KEYFILE, Buffer.from(process.env.KEY_B64, 'base64'));
           "
+          ls -la "$(dirname "$KEYFILE")"
           chmod 600 "$KEYFILE"
           echo "KEYFILE=$KEYFILE" >> "$GITHUB_ENV"
           echo "-- secret uzunluğu: ${#KEY_B64} karakter (beklenen ~344) --"
