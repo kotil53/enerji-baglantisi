@@ -100,14 +100,25 @@ jobs:
       - name: İmzalama sırları var mı?
         id: gate
         env:
-          KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          KEY_B64: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          KEY_ID_RAW: ${{ secrets.APPSTORE_API_KEY_ID }}
+          ISSUER_ID_RAW: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+          TEAM_ID_RAW: ${{ secrets.APPSTORE_TEAM_ID }}
         run: |
-          if [ -n "$KEY" ]; then
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-          else
+          if [ -z "$KEY_B64" ]; then
             echo "ok=false" >> "$GITHUB_OUTPUT"
             echo "::warning::APPSTORE_API_PRIVATE_KEY tanımlı değil — imzalı IPA derlemesi atlandı."
+            exit 0
           fi
+          # GitHub secret kutusuna yapıştırırken sona kaçan \n/\r ve boşlukları temizle —
+          # dosya yoluna karışırsa xcodebuild "keyPathInvalidFormat" ile kırılıyor.
+          trim() { printf '%s' "$1" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'; }
+          {
+            echo "KEY_ID=$(trim "$KEY_ID_RAW")"
+            echo "ISSUER_ID=$(trim "$ISSUER_ID_RAW")"
+            echo "TEAM_ID=$(trim "$TEAM_ID_RAW")"
+          } >> "$GITHUB_ENV"
+          echo "ok=true" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v5
         if: steps.gate.outputs.ok == 'true'
@@ -136,25 +147,29 @@ jobs:
           APP_VERSION: ${{ steps.meta.outputs.version }}
         run: npm run add:ios
 
-      - name: API anahtarını çöz
+      - name: API anahtarını çöz + doğrula
         if: steps.gate.outputs.ok == 'true'
         env:
           KEY_B64: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-          KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
-        # macOS'ta `base64 -d` bayrağı belirsiz (BSD sürümü farklı) -> Node ile çöz
+        # macOS'ta `base64 -d` bayrağı belirsiz (BSD sürümü farklı) -> Node ile çöz.
+        # KEY_ID artık gate adımında temizlenmiş (GITHUB_ENV) -> düz $KEY_ID kullanılır.
         run: |
-          mkdir -p "$RUNNER_TEMP/appstore"
+          mkdir -p "$RUNNER_TEMP/private_keys"
+          export KEYFILE="$RUNNER_TEMP/private_keys/AuthKey_${KEY_ID}.p8"
           node -e "
             const fs = require('node:fs');
-            const path = require('node:path');
-            const out = path.join(process.env.RUNNER_TEMP, 'appstore', 'AuthKey_' + process.env.KEY_ID + '.p8');
-            fs.writeFileSync(out, Buffer.from(process.env.KEY_B64, 'base64'));
+            fs.writeFileSync(process.env.KEYFILE, Buffer.from(process.env.KEY_B64, 'base64'));
           "
+          chmod 600 "$KEYFILE"
+          echo "KEYFILE=$KEYFILE" >> "$GITHUB_ENV"
+          echo "-- dosya yolu (uzunluk kontrolü dahil) --"
+          printf '%s' "$KEYFILE" | cat -A | tail -c 80   # gizli \n/\r varsa $ / ^M olarak görünür
+          echo
+          echo "-- openssl ile içerik doğrulaması --"
+          openssl pkey -in "$KEYFILE" -noout && echo "Anahtar formatı GEÇERLİ" || { echo "::error::.p8 içeriği geçersiz — APPSTORE_API_PRIVATE_KEY secret'ını kontrol et"; exit 1; }
 
       - name: exportOptions.plist üret
         if: steps.gate.outputs.ok == 'true'
-        env:
-          TEAM_ID: ${{ secrets.APPSTORE_TEAM_ID }}
         run: |
           cat > "$RUNNER_TEMP/exportOptions.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
@@ -172,10 +187,6 @@ jobs:
       - name: İmzalı archive
         if: steps.gate.outputs.ok == 'true'
         working-directory: capacitor-app/ios/App
-        env:
-          KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
-          TEAM_ID: ${{ secrets.APPSTORE_TEAM_ID }}
         run: |
           xcodebuild \
             -workspace App.xcworkspace \
@@ -185,7 +196,7 @@ jobs:
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
             archive \
             -allowProvisioningUpdates \
-            -authenticationKeyPath "$RUNNER_TEMP/appstore/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyPath "$KEYFILE" \
             -authenticationKeyID "$KEY_ID" \
             -authenticationKeyIssuerID "$ISSUER_ID" \
             CODE_SIGN_STYLE=Automatic \
@@ -195,16 +206,13 @@ jobs:
 
       - name: IPA'ya aktar (export)
         if: steps.gate.outputs.ok == 'true'
-        env:
-          KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
         run: |
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
             -exportPath "$RUNNER_TEMP/export" \
             -exportOptionsPlist "$RUNNER_TEMP/exportOptions.plist" \
             -allowProvisioningUpdates \
-            -authenticationKeyPath "$RUNNER_TEMP/appstore/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyPath "$KEYFILE" \
             -authenticationKeyID "$KEY_ID" \
             -authenticationKeyIssuerID "$ISSUER_ID"
 
