@@ -5,7 +5,8 @@
 // Yaptıkları (hepsi idempotent — ikinci kez çalıştırmak zararsız):
 //   1. AdMob native "APPLICATION_ID" — Android AndroidManifest.xml + iOS Info.plist
 //      (yoksa Android'de uygulama açılışta çöker)
-//   2. iOS: NSUserTrackingUsageDescription (ATT metni)
+//   2. iOS: NSUserTrackingUsageDescription (ATT metni) + ITSAppUsesNonExemptEncryption=false
+//      (App Store "Missing Compliance" / ihracat şifreleme sorusu bir daha çıkmaz)
 //   3. Android: build.gradle içinde versionCode / versionName
 //   4. iOS: Podfile'a GoogleUserMessagingPlatform 2.6.0 sabiti (+ gerekiyorsa
 //      pod install) — admob 6.2.0 eski UMP 2.x API'si kullanır, CocoaPods
@@ -77,6 +78,17 @@ patch(plist, (p) => {
   if (idx < 0) { console.warn("  ! Info.plist: </dict> bulunamadı"); return p; }
   log(`Info.plist            +GADApplicationIdentifier (${ADMOB_IOS}) +ATT`);
   return p.slice(0, idx) + keys + p.slice(idx);
+});
+
+// Oyun yalnız sistemin HTTPS'ini kullanıyor (özel şifreleme yok) -> ihracat uyumu
+// açısından muaf. Bu anahtar olmadan her TestFlight/App Store yüklemesinde
+// "Missing Compliance" çıkıp elle yanıt bekliyor.
+patch(plist, (p) => {
+  if (p.includes("ITSAppUsesNonExemptEncryption")) return p;
+  const idx = p.lastIndexOf("</dict>");
+  if (idx < 0) { console.warn("  ! Info.plist: </dict> bulunamadı"); return p; }
+  log("Info.plist            +ITSAppUsesNonExemptEncryption=false (App Store ihracat uyumu sorusu atlanır)");
+  return p.slice(0, idx) + `\t<key>ITSAppUsesNonExemptEncryption</key>\n\t<false/>\n` + p.slice(idx);
 });
 
 // admob 6.2.0 -> UMP 2.x API. CocoaPods varsayılanı UMP 3.x (sembol rename) ->
