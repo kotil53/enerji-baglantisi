@@ -877,12 +877,12 @@
         try { var p = AdMob.addListener(ev, fn); if (p && p.catch) p.catch(function () {}); } catch (e) {}
       };
       on("interstitialAdLoaded",       function () { self._int.loaded = true;  self._int.loading = false; });
-      on("interstitialAdFailedToLoad", function () { self._int.loaded = false; self._int.loading = false; });
+      on("interstitialAdFailedToLoad", function (i) { self._int.loaded = false; self._int.loading = false; if (i && i.message) self._err = "geçiş reklamı: " + i.message; });
       on("interstitialAdDismissed",    function () { self._int.loaded = false; self._int.lastAt = Date.now(); self._prepInt(); });
       on("interstitialAdFailedToShow", function () { self._int.loaded = false; self._prepInt(); });
 
-      on("onRewardedInterstitialAdLoaded",       function () { self._rew.loaded = true;  self._rew.loading = false; });
-      on("onRewardedInterstitialAdFailedToLoad", function () { self._rew.loaded = false; self._rew.loading = false; });
+      on("onRewardedInterstitialAdLoaded",       function () { self._rew.loaded = true;  self._rew.loading = false; self._err = ""; });
+      on("onRewardedInterstitialAdFailedToLoad", function (i) { self._rew.loaded = false; self._rew.loading = false; if (i && i.message) self._err = "ödüllü reklam: " + i.message; });
       on("onRewardedInterstitialAdReward",       function () { self._rew.earned = true; });
       on("onRewardedInterstitialAdDismissed",    function () { self._rew.loaded = false; self._consume(false); self._prepRew(); });
       on("onRewardedInterstitialAdFailedToShow", function () { self._rew.loaded = false; self._consume(true);  self._prepRew(); });

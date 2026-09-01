@@ -11,6 +11,9 @@
 //   4. iOS: Podfile'a GoogleUserMessagingPlatform 2.6.0 sabiti (+ gerekiyorsa
 //      pod install) — admob 6.2.0 eski UMP 2.x API'si kullanır, CocoaPods
 //      varsayılanı UMP 3.x pod Swift derlemesini kırar
+//   5. iOS: @capacitor-community/admob 6.2.0 AdMobPlugin.swift yaması —
+//      prepare/showRewardInterstitialAd bridge listesine eklenir (eksik;
+//      olmadan iOS'ta ödüllü reklam "not implemented" ile reddediliyor)
 //
 // Ortam değişkenleri (hepsi opsiyonel — verilmezse Google'ın TEST değerleri):
 //   ADMOB_APP_ID_ANDROID   varsayılan: ca-app-pub-3940256099942544~3347511713
@@ -91,6 +94,27 @@ patch(plist, (p) => {
   return p.slice(0, idx) + `\t<key>ITSAppUsesNonExemptEncryption</key>\n\t<false/>\n` + p.slice(idx);
 });
 
+// @capacitor-community/admob 6.2.0 iOS hatası: prepareRewardInterstitialAd /
+// showRewardInterstitialAd fonksiyonları tanımlı ama CAPBridgedPlugin
+// `pluginMethods` listesine eklenmemiş -> iOS'ta JS'ten çağrılınca "not
+// implemented" (Android reflection kullandığı için etkilenmez -> Android'de
+// ödüllü reklam çıkıyor, iOS'ta çıkmıyordu). 6.x'te düzelten sürüm yok
+// (7.x Capacitor 7 ister). node_modules kaynağını yamalıyoruz; pod install
+// eklenti dosyalarını buradan kopyalar.
+const admobSwift = join(root, "node_modules/@capacitor-community/admob/ios/Sources/AdMobPlugin/AdMobPlugin.swift");
+let admobSwiftPatched = false;
+patch(admobSwift, (s) => {
+  if (s.includes('name: "showRewardInterstitialAd"')) return s;
+  const anchor = 'CAPPluginMethod(name: "showRewardVideoAd", returnType: CAPPluginReturnPromise)';
+  if (!s.includes(anchor)) { console.warn("  ! AdMobPlugin.swift: pluginMethods enjeksiyon noktası bulunamadı"); return s; }
+  admobSwiftPatched = true;
+  log("AdMobPlugin.swift    +prepare/showRewardInterstitialAd köprüsü (6.2.0 eksiği)");
+  return s.replace(anchor,
+    anchor +
+    ',\n        CAPPluginMethod(name: "prepareRewardInterstitialAd", returnType: CAPPluginReturnPromise)' +
+    ',\n        CAPPluginMethod(name: "showRewardInterstitialAd", returnType: CAPPluginReturnPromise)');
+});
+
 // admob 6.2.0 -> UMP 2.x API. CocoaPods varsayılanı UMP 3.x (sembol rename) ->
 // CapacitorCommunityAdmob pod Swift derlemesi kırılır. GMA 11.3.0 yalnız
 // "GoogleUserMessagingPlatform >= 1.1" istediği için son 2.x'e (2.6.0) sabitle.
@@ -114,7 +138,7 @@ patch(podfile, (pf) => {
 // Podfile değiştiyse Pods'u yeniden kur (yalnız CocoaPods varsa — Windows/Android CI'da atlanır).
 // `cap add ios` ilk pod install'da Podfile.lock'a UMP 3.x kilitliyor; düz `pod install`
 // kilide karşı downgrade edemez → lock + Pods/ silinip tam yeniden çözüm yaptırılır.
-if (podfileChanged) {
+if (podfileChanged || admobSwiftPatched) {
   let hasPod = true;
   try { execSync("pod --version", { stdio: "ignore" }); }
   catch { hasPod = false; console.warn("  ! pod install atlandı — CocoaPods bulunamadı"); }
