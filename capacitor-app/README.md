@@ -73,6 +73,7 @@ sürüm kontrolüne alınmasına gerek yoktur.
 | ↳ release işi | `v*` tag'i **veya** elle "release" | imzalı `app-release.aab` + GitHub Release | evet (aşağıda) |
 | **iOS derleme** (`ios.yml`) | `push`/PR (`main`), tag | imzasız `App.xcarchive.zip` (derleme doğrulaması) | hayır |
 | ↳ release-ipa işi | `v*` tag'i **veya** elle "release" | imzalı App Store `.ipa` | evet (aşağıda) |
+| **iOS mağaza metinleri** (`ios-metadata.yml`) | yalnız elle (`workflow_dispatch`) | canlı metin artifact'ı (pull) / App Store Connect'e yazma (push) | evet (App Store API sırları) |
 
 Sürümleme: `versionCode` = GitHub `run_number`, `versionName` = tag'den (`v1.2.3`
 → `1.2.3`) ya da tag yoksa `0.0.0-ci.<run>`. `apply-native-config.mjs` bunları
@@ -152,6 +153,25 @@ Kurulum:
 `git tag v1.0.0 && git push origin v1.0.0` → `release-ipa` işi `enerji-baglantisi-ipa`
 artifact'ını üretir → indirip [App Store Connect](https://appstoreconnect.apple.com)'e
 (Transporter uygulaması ya da `xcrun altool`) yükle.
+
+### iOS mağaza metinleri (fastlane deliver)
+
+App Store Connect'teki **metin alanları** (ad, alt başlık, açıklama, anahtar
+kelimeler, tanıtım metni, sürüm notu, destek/gizlilik URL'si) + **yaş derecesi
+anketi** artık elle yapıştırılmıyor — `ios-metadata.yml` iş akışı `fastlane
+deliver` ile yazıyor. Tek doğruluk kaynağı `fastlane/metadata/` (bkz.
+[fastlane/README.md](fastlane/README.md)).
+
+- **Yeni secret gerekmez** — `release-ipa` ile aynı `APPSTORE_API_ISSUER_ID` +
+  `APPSTORE_API_PRIVATE_KEY` kullanılır (Key ID sabit).
+- **Actions → "iOS mağaza metinleri" → Run workflow**
+  - `mode=pull`: canlı metinleri indirir (artifact), hiçbir şey yazmaz — önce bununla bak.
+  - `mode=push`: `fastlane/metadata/` içindekini yazar. **İncelemeye göndermez**,
+    yayınlamaz; sürüm "Prepare for Submission" kalır.
+- API anahtarının rolü **App Manager** (veya Admin) olmalı; uygulamanın
+  App Store Connect'teki birincil dili **Türkçe** olmalı.
+- **Otomasyon dışı** (elle): ekran görüntüleri, App Privacy besin etiketi,
+  EU Trader Status, Content Rights, IDFA beyanı, "Submit for Review".
 
 ## Yapılandırma nerede?
 

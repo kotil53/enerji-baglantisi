@@ -1,0 +1,4 @@
+app_identifier("com.enerji.baglantisi")
+
+# apple_id / team_id gerekmiyor — kimlik App Store Connect API anahtarından gelir
+# (ios-metadata.yml içinde ASC_API_KEY_JSON olarak üretilir).

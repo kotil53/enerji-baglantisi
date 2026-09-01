@@ -1,0 +1,28 @@
+⚡ ENERJİ BAĞLANTISI
+
+Elektrik kaynaktan çıkıyor ama ampule ulaşamıyor. Kabloları tek tek döndür, kopuk devreyi birleştir ve bütün ampulleri yak.
+
+Basit bir kuralı var, bırakması zor: her dokunuşta bir parça döner. Fazladan hamle yapma — yıldızların hamle sayına bağlı.
+
+▸ NASIL OYNANIR
+• Kaynağa (⚡) ve ampullere (💡) giden yolu kur
+• Parçalara dokunarak döndür
+• Kilitli parçalar (🔒) sabittir — çözümü onların etrafından geçir
+• Bütün ampuller yanınca seviye biter
+
+▸ ÖZELLİKLER
+• Sonsuz mod — tükenmeyen, gitgide büyüyen bulmacalar
+• Günlük bulmaca — herkese aynı bölümler, her gün yenilenir
+• Üç zorluk: Rahat, Normal, Zor
+• Her seviyede 3 yıldız — en az hamleyle çöz
+• Takıldığında ipucu: kısa bir reklam karşılığında bir kabloyu düzeltir
+• Çevrimdışı çalışır — internet gerekmez
+• Titreşimli geri bildirim, sade ve karanlık tasarım
+• Hesap yok, giriş yok, kayıt yok
+
+▸ HATIRLATICILAR
+İstersen günlük bulmacan hazır olduğunda ya da bir süredir oynamadığında nazik bir hatırlatma gönderir. Menüden kapatabilirsin.
+
+Oyun ücretsizdir; seviyeler arasında ve ödül karşılığında reklam gösterir.
+
+Kısa bir mola için de, uzun bir oturma için de: bir kablo daha döndür.

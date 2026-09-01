@@ -1,0 +1,99 @@
+name: iOS mağaza metinleri
+
+# App Store Connect'teki METİN alanlarını (ad, alt başlık, açıklama, anahtar
+# kelimeler, tanıtım metni, sürüm notu, URL'ler) + yaş derecesi anketini
+# fastlane `deliver` ile yönetir. Kaynak: capacitor-app/fastlane/metadata/.
+#
+# Binary (.ipa) yüklemesi bu akışta DEĞİL — o iş ios.yml > release-ipa.
+# Ekran görüntüsü / App Privacy / EU Trader / Content Rights / "Submit for
+# Review" elle yapılır (bkz. store/store-listing.md).
+#
+# Sırlar: ios.yml ile AYNI — APPSTORE_API_ISSUER_ID + APPSTORE_API_PRIVATE_KEY.
+# (Key ID gizli değil: AuthKey_<KEY_ID>.p8 dosya adının kendisi → sabit.)
+# Yalnızca elle tetiklenir; hiçbir push/tag bunu çalıştırmaz.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "pull = canlı metinleri indir (yazmaz) · push = repodaki metinleri App Store Connect'e yaz"
+        type: choice
+        options: [pull, push]
+        default: pull
+      version:
+        description: "App Store sürüm numarası (düzenlenebilir 'Prepare for Submission' sürümü)"
+        type: string
+        default: "1.0"
+      include_screenshots:
+        description: "push: fastlane/screenshots/ içindeki ekran görüntülerini de yükle"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ios-metadata
+  cancel-in-progress: false
+
+jobs:
+  deliver:
+    runs-on: macos-26
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: capacitor-app
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Sırları doğrula + API anahtar dosyasını üret
+        env:
+          KEY_B64: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          ISSUER_ID_RAW: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+        # KEY_ID gizli değil (ios.yml'de de sabit). issuer'daki kaçak boşluk/\n
+        # deliver'ı 401'e düşürür → temizle. .p8 base64'ünü çöz, fastlane'in
+        # beklediği api_key JSON'ını (key_id/issuer_id/key/in_house) yaz.
+        run: |
+          if [ -z "$KEY_B64" ] || [ -z "$ISSUER_ID_RAW" ]; then
+            echo "::error::APPSTORE_API_PRIVATE_KEY / APPSTORE_API_ISSUER_ID tanımlı değil — mağaza metni gönderilemez."
+            exit 1
+          fi
+          ISSUER_ID="$(printf '%s' "$ISSUER_ID_RAW" | tr -d '\n\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          export ISSUER_ID
+          ruby -e 'require "base64"; File.binwrite(ENV["RUNNER_TEMP"]+"/AuthKey.p8", Base64.decode64(ENV["KEY_B64"]))'
+          openssl pkey -in "$RUNNER_TEMP/AuthKey.p8" -noout \
+            || { echo "::error::.p8 içeriği geçersiz — APPSTORE_API_PRIVATE_KEY secret'ını kontrol et"; exit 1; }
+          ruby -rjson -e '
+            File.write(
+              ENV["RUNNER_TEMP"] + "/asc_api_key.json",
+              JSON.pretty_generate({
+                "key_id"    => "Z4B2M8QU2M",
+                "issuer_id" => ENV["ISSUER_ID"],
+                "key"       => File.read(ENV["RUNNER_TEMP"] + "/AuthKey.p8"),
+                "in_house"  => false,
+              })
+            )'
+          echo "ASC_API_KEY_JSON=$RUNNER_TEMP/asc_api_key.json" >> "$GITHUB_ENV"
+
+      - name: fastlane sürümü
+        run: fastlane --version
+
+      - name: Canlı metinleri indir (pull)
+        if: inputs.mode == 'pull'
+        run: |
+          rm -rf fastlane/metadata_live && mkdir -p fastlane/metadata_live
+          fastlane deliver download_metadata \
+            --api_key_path "$ASC_API_KEY_JSON" \
+            --app_identifier com.enerji.baglantisi \
+            --metadata_path fastlane/metadata_live
+
+      - uses: actions/upload-artifact@v4
+        if: inputs.mode == 'pull'
+        with:
+          name: app-store-metadata-live
+          path: capacitor-app/fastlane/metadata_live
+          if-no-files-found: error
+
+      - name: Metinleri App Store Connect'e yaz (push)
+        if: inputs.mode == 'push'
+        env:
+          ASC_APP_VERSION: ${{ inputs.version }}
+          ASC_INCLUDE_SCREENSHOTS: ${{ inputs.include_screenshots }}
+        run: fastlane ios metadata_push

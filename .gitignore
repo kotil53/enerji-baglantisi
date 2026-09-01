@@ -16,6 +16,14 @@ capacitor-app/**/.gradle/
 *.ipa
 *.xcarchive
 
+# ── fastlane: App Store metin otomasyonu (geçici çıktılar) ───────
+# metadata/ ve screenshots/ SÜRÜM KONTROLÜNE GİRER (tek doğruluk kaynağı);
+# aşağıdakiler `deliver` çalışınca üretilen geçici dosyalar.
+capacitor-app/fastlane/metadata_live/
+capacitor-app/fastlane/report.xml
+capacitor-app/fastlane/Preview.html
+*.itmsp
+
 # ── İmzalama sırları (asla commit'lenmez) ────────────────────────
 *.keystore
 *.jks

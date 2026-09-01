@@ -1,0 +1,43 @@
+# App Store Connect METİN alanları + yaş derecesi otomasyonu.
+#
+# Native Xcode projesi (ios/) her CI derlemesinde sıfırdan `cap add` ile
+# üretiliyor ve .gitignore'da → fastlane BURADA, kalıcı ve ayrı durur.
+# `deliver` bir Xcode projesi olmadan da çalışır: app_identifier + App Store
+# Connect API anahtarı (ASC_API_KEY_JSON) + app_version yeter.
+#
+# Binary (IPA) yüklemesi bu dosyada DEĞİL — o iş .github/workflows/ios.yml
+# > release-ipa'da (xcodebuild + altool). Burada yalnız mağaza metni.
+#
+# Çalıştırma: .github/workflows/ios-metadata.yml (elle tetiklenir)
+#   mode=pull → fastlane deliver download_metadata   (workflow adımı, yazmaz)
+#   mode=push → fastlane ios metadata_push           (aşağıdaki lane)
+
+default_platform(:ios)
+
+APP_IDENTIFIER = "com.enerji.baglantisi".freeze
+
+platform :ios do
+  desc "fastlane/metadata/ + yaş derecesini App Store Connect'e yazar (incelemeye GÖNDERMEZ)"
+  lane :metadata_push do
+    rating = File.expand_path("metadata/app_rating_config.json", __dir__)
+
+    deliver(
+      app_identifier: APP_IDENTIFIER,
+      api_key_path: ENV.fetch("ASC_API_KEY_JSON"),
+      app_version: ENV.fetch("ASC_APP_VERSION", "1.0"),
+      metadata_path: File.expand_path("metadata", __dir__),
+      screenshots_path: File.expand_path("screenshots", __dir__),
+      app_rating_config_path: (rating if File.exist?(rating)),
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: ENV["ASC_INCLUDE_SCREENSHOTS"] != "true",
+      force: true,                          # HTML önizleme onayını sorma (CI etkileşimsiz)
+      run_precheck_before_submit: false,
+      precheck_include_in_app_purchases: false,
+      submit_for_review: false,             # incelemeye ASLA otomatik gönderme
+      automatic_release: false,
+    )
+
+    UI.success("Metinler yazıldı. Sürüm hâlâ 'Prepare for Submission' — inceleme ve yayın elle yapılır.")
+  end
+end

@@ -90,6 +90,14 @@ Birincil: **Oyunlar → Bulmaca**  ·  İkincil: **Oyunlar → Kelime/Beceri** (
 Build zaten TestFlight'ta (CI otomatik yüklüyor). Sıra "App Store" sekmesindeki
 1.0 sürümünü doldurup incelemeye göndermekte.
 
+> **Metin alanları + yaş derecesi artık otomatik.** `ios-metadata.yml` iş akışı
+> (`fastlane deliver`) aşağıdaki "Metin alanları" tablosunu ve "Age Rating"
+> anketini App Store Connect'e yazıyor — kaynak
+> [`capacitor-app/fastlane/metadata/`](../capacitor-app/fastlane/README.md).
+> Bu bölümdeki metinleri değiştirdiğinde `fastlane/metadata/tr/*.txt` dosyalarını
+> da güncelle (tek doğruluk kaynağı orası). **Elle kalan:** ekran görüntüleri,
+> App Privacy, EU Trader, Content Rights, IDFA beyanı, "Submit for Review".
+
 ### Ekran görüntüleri (iOS — zorunlu, Android'inkiler GEÇMEZ)
 Apple boyutları farklı. En az **6.7" / 6.9"** seti gerekir (biri yeterli, Apple
 küçük cihazlara ölçekler):
@@ -100,18 +108,20 @@ kilitli parçalar, günlük mod, kazanma anı) → 3–5 adet. Simülatörden de
 (iPhone 16 Pro Max, tam çözünürlük).
 
 ### Metin alanları
-| Alan | Değer |
-|---|---|
-| Name | Enerji Bağlantısı |
-| Subtitle | Kablo döndürme bulmacası |
-| Promotional Text | (yukarıdaki tanıtım metni) |
-| Description | Play "Tam açıklama" bloğu |
-| Keywords | (yukarıdaki anahtar kelimeler) |
-| Support URL | `https://github.com/kotil53/enerji-baglantisi` |
-| Marketing URL | (boş bırakılabilir) |
-| Privacy Policy URL | `https://kotil53.github.io/enerji-baglantisi/privacy-policy.html` |
-| What's New (1.0) | İlk sürüm. |
-| Price | Free |
+`ios-metadata.yml` (push) yazar · kaynak `capacitor-app/fastlane/metadata/tr/`
+
+| Alan | Değer | fastlane dosyası |
+|---|---|---|
+| Name | Enerji Bağlantısı | `name.txt` |
+| Subtitle | Kablo döndürme bulmacası | `subtitle.txt` |
+| Promotional Text | (yukarıdaki tanıtım metni) | `promotional_text.txt` |
+| Description | Play "Tam açıklama" bloğu | `description.txt` |
+| Keywords | (yukarıdaki anahtar kelimeler) | `keywords.txt` |
+| Support URL | `https://github.com/kotil53/enerji-baglantisi` | `support_url.txt` |
+| Marketing URL | (boş bırakılabilir) | — (dosya yok) |
+| Privacy Policy URL | `https://kotil53.github.io/enerji-baglantisi/privacy-policy.html` | `privacy_url.txt` |
+| What's New (1.0) | İlk sürüm. | `release_notes.txt` |
+| Price | Free | — (App Store Connect'te elle) |
 
 ### App Privacy (Apple "besin etiketi") — AdMob'a göre
 App Store Connect → App Privacy → "Get Started". Sunucumuz yok; tek veri kaynağı AdMob.
@@ -130,6 +140,10 @@ zaten kodda var (`requestTrackingAuthorization`).
 Şiddet / cinsellik / küfür / madde / kumar / korku: **hepsi None/No**.
 "Unrestricted Web Access" = No. → Sonuç genelde **4+** (reklam varlığı yaş
 derecesini yükseltmez). "Made for Kids" işaretleme — 13+ hedefliyoruz.
+
+Bu yanıtlar `capacitor-app/fastlane/metadata/app_rating_config.json` içinde
+(hepsi `0`/`false`) → `ios-metadata.yml` push ederken yazıyor. Yine de App Store
+Connect'te derecelendirmeyi bir kez gözden geçirip onayla.
 
 ### Diğer sorular
 - **Export Compliance**: `ITSAppUsesNonExemptEncryption=false` gömülü → soru çıkmaz.

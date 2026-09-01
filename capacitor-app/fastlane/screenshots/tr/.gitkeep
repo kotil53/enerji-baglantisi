@@ -1,0 +1,5 @@
+# Bu klasör fastlane deliver'ın iOS ekran görüntülerini aradığı yer.
+# 6.9" iPhone karesi = 1320 x 2868 (dikey). Dosya adına göre alfabetik sıralanır:
+#   01-oynanis.png  02-menu.png  03-kilitli-parcalar.png  ...
+# deliver cihaz tipini çözünürlükten anlar. Yüklemek için ios-metadata.yml'yi
+# include_screenshots=true ile çalıştır.
