@@ -832,8 +832,10 @@
     _int: { loaded: false, loading: false, lastAt: 0 },
     _rew: { loaded: false, loading: false, cb: null, earned: false },
     _completed: 0,
+    _err: "",                                   // son AdMob hatası (TEST_MODE'da toast'ta gösterilir)
 
     _plugin: function () { return capPlugin("AdMob"); },
+    _errMsg: function (e) { return (e && (e.message || e.errorMessage || e.code)) || (e ? String(e) : "?"); },
 
     // Uygulama açılışında bir kez çağrılır (bkz. initNative)
     init: function () {
@@ -864,7 +866,9 @@
         self._bind(AdMob);
         self._prepInt();
         self._prepRew();
-      }).catch(function () {});
+        // İlk ön-yükleme başarısız olursa kalıcı takılmasın — periyodik yeniden dene
+        setInterval(function () { self._prepInt(); self._prepRew(); }, 20000);
+      }).catch(function (e) { self._err = "init: " + self._errMsg(e); });
     },
 
     _bind: function (AdMob) {
@@ -905,7 +909,7 @@
       var self = this;
       AdMob.prepareInterstitial({ adId: this._ids.interstitial, isTesting: ADS_CFG.TEST_MODE }).then(
         function () { self._int.loaded = true;  self._int.loading = false; },
-        function () { self._int.loaded = false; self._int.loading = false; }
+        function (e) { self._int.loaded = false; self._int.loading = false; self._err = "prepInt: " + self._errMsg(e); }
       );
     },
 
@@ -916,8 +920,8 @@
       this._rew.loading = true;
       var self = this;
       AdMob.prepareRewardInterstitialAd({ adId: this._ids.rewarded, isTesting: ADS_CFG.TEST_MODE }).then(
-        function () { self._rew.loaded = true;  self._rew.loading = false; },
-        function () { self._rew.loaded = false; self._rew.loading = false; }
+        function () { self._rew.loaded = true;  self._rew.loading = false; self._err = ""; },
+        function (e) { self._rew.loaded = false; self._rew.loading = false; self._err = "prepRew: " + self._errMsg(e); }
       );
     },
 
@@ -951,7 +955,17 @@
     // promptText verilirse gösterimden önce onay sorulur.
     rewarded: function (cb, promptText) {
       var AdMob = this._plugin();
-      if (this.removed || !this.ready || !AdMob || !this._rew.loaded) { try { cb(); } catch (e) {} return; }
+      if (this.removed || !this.ready || !AdMob || !this._rew.loaded) {
+        if (AdMob && this.ready && !this._rew.loading) this._prepRew();   // sonraki sefer için tekrar dene
+        if (ADS_CFG.TEST_MODE) {
+          var why = !AdMob ? "AdMob eklentisi yok" :
+                    !this.ready ? "init tamamlanmadı" + (this._err ? " — " + this._err : "") :
+                    "ödüllü reklam yüklenmedi" + (this._err ? " — " + this._err : " (yükleniyor…)");
+          showToast("Reklam gösterilemedi: " + why, 4500);
+        }
+        try { cb(); } catch (e) {}
+        return;
+      }
       if (promptText && !window.confirm(promptText)) return;
       var self = this;
       this._rew.cb = cb;
