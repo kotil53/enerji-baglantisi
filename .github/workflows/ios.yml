@@ -346,3 +346,15 @@ jobs:
           name: enerji-baglantisi-ipa
           path: ${{ runner.temp }}/export/*.ipa
           if-no-files-found: error
+
+      - name: TestFlight'a yükle
+        if: steps.gate.outputs.ok == 'true'
+        # App Store Connect'te "Enerji Bağlantisi" uygulama kaydı zaten var (bundle id
+        # com.enerji.baglantisi) -> altool'un aradığı .p8 klasörüne kopyalayıp yüklüyoruz.
+        run: |
+          IPA="$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)"
+          echo "-- yüklenecek: $IPA --"
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          cp "$KEYFILE" "$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8"
+          xcrun altool --upload-app -f "$IPA" -t ios \
+            --apiKey "$KEY_ID" --apiIssuer "$ISSUER_ID"
