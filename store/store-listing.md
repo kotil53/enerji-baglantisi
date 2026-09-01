@@ -85,6 +85,71 @@ Birincil: **Oyunlar → Bulmaca**  ·  İkincil: **Oyunlar → Kelime/Beceri** (
 
 ---
 
+## App Store Connect — gönderim adımları
+
+Build zaten TestFlight'ta (CI otomatik yüklüyor). Sıra "App Store" sekmesindeki
+1.0 sürümünü doldurup incelemeye göndermekte.
+
+### Ekran görüntüleri (iOS — zorunlu, Android'inkiler GEÇMEZ)
+Apple boyutları farklı. En az **6.7" / 6.9"** seti gerekir (biri yeterli, Apple
+küçük cihazlara ölçekler):
+- 6.9" iPhone (16 Pro Max): **1320 × 2868**
+- 6.5" iPhone: 1242 × 2688 (alternatif)
+Kaynak: TestFlight build'i çalışan iPhone'da ekran görüntüsü al (oynanış, menü,
+kilitli parçalar, günlük mod, kazanma anı) → 3–5 adet. Simülatörden de alınır
+(iPhone 16 Pro Max, tam çözünürlük).
+
+### Metin alanları
+| Alan | Değer |
+|---|---|
+| Name | Enerji Bağlantısı |
+| Subtitle | Kablo döndürme bulmacası |
+| Promotional Text | (yukarıdaki tanıtım metni) |
+| Description | Play "Tam açıklama" bloğu |
+| Keywords | (yukarıdaki anahtar kelimeler) |
+| Support URL | `https://github.com/kotil53/enerji-baglantisi` |
+| Marketing URL | (boş bırakılabilir) |
+| Privacy Policy URL | `https://kotil53.github.io/enerji-baglantisi/privacy-policy.html` |
+| What's New (1.0) | İlk sürüm. |
+| Price | Free |
+
+### App Privacy (Apple "besin etiketi") — AdMob'a göre
+App Store Connect → App Privacy → "Get Started". Sunucumuz yok; tek veri kaynağı AdMob.
+
+| Veri | Toplanıyor | Amaç | Kimliğe bağlı | İzleme için |
+|---|---|---|---|---|
+| Identifiers → Device ID | Evet | Third-Party Advertising, Analytics | Evet | **Evet** |
+| Usage Data → Product Interaction | Evet | Third-Party Advertising, Analytics | Evet | **Evet** |
+| Location → Coarse Location | Evet | Third-Party Advertising | Evet | **Evet** |
+| Diagnostics → Crash / Performance Data | Evet | Analytics | Hayır | Hayır |
+
+→ "This app uses data to track you" = **Evet** (AdMob reklam kimliği). ATT istemi
+zaten kodda var (`requestTrackingAuthorization`).
+
+### Age Rating (yaş derecelendirme anketi)
+Şiddet / cinsellik / küfür / madde / kumar / korku: **hepsi None/No**.
+"Unrestricted Web Access" = No. → Sonuç genelde **4+** (reklam varlığı yaş
+derecesini yükseltmez). "Made for Kids" işaretleme — 13+ hedefliyoruz.
+
+### Diğer sorular
+- **Export Compliance**: `ITSAppUsesNonExemptEncryption=false` gömülü → soru çıkmaz.
+- **Content Rights** ("üçüncü taraf içeriği?"): reklam bu soruya girmez → **No**.
+- **Advertising Identifier (IDFA)**: kullanılıyor → "Serve advertisements within the
+  app" kutusunu işaretle + ATT ile onurlandırıldığını beyan et.
+- **App Review Information**: giriş yok → demo hesap gerekmez. Not: "Ödüllü/geçiş
+  reklamları AdMob canlı; oyun tümüyle çevrimdışı."
+
+### EU Trader Status (DSA — App Store Connect'teki uyarı)
+App Store Connect → **Business** → Trader Status. Bireysel geliştiricisin; reklam
+geliri var. Ticari faaliyet sayılıp sayılmadığı hukuki bir karar:
+- **Trader** beyan edersen: ad + adres + telefon + e-posta App Store'da herkese
+  görünür yayımlanır.
+- **Non-trader**: bilgiler gizli kalır ama Apple AB dağıtımını kısıtlayabilir.
+Karar senin; çoğu hobi/tek kişi ad-supported uygulama için "trader" beyanı + bir
+iletişim adresi tercih ediliyor (aksi halde AB'de yayından kalkma riski).
+
+---
+
 ## Yükleme öncesi kontrol listesi
 
 - [ ] **Gizlilik politikası URL'si** (zorunlu — AdMob var):
