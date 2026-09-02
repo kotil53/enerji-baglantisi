@@ -75,21 +75,50 @@ jobs:
       - name: fastlane sürümü
         run: fastlane --version
 
-      - name: Canlı metinleri indir (pull)
+      - name: Canlı metinleri indir + repo ile karşılaştır (pull)
         if: inputs.mode == 'pull'
+        # download_metadata App Store Connect'teki canlı/düzenlenebilir metni indirir.
+        # Yeni uygulamada indirecek metin olmayabilir (boş sonuç = normal). Auth
+        # sorunu olsaydı burada exit != 0 olurdu. Sonucu notice + artifact yapıyoruz;
+        # boş çıksa bile adım YEŞİL kalır (if-no-files-found: warn).
         run: |
+          fastlane --version 2>&1 | sed -n 's/^fastlane \([0-9][0-9.]*\).*/::notice::runner fastlane \1/p' || true
           rm -rf fastlane/metadata_live && mkdir -p fastlane/metadata_live
+          touch "$RUNNER_TEMP/marker"
+          set +e
           fastlane deliver download_metadata \
             --api_key_path "$ASC_API_KEY_JSON" \
             --app_identifier com.enerji.baglantisi \
-            --metadata_path fastlane/metadata_live
+            --metadata_path fastlane/metadata_live \
+            --use_live_version false
+          rc=$?
+          set -e
+          echo "::notice::deliver download_metadata exit=$rc"
+          written=$(find . -type f -newer "$RUNNER_TEMP/marker" -not -path './node_modules/*' -not -path './.git/*' 2>/dev/null)
+          nlive=$(printf '%s\n' "$written" | grep -c . || true)
+          echo "::notice::download_metadata sonrası yazılan/değişen dosya = $nlive"
+          {
+            echo "deliver download_metadata exit=$rc"
+            echo
+            echo "== yazılan/değişen dosyalar (checkout'a göre) =="
+            printf '%s\n' "$written"
+            echo
+            echo "== git diff =="
+            git diff --no-color
+          } > fastlane/metadata_live/_ozet.txt
+          diffhead=$(git diff --no-color | head -c 3500)
+          if [ -n "$diffhead" ]; then
+            echo "::warning::pull diff (ilk 3.5KB):%0A$(printf '%s' "$diffhead" | sed ':a;N;$!ba;s/\n/%0A/g')"
+          else
+            echo "::notice::checkout'a gore fark yok — canli metin repo ile ayni ya da ASC'de indirilecek metin yok (yeni uygulama). push'a gecebilirsin."
+          fi
 
       - uses: actions/upload-artifact@v4
         if: inputs.mode == 'pull'
         with:
           name: app-store-metadata-live
           path: capacitor-app/fastlane/metadata_live
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Metinleri App Store Connect'e yaz (push)
         if: inputs.mode == 'push'
