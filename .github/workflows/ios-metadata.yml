@@ -125,4 +125,12 @@ jobs:
         env:
           ASC_APP_VERSION: ${{ inputs.version }}
           ASC_INCLUDE_SCREENSHOTS: ${{ inputs.include_screenshots }}
-        run: fastlane ios metadata_push
+        # deliver hatası fastlane'de kırmızı kutuya gider, GitHub annotation'ına
+        # düşmez → çıktıyı yakalayıp son 45 satırı ::error:: olarak bas.
+        run: |
+          set -o pipefail
+          fastlane ios metadata_push 2>&1 | tee "$RUNNER_TEMP/push.log" || {
+            rc=$?
+            echo "::error::deliver push başarısız (exit $rc). Son 45 satır:%0A$(tail -n 45 "$RUNNER_TEMP/push.log" | sed 's/%/%25/g; :a;N;$!ba;s/\r//g; s/\n/%0A/g')"
+            exit $rc
+          }
