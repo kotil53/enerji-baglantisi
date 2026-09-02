@@ -1320,6 +1320,18 @@
   var cell = 60;       // bir hücrenin piksel boyutu (layout() hesaplar)
   var menuOpen = false;
 
+  // ERİŞİLEBİLİRLİK — sistem "hareketi azalt" ayarı. Açıkken oyun içi animasyonlar
+  // (kablo dönüşü, parlaklık rampası, akan enerji, kazanma açılışı, ampul nabzı)
+  // anında/sade uygulanır. Kapalıyken (varsayılan) hiçbir davranış değişmez.
+  var reduceMotion = false;
+  try {
+    var _rmq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    reduceMotion = !!_rmq.matches;
+    var _rmSync = function () { reduceMotion = !!_rmq.matches; };
+    if (_rmq.addEventListener) _rmq.addEventListener("change", _rmSync);
+    else if (_rmq.addListener) _rmq.addListener(_rmSync);
+  } catch (e) {}
+
   var game = {
     li: 0,            // SONSUZ mod seviye indeksi (0 -> "Seviye 1")
     dailyIdx: 0,      // GÜNLÜK mod: bugünkü bulmaca dizisindeki sıra (0..DAILY_COUNT-1)
@@ -1650,6 +1662,7 @@
   // Bir parçanın o anki görsel açısı (dönüş animasyonu dahil)
   function currentAngle(c, now) {
     var base = c.rot * (Math.PI / 2);
+    if (reduceMotion) return base;            // hareket azalt: dönüş anında oturur
     var dt = now - c.animAt;
     if (dt < ROT_DUR) {
       var t = easeOutCubic(dt / ROT_DUR);
@@ -1690,8 +1703,8 @@
       ctx.strokeStyle = "#fff2bf";
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
 
-      // akan enerji noktaları (kesikli çizgi kaydırma) -> minik hücrelerde atla
-      if (cell >= 26) {
+      // akan enerji noktaları (kesikli çizgi kaydırma) -> minik hücrelerde / hareket azaltta atla
+      if (cell >= 26 && !reduceMotion) {
         ctx.lineWidth = lw * 0.28;
         ctx.strokeStyle = "#fffdf2";
         ctx.setLineDash([cell * 0.03, cell * 0.14]);
@@ -1734,7 +1747,7 @@
   function drawBulb(glow, now) {
     var R = cell * 0.20;
     if (glow > 0.35) {
-      var pulse = 1 + 0.06 * Math.sin(now / 170);
+      var pulse = reduceMotion ? 1 : 1 + 0.06 * Math.sin(now / 170);
       ctx.save();
       ctx.scale(pulse, pulse);
       ctx.shadowColor = "#ffcf3f";
@@ -1879,6 +1892,7 @@
   function drawWinOverlay(now) {
     var W = game.cols * cell, H = game.rows * cell, M = Math.min(W, H);
     var el = now - game.phaseAt;
+    if (reduceMotion) el = 1e9;               // hareket azalt: onay + yıldızlar anında görünür
     var t = clamp01(el / 280);
     ctx.fillStyle = "rgba(6,9,18," + (0.76 * t).toFixed(3) + ")";
     ctx.fillRect(0, 0, W, H);
@@ -1929,7 +1943,7 @@
     ctx.fillStyle = game.newBest ? "#7BFFB0" : "#9fb0d8";
     var sub = game.newBest
       ? "Yeni rekor! " + game.moves + " hamle"
-      : game.moves + " hamle  (en iyi: " + game.par + ")";
+      : game.moves + " hamle  ·  hedef " + game.par;
     ctx.fillText(sub, W / 2, H / 2 + M * 0.28);
   }
 
@@ -1946,7 +1960,9 @@
     for (var r = 0; r < game.rows; r++) {
       for (var c = 0; c < game.cols; c++) {
         var cl = game.cells[r][c];
-        if (cl.lit) {
+        if (reduceMotion) {
+          cl.glow = cl.lit ? 1 : 0;          // hareket azalt: yayılma gecikmesi/geçiş yok
+        } else if (cl.lit) {
           if (now - cl.litSince >= cl.litDelay)
             cl.glow += (1 - cl.glow) * Math.min(1, dt / 150);
         } else {
@@ -1976,7 +1992,7 @@
     // --- çiz ---
     ctx.clearRect(0, 0, game.cols * cell + 2, game.rows * cell + 2);
 
-    var intro = clamp01((now - game.introAt) / 350);   // seviye açılış fade-in
+    var intro = reduceMotion ? 1 : clamp01((now - game.introAt) / 350);   // seviye açılış fade-in
     ctx.globalAlpha = intro;
 
     // dış çerçeve
@@ -2045,12 +2061,18 @@
     if (performance.now() - game.introAt < 220) return;
 
     var rect = canvas.getBoundingClientRect();
-    // canvas CSS pikseli cinsinde koordinat
+    // Dokunuşu canvas'ın GERÇEK ekran boyutuna göre hücreye çevir.
+    // ("cell" yalnız çizim ölçüsü; mobilde tarayıcı sayfayı ölçekleyince
+    //  rect boyutu cols*cell'den sapar -> sabit "cell"e bölmek hatayı aşağıya
+    //  doğru biriktirip en alt satırı game.rows'a taşıyarak dokunuşu düşürürdü.)
     var x = e.clientX - rect.left;
     var y = e.clientY - rect.top;
-    var col = Math.floor(x / cell);
-    var row = Math.floor(y / cell);
-    if (row < 0 || col < 0 || row >= game.rows || col >= game.cols) return;
+    if (x < 0 || y < 0 || x >= rect.width || y >= rect.height) return;
+    var col = Math.floor(x / rect.width  * game.cols);
+    var row = Math.floor(y / rect.height * game.rows);
+    if (col >= game.cols) col = game.cols - 1;   // en sağ kenar pikseli
+    if (row >= game.rows) row = game.rows - 1;   // en alt kenar pikseli
+    if (row < 0 || col < 0) return;
 
     var c = game.cells[row][col];
     if (!c || c.d.length === 0) return;              // boş hücre
@@ -2113,6 +2135,8 @@
     if (!cands.length) { showToast("Çözüme çok yakınsın", 1100); return; }
     var target = cands[rndInt(cands.length)];
     Ads.rewarded(function () {
+      game.undo.push({ c: target, from: target.rot });   // düzeltme geri-al yığınına yazılır (sayaç tutarlı kalır)
+      if (game.undo.length > 300) game.undo.shift();
       target.rot = 0;                       // üreticinin "çözülmüş" yönü
       target.animAt = performance.now();
       target.hintAt = performance.now();
