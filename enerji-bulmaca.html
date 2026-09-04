@@ -30,6 +30,18 @@
      ======================================================================= */
   *, *::before, *::after { box-sizing: border-box; }
 
+  /* Tema değişkenleri: varsayılan (Seviye 1) değerler — JS her seviye
+     geçişinde applyTheme() ile bunları günceller. */
+  :root {
+    --bg-a: #14203c;
+    --bg-b: #1a1330;
+    --bg-base: #0a0e1a;
+    --accent-1: #3ad0c0;
+    --accent-2: #2a95e8;
+    --panel-glow: rgba(80, 140, 255, 0.15);
+    --lvl-color: #e8eefc;
+  }
+
   html, body {
     margin: 0;
     padding: 0;
@@ -38,7 +50,7 @@
     position: fixed;
     inset: 0;
     overflow: hidden;
-    background: #0a0e1a;
+    background: var(--bg-base);
     overscroll-behavior: none;
     touch-action: none;                 /* KRİTİK: kablolara dokununca sayfa kaymaz */
     -webkit-user-select: none;
@@ -57,9 +69,10 @@
     /* iOS çentik/gezinme çubuğu güvenli alanları */
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     background:
-      radial-gradient(1200px 800px at 20% -10%, #14203c 0%, rgba(20,32,60,0) 60%),
-      radial-gradient(1000px 700px at 110% 120%, #1a1330 0%, rgba(26,19,48,0) 55%),
-      #0a0e1a;
+      radial-gradient(1200px 800px at 20% -10%, var(--bg-a) 0%, rgba(20,32,60,0) 60%),
+      radial-gradient(1000px 700px at 110% 120%, var(--bg-b) 0%, rgba(26,19,48,0) 55%),
+      var(--bg-base);
+    transition: background .5s ease;
   }
 
   /* ---------- ÜST BİLGİ ÇUBUĞU (HUD) ---------- */
@@ -76,7 +89,7 @@
     letter-spacing: 0.3px;
   }
   #hud .left  { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; overflow: hidden; }
-  #hud .lvl   { font-size: 15px; color: #e8eefc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #hud .lvl   { font-size: 15px; color: var(--lvl-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .5s ease; }
   #hud .moves { font-size: 12px; color: #8b93b5; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #hud .right { display: flex; gap: 7px; flex: 0 0 auto; }
 
@@ -126,7 +139,8 @@
     box-shadow:
       0 0 0 1px rgba(60, 80, 120, 0.25),
       0 20px 60px -20px rgba(0, 0, 0, 0.8),
-      inset 0 0 60px -20px rgba(80, 140, 255, 0.15);
+      inset 0 0 60px -20px var(--panel-glow);
+    transition: box-shadow .5s ease;
   }
 
   /* İlk seviyede görünen küçük ipucu */
@@ -220,7 +234,7 @@
     transition: background .15s ease, border-color .15s ease, color .15s ease, transform .08s ease;
   }
   #menu .seg.on {
-    background: linear-gradient(135deg, #3ad0c0, #2a95e8);
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
     border-color: transparent; color: #04121f;
   }
   #menu .seg:active { transform: scale(0.97); }
@@ -236,8 +250,9 @@
   }
   #menu button.big {
     margin-top: 14px; padding: 14px; border: none; border-radius: 14px;
-    background: linear-gradient(135deg, #4dd0c3, #2b9df0);
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
     color: #04121f; font-size: 16px; font-weight: 800; letter-spacing: 0.5px;
+    transition: background .5s ease;
   }
   #menu button.big:active { transform: scale(0.97); }
   #menu button.ghost {
@@ -1317,6 +1332,139 @@
   var ROT_DUR = 150;   // dönüş animasyonu süresi (ms)
   var WIN_HOLD = 1150; // ampul yandıktan sonra sonraki seviyeye geçiş beklemesi (ms)
 
+  /* ----------------------------------------------------------------------
+     TEMA SİSTEMİ — her seviye geçişinde farklı bir görsel tema uygulanır.
+     Her tema; arka plan, HUD/menü vurgu rengi ve tahtadaki enerji/kaynak/
+     ampul renklerini birlikte değiştirir. Liste bitince baştan döner,
+     böylece sonsuz modda temalar sürekli tekrar döngüye girer.
+     ---------------------------------------------------------------------- */
+  var THEMES = [
+    { name: "Gece Mavisi",   bgA: "#14203c", bgB: "#1a1330", bgBase: "#0a0e1a",
+      accent1: "#3ad0c0", accent2: "#2a95e8", panelGlow: "rgba(80,140,255,0.15)", lvlColor: "#e8eefc",
+      glowHot: "#ffb733", glowSoft: "#fff2bf", spark: "#fffdf2", shadowGlow: "#ff9a1f",
+      sourceA: "#7bffe6", sourceB: "#12b7a0", sourceStroke: "#0c7d70", sourceIcon: "#06342f",
+      bulbA: "#fff7cf", bulbB: "#ffc531", bulbShadow: "#ffcf3f" },
+    { name: "Zümrüt Orman",  bgA: "#123a2c", bgB: "#0f2b1e", bgBase: "#081512",
+      accent1: "#5be08a", accent2: "#1f9e6b", panelGlow: "rgba(70,220,140,0.15)", lvlColor: "#e7fff2",
+      glowHot: "#8dff5e", glowSoft: "#e7ffcf", spark: "#f6fff0", shadowGlow: "#5be030",
+      sourceA: "#c9ff8f", sourceB: "#3fae3f", sourceStroke: "#1f6d1f", sourceIcon: "#0e2c0e",
+      bulbA: "#fbffd6", bulbB: "#c8e648", bulbShadow: "#d8f04a" },
+    { name: "Gün Batımı",    bgA: "#3a2013", bgB: "#2c1030", bgBase: "#160a10",
+      accent1: "#ff9d5c", accent2: "#e8437a", panelGlow: "rgba(255,130,90,0.16)", lvlColor: "#ffeee0",
+      glowHot: "#ff8a3d", glowSoft: "#ffe0b3", spark: "#fff6ea", shadowGlow: "#ff5c1f",
+      sourceA: "#ffd08a", sourceB: "#e8641f", sourceStroke: "#8a3a0c", sourceIcon: "#2c1305",
+      bulbA: "#fff0d0", bulbB: "#ff9d3f", bulbShadow: "#ff8a2f" },
+    { name: "Mor Nova",      bgA: "#2a1650", bgB: "#180d33", bgBase: "#0c0718",
+      accent1: "#b389ff", accent2: "#6f5cff", panelGlow: "rgba(150,110,255,0.18)", lvlColor: "#f0eaff",
+      glowHot: "#c88bff", glowSoft: "#e9d8ff", spark: "#f9f3ff", shadowGlow: "#9a4fff",
+      sourceA: "#dcb8ff", sourceB: "#7b3fd6", sourceStroke: "#4a1f8a", sourceIcon: "#180a30",
+      bulbA: "#f3e6ff", bulbB: "#b784ff", bulbShadow: "#c88bff" },
+    { name: "Mercan Resifi", bgA: "#123a44", bgB: "#0d2a3a", bgBase: "#07161e",
+      accent1: "#4fe0d6", accent2: "#ff7a8a", panelGlow: "rgba(80,210,200,0.16)", lvlColor: "#e6fffb",
+      glowHot: "#4de8d0", glowSoft: "#c8fff2", spark: "#effffb", shadowGlow: "#22c9b0",
+      sourceA: "#a8fff0", sourceB: "#1fae9a", sourceStroke: "#0d6b5c", sourceIcon: "#052622",
+      bulbA: "#fff0f2", bulbB: "#ff8a9a", bulbShadow: "#ff6b80" },
+    { name: "Buzul",         bgA: "#16324a", bgB: "#0e2438", bgBase: "#081420",
+      accent1: "#9fe8ff", accent2: "#4d9dff", panelGlow: "rgba(140,220,255,0.16)", lvlColor: "#eefaff",
+      glowHot: "#9fe0ff", glowSoft: "#e0f7ff", spark: "#f5fdff", shadowGlow: "#5cc4ff",
+      sourceA: "#e0f7ff", sourceB: "#4fa8d9", sourceStroke: "#1f5f80", sourceIcon: "#0a2230",
+      bulbA: "#f2fbff", bulbB: "#bfe8ff", bulbShadow: "#a6ddff" },
+    { name: "Volkanik",      bgA: "#3a1414", bgB: "#26100f", bgBase: "#140707",
+      accent1: "#ff6a4d", accent2: "#c92a3c", panelGlow: "rgba(255,90,60,0.18)", lvlColor: "#ffe9e4",
+      glowHot: "#ff6a3d", glowSoft: "#ffc9a3", spark: "#fff0e6", shadowGlow: "#ff3d1f",
+      sourceA: "#ffb08a", sourceB: "#c9391f", sourceStroke: "#7a1c0c", sourceIcon: "#260a04",
+      bulbA: "#ffe6d6", bulbB: "#ff7a3d", bulbShadow: "#ff5a2f" },
+    { name: "Neon Siber",    bgA: "#1a0836", bgB: "#04101f", bgBase: "#04060f",
+      accent1: "#ff2fd0", accent2: "#2fe0ff", panelGlow: "rgba(255,40,210,0.2)", lvlColor: "#ecfcff",
+      glowHot: "#2fe8ff", glowSoft: "#c8fbff", spark: "#f0feff", shadowGlow: "#ff2fd0",
+      sourceA: "#c8ffef", sourceB: "#1fd0c0", sourceStroke: "#0c6b64", sourceIcon: "#03201d",
+      bulbA: "#ffe0fb", bulbB: "#ff4fe0", bulbShadow: "#ff2fd0" },
+    { name: "Lavanta Rüyası",bgA: "#2c2450", bgB: "#1c1838", bgBase: "#0e0c1e",
+      accent1: "#c9a8ff", accent2: "#8f9dff", panelGlow: "rgba(180,160,255,0.16)", lvlColor: "#f2eeff",
+      glowHot: "#c3a6ff", glowSoft: "#e9dcff", spark: "#f8f2ff", shadowGlow: "#9d7bff",
+      sourceA: "#e6d6ff", sourceB: "#8f6bd9", sourceStroke: "#4f3a8a", sourceIcon: "#1c1330",
+      bulbA: "#f6efff", bulbB: "#cbb0ff", bulbShadow: "#b998ff" },
+    { name: "Bakır Çağı",    bgA: "#3a2414", bgB: "#26180e", bgBase: "#140c06",
+      accent1: "#e0a15c", accent2: "#c96a3a", panelGlow: "rgba(220,150,80,0.18)", lvlColor: "#fdf0e2",
+      glowHot: "#f0a94d", glowSoft: "#ffdba3", spark: "#fff3e0", shadowGlow: "#d97a1f",
+      sourceA: "#ffd9a3", sourceB: "#c9791f", sourceStroke: "#7a4610", sourceIcon: "#2c1a06",
+      bulbA: "#fff0d6", bulbB: "#e8a94d", bulbShadow: "#d99a3f" },
+    { name: "Okyanus Derinliği", bgA: "#0d2440", bgB: "#0a1830", bgBase: "#050d1a",
+      accent1: "#3fb8e0", accent2: "#2a5cf0", panelGlow: "rgba(60,150,230,0.17)", lvlColor: "#e4f4ff",
+      glowHot: "#4dc8ff", glowSoft: "#bfe8ff", spark: "#eefaff", shadowGlow: "#1f9dff",
+      sourceA: "#bfe8ff", sourceB: "#2a7ed9", sourceStroke: "#123f6b", sourceIcon: "#051526",
+      bulbA: "#eaf7ff", bulbB: "#7ec4ff", bulbShadow: "#4dabff" },
+    { name: "Kiraz Çiçeği",  bgA: "#3a1a2c", bgB: "#2a1220", bgBase: "#160810",
+      accent1: "#ff9ec7", accent2: "#ff5c8a", panelGlow: "rgba(255,130,180,0.18)", lvlColor: "#fff0f6",
+      glowHot: "#ff8ab3", glowSoft: "#ffd6e6", spark: "#fff0f6", shadowGlow: "#ff5c93",
+      sourceA: "#ffd6e8", sourceB: "#e0568a", sourceStroke: "#8a2c52", sourceIcon: "#2c0e1c",
+      bulbA: "#fff0f6", bulbB: "#ff9ec0", bulbShadow: "#ff85b0" },
+    { name: "Altın Çöl",     bgA: "#3a2c10", bgB: "#2c1e0c", bgBase: "#140e04",
+      accent1: "#ffd166", accent2: "#e0973a", panelGlow: "rgba(255,200,90,0.18)", lvlColor: "#fff6e0",
+      glowHot: "#ffcf5c", glowSoft: "#ffedb3", spark: "#fff8e0", shadowGlow: "#ffab1f",
+      sourceA: "#ffe6a3", sourceB: "#d99a1f", sourceStroke: "#8a5c0c", sourceIcon: "#2c1e06",
+      bulbA: "#fff8e0", bulbB: "#ffd166", bulbShadow: "#ffc23f" },
+    { name: "Kutup Işıkları",bgA: "#0e3a30", bgB: "#1c1440", bgBase: "#070f1e",
+      accent1: "#5ef0b0", accent2: "#8a6fff", panelGlow: "rgba(90,220,180,0.17)", lvlColor: "#e8fff5",
+      glowHot: "#5ef0c0", glowSoft: "#cfffe8", spark: "#f0fffa", shadowGlow: "#3fd68a",
+      sourceA: "#c0ffe0", sourceB: "#3fbf8a", sourceStroke: "#1f6f52", sourceIcon: "#082a1e",
+      bulbA: "#eafff5", bulbB: "#8ae0c0", bulbShadow: "#5ecfa0" },
+    { name: "Gece Yarısı Moru", bgA: "#20123c", bgB: "#100a24", bgBase: "#080512",
+      accent1: "#a06bff", accent2: "#5c3ad9", panelGlow: "rgba(140,90,255,0.18)", lvlColor: "#ece4ff",
+      glowHot: "#a980ff", glowSoft: "#d9c4ff", spark: "#f2eaff", shadowGlow: "#8850ff",
+      sourceA: "#d0b8ff", sourceB: "#6f3fd9", sourceStroke: "#3a1f80", sourceIcon: "#140a2c",
+      bulbA: "#ece0ff", bulbB: "#a374f0", bulbShadow: "#8f5cf0" },
+    { name: "Bahar Yeşili",  bgA: "#1c3a1a", bgB: "#122a14", bgBase: "#08160a",
+      accent1: "#a3e85c", accent2: "#4dbf6a", panelGlow: "rgba(140,220,90,0.16)", lvlColor: "#f0ffe6",
+      glowHot: "#b0f05c", glowSoft: "#e6ffc3", spark: "#f6fff0", shadowGlow: "#8ad63f",
+      sourceA: "#e0ffb0", sourceB: "#7ac93f", sourceStroke: "#3f7a1f", sourceIcon: "#122c08",
+      bulbA: "#f6ffe0", bulbB: "#c3e86b", bulbShadow: "#aad63f" },
+    { name: "Ateş Böceği",   bgA: "#243a10", bgB: "#141f0a", bgBase: "#0a1004",
+      accent1: "#d9f04d", accent2: "#8adc3f", panelGlow: "rgba(210,240,80,0.18)", lvlColor: "#f8ffe0",
+      glowHot: "#e0ff5c", glowSoft: "#f2ffb3", spark: "#f9ffe0", shadowGlow: "#c9f01f",
+      sourceA: "#f0ffb0", sourceB: "#a3d91f", sourceStroke: "#5c7a0c", sourceIcon: "#1c2c04",
+      bulbA: "#f9ffdc", bulbB: "#e0f04d", bulbShadow: "#d0e030" },
+    { name: "Gümüş Ay",      bgA: "#242c3a", bgB: "#181e2a", bgBase: "#0c0f16",
+      accent1: "#c9d6f0", accent2: "#8a9dc9", panelGlow: "rgba(190,205,235,0.15)", lvlColor: "#f0f4ff",
+      glowHot: "#d6e0f5", glowSoft: "#eef2ff", spark: "#f9fbff", shadowGlow: "#9aaee0",
+      sourceA: "#eef2ff", sourceB: "#9aaed9", sourceStroke: "#4f5c80", sourceIcon: "#161c2c",
+      bulbA: "#f6f8ff", bulbB: "#c9d6f0", bulbShadow: "#aebde0" },
+    { name: "Mango",         bgA: "#3a2408", bgB: "#2c1408", bgBase: "#140a04",
+      accent1: "#ffb03f", accent2: "#ff6a3f", panelGlow: "rgba(255,150,60,0.19)", lvlColor: "#fff2e0",
+      glowHot: "#ffaa3f", glowSoft: "#ffdca3", spark: "#fff3e0", shadowGlow: "#ff7a1f",
+      sourceA: "#ffd9a3", sourceB: "#e07a1f", sourceStroke: "#8a4210", sourceIcon: "#2c1606",
+      bulbA: "#fff3d6", bulbB: "#ffab3f", bulbShadow: "#ff8f2f" },
+    { name: "Elmas Mavisi",  bgA: "#0a2c40", bgB: "#0a1830", bgBase: "#050c18",
+      accent1: "#5cd6ff", accent2: "#3f6aff", panelGlow: "rgba(90,190,255,0.18)", lvlColor: "#e4f7ff",
+      glowHot: "#5cd6ff", glowSoft: "#bfeeff", spark: "#eefbff", shadowGlow: "#2fb0ff",
+      sourceA: "#bfeeff", sourceB: "#2f8fd9", sourceStroke: "#123f6b", sourceIcon: "#04182c",
+      bulbA: "#eafaff", bulbB: "#7cc9ff", bulbShadow: "#4db3ff" }
+  ];
+
+  var THEME = THEMES[0];
+
+  // "#rrggbb" -> "rgba(r,g,b,a)"
+  function hexA(hex, a) {
+    var v = parseInt(hex.slice(1), 16);
+    return "rgba(" + ((v >> 16) & 255) + "," + ((v >> 8) & 255) + "," + (v & 255) + "," + a + ")";
+  }
+
+  // n = 1 tabanlı seviye numarası. Liste bitince baştan döner.
+  function applyTheme(n) {
+    var idx = ((n - 1) % THEMES.length + THEMES.length) % THEMES.length;
+    THEME = THEMES[idx];
+    var root = document.documentElement.style;
+    root.setProperty("--bg-a", THEME.bgA);
+    root.setProperty("--bg-b", THEME.bgB);
+    root.setProperty("--bg-base", THEME.bgBase);
+    root.setProperty("--accent-1", THEME.accent1);
+    root.setProperty("--accent-2", THEME.accent2);
+    root.setProperty("--panel-glow", THEME.panelGlow);
+    root.setProperty("--lvl-color", THEME.lvlColor);
+    var mt = document.querySelector('meta[name="theme-color"]');
+    if (mt) mt.setAttribute("content", THEME.bgBase);
+  }
+
   var cell = 60;       // bir hücrenin piksel boyutu (layout() hesaplar)
   var menuOpen = false;
 
@@ -1403,6 +1551,7 @@
      ---------------------------------------------------------------------- */
   function buildLevel() {
     var n = levelNo();
+    applyTheme(n);   // her seviye kendi temasıyla açılır
 
     // GÜNLÜK mod: üretimi tarihe göre tohumla -> herkeste aynı bulmaca.
     // SONSUZ mod: RNG = Math.random (her seferinde farklı).
@@ -1691,22 +1840,22 @@
     if (glow > 0.02) {
       ctx.globalAlpha = glow;
 
-      ctx.shadowColor = "#ff9a1f";
+      ctx.shadowColor = THEME.shadowGlow;
       // gölge bulanıklığı en pahalı canvas işlemi -> büyük ızgarada üst sınır koy
       ctx.shadowBlur = Math.min(cell * 0.32, 13);
       ctx.lineWidth = lw;
-      ctx.strokeStyle = "#ffb733";
+      ctx.strokeStyle = THEME.glowHot;
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
       ctx.shadowBlur = 0;
 
       ctx.lineWidth = lw * 0.44;
-      ctx.strokeStyle = "#fff2bf";
+      ctx.strokeStyle = THEME.glowSoft;
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
 
       // akan enerji noktaları (kesikli çizgi kaydırma) -> minik hücrelerde / hareket azaltta atla
       if (cell >= 26 && !reduceMotion) {
         ctx.lineWidth = lw * 0.28;
-        ctx.strokeStyle = "#fffdf2";
+        ctx.strokeStyle = THEME.spark;
         ctx.setLineDash([cell * 0.03, cell * 0.14]);
         ctx.lineDashOffset = -(now * 0.05) % 1000;
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
@@ -1721,17 +1870,17 @@
   function drawSource() {
     var s = cell * 0.30;
     var g = ctx.createRadialGradient(0, 0, 2, 0, 0, s);
-    g.addColorStop(0, "#7bffe6");
-    g.addColorStop(1, "#12b7a0");
+    g.addColorStop(0, THEME.sourceA);
+    g.addColorStop(1, THEME.sourceB);
     ctx.fillStyle = g;
-    ctx.strokeStyle = "#0c7d70";
+    ctx.strokeStyle = THEME.sourceStroke;
     ctx.lineWidth = cell * 0.05;
     rr(-s, -s, s * 2, s * 2, s * 0.42);
     ctx.fill();
     ctx.stroke();
 
     // şimşek simgesi
-    ctx.fillStyle = "#06342f";
+    ctx.fillStyle = THEME.sourceIcon;
     ctx.beginPath();
     ctx.moveTo(-s * 0.18, -s * 0.62);
     ctx.lineTo( s * 0.34, -s * 0.06);
@@ -1750,17 +1899,17 @@
       var pulse = reduceMotion ? 1 : 1 + 0.06 * Math.sin(now / 170);
       ctx.save();
       ctx.scale(pulse, pulse);
-      ctx.shadowColor = "#ffcf3f";
+      ctx.shadowColor = THEME.bulbShadow;
       ctx.shadowBlur = Math.min(cell * 0.55 * glow, 22);
       var g = ctx.createRadialGradient(0, 0, 1, 0, 0, R);
-      g.addColorStop(0, "#fff7cf");
-      g.addColorStop(1, "#ffc531");
+      g.addColorStop(0, THEME.bulbA);
+      g.addColorStop(1, THEME.bulbB);
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
       ctx.shadowBlur = 0;
 
       // ışınlar
-      ctx.strokeStyle = "rgba(255,224,120," + glow.toFixed(2) + ")";
+      ctx.strokeStyle = hexA(THEME.bulbShadow, glow);
       ctx.lineWidth = cell * 0.03;
       ctx.lineCap = "round";
       for (var i = 0; i < 8; i++) {
@@ -1851,7 +2000,7 @@
         ctx.beginPath(); ctx.arc(0, 0, lw * 0.62, 0, Math.PI * 2); ctx.fill();
         if (g > 0.02) {
           ctx.globalAlpha = g;
-          ctx.fillStyle = "#ffdf8a";
+          ctx.fillStyle = THEME.glowSoft;
           ctx.beginPath(); ctx.arc(0, 0, lw * 0.62, 0, Math.PI * 2); ctx.fill();
           ctx.globalAlpha = 1;
         }
@@ -1860,7 +2009,7 @@
           var d = c.d[0];
           var ex = [0, half, 0, -half][d];
           var ey = [-half, 0, half, 0][d];
-          ctx.fillStyle = g > 0.5 ? "#ffd66b" : "#3a4060";
+          ctx.fillStyle = g > 0.5 ? THEME.glowHot : "#3a4060";
           ctx.beginPath();
           ctx.arc(ex * 0.82, ey * 0.82, lw * 0.6, 0, Math.PI * 2);
           ctx.fill();
