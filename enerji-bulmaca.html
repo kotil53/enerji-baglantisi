@@ -1346,8 +1346,9 @@
     stars: 0,         // son seviyede kazanılan yıldız
     newBest: false,   // son seviyede kişisel rekor kırıldı mı
     undo: [],         // geri-al yığını: { c: hücre, from: eski dönüş }
-    phase: "play",    // "play" | "win" | "done" (günlük bitti)
+    phase: "play",    // "play" | "winWait" | "win" | "done" (günlük bitti)
     phaseAt: 0,       // faz başlangıç zamanı
+    winSpreadDist: 0, // kazanan hamlede kaynaktan en uzak yanan hücrenin mesafesi (winWait süresini belirler)
     introAt: 0,       // seviye açılış (fade-in) zamanı
     firstMove: false
   };
@@ -1602,7 +1603,7 @@
     }
 
     // Parlaklık hedeflerini güncelle + ampul kontrolü (TÜM ampuller yanmalı)
-    var bulbTotal = 0, bulbLit = 0;
+    var bulbTotal = 0, bulbLit = 0, maxLitDist = 0;
     for (r = 0; r < rows; r++) {
       for (c = 0; c < cols; c++) {
         var cell2 = cells[r][c];
@@ -1616,9 +1617,11 @@
             cell2.litSince = -1;
           }
         }
+        if (cell2._pw && cell2._dist > maxLitDist) maxLitDist = cell2._dist;
         if (cell2.role === "bulb") { bulbTotal++; if (cell2._pw) bulbLit++; }
       }
     }
+    game.winSpreadDist = maxLitDist;
     if (instant) {
       for (r = 0; r < rows; r++)
         for (c = 0; c < cols; c++)
@@ -1971,6 +1974,14 @@
       }
     }
 
+    // Enerji ampule ulaştı -> ampul(ler) görsel olarak tam yanana kadar bekle,
+    // ancak ondan sonra "SEVİYE TAMAM" ekranını aç (yayılma gecikmesi + parlaklık
+    // rampası: reduceMotion'da anında).
+    if (game.phase === "winWait" && !menuOpen) {
+      var spreadMs = reduceMotion ? 0 : game.winSpreadDist * 26 + 320;
+      if (now - game.phaseAt >= spreadMs) onWin();
+    }
+
     // Kazanma -> kısa bekleme sonrası bir sonraki seviye (menü açıkken beklet)
     if (game.phase === "win" && !menuOpen && now - game.phaseAt > WIN_HOLD) {
       if (cfg.mode === "daily") {
@@ -2101,7 +2112,7 @@
     updateHud();
 
     // Enerjiyi yeniden hesapla; ampul yandıysa kazanma fazına geç
-    if (computePower(performance.now(), false)) onWin();
+    if (computePower(performance.now(), false)) beginWinWait();
   }
 
   // Son dönüşü geri al
@@ -2145,8 +2156,15 @@
       Sound.rotate();
       updateHud();
       showToast("İpucu: bir kablo düzeltildi", 1100);
-      if (computePower(performance.now(), false)) onWin();
+      if (computePower(performance.now(), false)) beginWinWait();
     }, "İpucu için kısa bir reklam izlensin mi?\nKarşılığında bir kablo doğru yönüne çevrilir.");
+  }
+
+  // Enerji ampule ulaştı: girdiyi kilitle, ampul(ler) görsel olarak TAMAMEN
+  // yanana kadar bekle -> "SEVİYE TAMAM" ekranı ancak ondan sonra açılsın.
+  function beginWinWait() {
+    game.phase = "winWait";
+    game.phaseAt = performance.now();
   }
 
   // Ampul yandı: yıldız hesapla, kaydet, geri bildirim ver
