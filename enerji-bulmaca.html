@@ -104,6 +104,89 @@
   .btn.hint { border-color: #5a4a1e; background: #2a2410; color: #ffd23f; }
   .btn.hint:active { background: #342c14; border-color: #7a6526; }
 
+  /* ---------- ALT-HUD: SÜRE ÇUBUĞU + CANLAR ---------- */
+  #subhud {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 14px 9px;
+  }
+  #timeLabel {
+    flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: #9aa5c8;
+    min-width: 26px;
+  }
+  #timeLabel.warn   { color: #ffb733; }
+  #timeLabel.danger { color: #ff5c5c; }
+  #timerWrap {
+    flex: 1 1 auto;
+    height: 6px;
+    border-radius: 999px;
+    background: #141d33;
+    border: 1px solid #223049;
+    overflow: hidden;
+  }
+  #timerFill {
+    height: 100%;
+    width: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #17a2a2, #2ecc71);
+    transition: width .2s linear, background .3s ease;
+  }
+  #timerFill.warn   { background: linear-gradient(90deg, #e8a83a, #ff9a1f); }
+  #timerFill.danger { background: linear-gradient(90deg, #ff5c5c, #ff2e2e); }
+  #livesLabel { flex: 0 0 auto; display: flex; gap: 2px; }
+  #livesLabel .heart {
+    font-size: 14px;
+    color: #ff5c7a;
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity .2s ease, transform .2s ease, color .2s ease;
+  }
+  #livesLabel .heart.off { color: #333c5c; opacity: 0.55; transform: scale(0.82); }
+
+  /* ---------- CAN BİTTİ KATMANI ---------- */
+  #lifeOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 26;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 14px);
+    background: rgba(6, 9, 18, 0.86);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .28s ease;
+  }
+  #lifeOverlay.show { opacity: 1; pointer-events: auto; }
+  #lifeOverlay .card {
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+    background: linear-gradient(180deg, #141d33, #0e1526);
+    border: 1px solid #2a3550;
+    border-radius: 20px;
+    padding: 26px 22px;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+  }
+  #lifeOverlay .hearts { font-size: 30px; letter-spacing: 4px; margin-bottom: 10px; }
+  #lifeOverlay h2 { margin: 2px 0 6px; font-size: 20px; letter-spacing: 0.5px; color: #eaf1ff; }
+  #lifeOverlay .sub { margin: 0 0 18px; color: #8b93b5; font-size: 13px; line-height: 1.5; }
+  #lifeOverlay button.big {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; cursor: pointer; touch-action: manipulation;
+    padding: 14px; border: none; border-radius: 14px;
+    background: linear-gradient(135deg, #ffd23f, #ff9a1f);
+    color: #241a04; font-size: 15px; font-weight: 800; letter-spacing: 0.3px;
+  }
+  #lifeOverlay button.big:active { transform: scale(0.97); }
+
   /* ---------- OYUN SAHNESİ (canvas'ı ortalar) ---------- */
   #stage {
     flex: 1 1 auto;
@@ -411,6 +494,19 @@
     </div>
   </div>
 
+  <!-- ALT-HUD: süre çubuğu + canlar -->
+  <div id="subhud">
+    <span id="timeLabel">0s</span>
+    <div id="timerWrap"><div id="timerFill"></div></div>
+    <div id="livesLabel" aria-label="Canlar">
+      <span class="heart" data-i="0">&#10084;</span>
+      <span class="heart" data-i="1">&#10084;</span>
+      <span class="heart" data-i="2">&#10084;</span>
+      <span class="heart" data-i="3">&#10084;</span>
+      <span class="heart" data-i="4">&#10084;</span>
+    </div>
+  </div>
+
   <!-- OYUN ALANI -->
   <div id="stage">
     <canvas id="game"></canvas>
@@ -451,13 +547,22 @@
       <div class="stats" id="menuStats">—</div>
 
       <button class="big"   id="menuPrimary">Devam Et</button>
-      <button class="ghost" id="menuSkip">Bu seviyeyi geç</button>
       <button class="ghost" id="menuWipe">Bu moddaki ilerlemeyi sıfırla</button>
 
       <div class="credit">
         <span class="kotiliy-mark" role="img" aria-label="kotiliy"></span>
         <span>kotiliy tarafından geliştirildi</span>
       </div>
+    </div>
+  </div>
+
+  <!-- CANLAR BİTTİ KATMANI -->
+  <div id="lifeOverlay">
+    <div class="card">
+      <div class="hearts">&#128148;</div>
+      <h2>CANLARIN BİTTİ</h2>
+      <p class="sub">Süre doldu ve son canını da kaybettin.<br>Devam etmek için kısa bir reklam izleyerek 1 can kazanabilirsin.</p>
+      <button class="big" id="lifeWatchBtn">&#127916; Reklam izle, 1 can kazan</button>
     </div>
   </div>
 </div>
@@ -1313,6 +1418,13 @@
   var toastEl    = document.getElementById("toast");
   var menuEl     = document.getElementById("menu");
   var soundBtn   = document.getElementById("soundBtn");
+  var timeLabel   = document.getElementById("timeLabel");
+  var timerFill   = document.getElementById("timerFill");
+  var livesLabel  = document.getElementById("livesLabel");
+  var heartEls    = livesLabel.querySelectorAll(".heart");
+  var lifeOverlay = document.getElementById("lifeOverlay");
+
+  var MAX_LIVES = 5;   // toplam can hakkı; süre bitince 1 azalır, ödüllü reklamla 1 kazanılır
 
   var ROT_DUR = 150;   // dönüş animasyonu süresi (ms)
   var WIN_HOLD = 1150; // ampul yandıktan sonra sonraki seviyeye geçiş beklemesi (ms)
@@ -1346,10 +1458,13 @@
     stars: 0,         // son seviyede kazanılan yıldız
     newBest: false,   // son seviyede kişisel rekor kırıldı mı
     undo: [],         // geri-al yığını: { c: hücre, from: eski dönüş }
-    phase: "play",    // "play" | "win" | "done" (günlük bitti)
+    phase: "play",    // "play" | "win" | "done" (günlük bitti) | "dead" (canlar bitti)
     phaseAt: 0,       // faz başlangıç zamanı
     introAt: 0,       // seviye açılış (fade-in) zamanı
-    firstMove: false
+    firstMove: false,
+    lives: MAX_LIVES, // kalan can (süre dolunca -1, ödüllü reklamla +1)
+    timeLimit: 0,     // bu seviye için saniye cinsinden süre hakkı
+    timeLeft: 0       // kalan süre (saniye)
   };
   // O anki 1-tabanlı seviye numarası (üretici bu numarayı kullanır)
   function levelNo() { return cfg.mode === "daily" ? game.dailyIdx + 1 : game.li + 1; }
@@ -1463,6 +1578,9 @@
     game.phase = "play";
     game.phaseAt = performance.now();
     game.introAt = performance.now();
+    game.timeLimit = computeTimeLimit();
+    game.timeLeft = game.timeLimit;
+    updateTimerUI();
 
     // Kaldığı yer + en iyi seviye kaydı (yalnız sonsuz mod)
     if (cfg.mode === "endless") {
@@ -1493,6 +1611,13 @@
       }
     }
     return Math.max(1, par);
+  }
+
+  // Seviyenin süre hakkı (saniye). Par (gereken en az dokunuş) ve ampul sayısına
+  // göre ölçeklenir -> büyük/zor seviyeler daha çok, küçük seviyeler daha az süre alır.
+  function computeTimeLimit() {
+    var t = 22 + game.par * 6 + (game.bulbCount - 1) * 10;
+    return clampI(Math.round(t), 22, 150);
   }
 
   // Hamle sayısına göre yıldız (3/2/1). Par'a yakınlık ödüllendirilir.
@@ -1539,7 +1664,7 @@
 
   // Aktif seviyeyi başlangıç karıştırmasına döndür (aynı bulmaca)
   function resetLevel() {
-    if (menuOpen) return;
+    if (menuOpen || game.phase === "dead") return;
     for (var r = 0; r < game.rows; r++) {
       for (var c = 0; c < game.cols; c++) {
         var cellObj = game.cells[r][c];
@@ -1554,6 +1679,8 @@
     game.phase = "play";
     game.phaseAt = performance.now();
     game.introAt = performance.now();
+    game.timeLeft = game.timeLimit;
+    updateTimerUI();
     computePower(performance.now(), true);
     updateHud();
     Sound.undo();
@@ -1971,6 +2098,16 @@
       }
     }
 
+    // Süre sayacı: yalnızca oynanışta ve menü kapalıyken azalır.
+    if (game.phase === "play" && !menuOpen) {
+      game.timeLeft -= dt / 1000;
+      if (game.timeLeft <= 0) {
+        game.timeLeft = 0;
+        loseLife();
+      }
+    }
+    updateTimerUI();
+
     // Kazanma -> kısa bekleme sonrası bir sonraki seviye (menü açıkken beklet)
     if (game.phase === "win" && !menuOpen && now - game.phaseAt > WIN_HOLD) {
       if (cfg.mode === "daily") {
@@ -2178,6 +2315,27 @@
     }
   }
 
+  /* Süre dolduğunda çağrılır: bir can azalt. Can kaldıysa aynı seviye sıfırlanıp
+     yeniden başlar; kalmadıysa oyun kilitlenir ve ödüllü reklam ekranı açılır. */
+  function loseLife() {
+    if (game.phase !== "play") return;
+    game.lives = Math.max(0, game.lives - 1);
+    updateLives();
+    Haptic.error();
+    Sound.locked();
+    if (game.lives > 0) {
+      showToast("Süre doldu! Bir can kaybettin", 1500);
+      resetLevel();
+    } else {
+      game.phase = "dead";
+      game.phaseAt = performance.now();
+      showLifeOverlay();
+    }
+  }
+
+  function showLifeOverlay() { lifeOverlay.classList.add("show"); }
+  function hideLifeOverlay() { lifeOverlay.classList.remove("show"); }
+
   /* ----------------------------------------------------------------------
      11) HUD GÜNCELLE
      ---------------------------------------------------------------------- */
@@ -2196,6 +2354,28 @@
     }
     if (l !== _lvlTxt) { lvlLabel.textContent = l; _lvlTxt = l; }
     if (m !== _mvTxt)  { movesLabel.textContent = m; _mvTxt = m; }
+  }
+
+  // Can gösterge kalplerini kalan can sayısına göre boyar/soldurur
+  function updateLives() {
+    for (var i = 0; i < heartEls.length; i++) {
+      heartEls[i].classList.toggle("off", i >= game.lives);
+    }
+  }
+
+  // Süre çubuğunu + saniye metnini kalan süreye göre günceller
+  var _timeTxt = "";
+  function updateTimerUI() {
+    var secs = Math.max(0, Math.ceil(game.timeLeft));
+    var txt = secs + "s";
+    if (txt !== _timeTxt) { timeLabel.textContent = txt; _timeTxt = txt; }
+    var pct = game.timeLimit > 0 ? clamp01(game.timeLeft / game.timeLimit) : 0;
+    timerFill.style.width = (pct * 100) + "%";
+    var warn = pct <= 0.4 && pct > 0.18, danger = pct <= 0.18;
+    timerFill.classList.toggle("warn", warn);
+    timerFill.classList.toggle("danger", danger);
+    timeLabel.classList.toggle("warn", warn);
+    timeLabel.classList.toggle("danger", danger);
   }
 
   /* ----------------------------------------------------------------------
@@ -2231,7 +2411,6 @@
 
     // zorluk yalnız sonsuz modda anlamlı
     document.getElementById("diffGrp").style.opacity = (cfg.mode === "endless") ? "1" : "0.4";
-    document.getElementById("menuSkip").style.display = (cfg.mode === "endless") ? "" : "none";
 
     var stats;
     if (cfg.mode === "daily") {
@@ -2360,15 +2539,20 @@
     if (cfg.mode === "daily" && !!Store.get(dkey("done"), false)) { closeMenu(); applyMode("endless"); }
     else closeMenu();
   });
-  document.getElementById("menuSkip").addEventListener("click", function () {
-    closeMenu();
-    if (cfg.mode !== "endless") return;
-    Ads.rewarded(function () {
-      game.li++; buildLevel(); Ads.levelAdvanced();
-    });
-  });
   document.getElementById("menuWipe").addEventListener("click", function () {
     if (window.confirm("Bu moddaki tüm ilerleme silinsin mi?")) { closeMenu(); wipeProgress(); }
+  });
+
+  // Canlar bitince açılan katman: ödüllü reklam karşılığı 1 can + aynı seviyeyi yeniden başlat
+  document.getElementById("lifeWatchBtn").addEventListener("click", function () {
+    Ads.rewarded(function () {
+      game.lives = Math.min(MAX_LIVES, game.lives + 1);
+      updateLives();
+      hideLifeOverlay();
+      game.phase = "play";        // resetLevel()'in "dead" korumasını aşmak için
+      resetLevel();
+      showToast("1 can kazandın!", 1200);
+    }, "Devam etmek için kısa bir reklam izlensin mi?\nKarşılığında 1 can kazanırsın.");
   });
 
   // Yeniden boyutlandırma / yön değişimi -> yeniden yerleşim
@@ -2418,6 +2602,7 @@
      13) BAŞLAT
      ---------------------------------------------------------------------- */
   refreshSoundBtn();
+  updateLives();
   if (cfg.mode === "daily") {
     startDaily();
   } else {
