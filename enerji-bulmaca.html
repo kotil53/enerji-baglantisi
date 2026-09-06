@@ -114,7 +114,9 @@
   }
   #hud .left  { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; overflow: hidden; }
   #hud .lvl   { font-size: 15px; color: var(--e-ink-hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #hud .moves { font-size: 12px; color: var(--e-muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #hud .moves { font-size: 12px; color: var(--e-muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .2s ease; }
+  #hud .moves.warn   { color: #ffb733; font-weight: 700; }
+  #hud .moves.danger { color: #ff5c5c; font-weight: 700; }
   #hud .right { display: flex; gap: 7px; flex: 0 0 auto; }
 
   /* HUD düğmeleri: dokunmatik için yeterince büyük (min 40px) */
@@ -223,6 +225,14 @@
     color: #241a04; font-size: 15px; font-weight: 800; letter-spacing: 0.3px;
   }
   #lifeOverlay button.big:active { transform: scale(0.97); }
+  /* İkincil (sessiz) seçenek: reklam yerine 20 seviye geri dön */
+  #lifeOverlay button.ghost {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; cursor: pointer; touch-action: manipulation;
+    margin-top: 10px; padding: 14px; border: 1px solid #2a3550; border-radius: 14px;
+    background: transparent; color: #9aa5c8; font-size: 13.5px; font-weight: 700; letter-spacing: 0.3px;
+  }
+  #lifeOverlay button.ghost:active { transform: scale(0.97); background: #10192c; }
 
   /* ---------- OYUN SAHNESİ (canvas'ı ortalar) ---------- */
   #stage {
@@ -682,8 +692,9 @@
     <div class="card">
       <div class="hearts">&#128148;</div>
       <h2>CANLARIN BİTTİ</h2>
-      <p class="sub">Süre doldu ve son canını da kaybettin.<br>Devam etmek için kısa bir reklam izleyerek 1 can kazanabilirsin.</p>
+      <p class="sub">Son canını da kaybettin.<br>Devam etmek için kısa bir reklam izleyerek 1 can kazanabilirsin.</p>
       <button class="big" id="lifeWatchBtn">&#127916; Reklam izle, 1 can kazan</button>
+      <button class="ghost" id="lifeBackBtn">&#8617;&#65039; 20 seviye geri dön &middot; 1 can</button>
     </div>
   </div>
 </div>
@@ -1988,9 +1999,10 @@
     winSpreadDist: 0, // kazanan hamlede kaynaktan en uzak yanan hücrenin mesafesi (winWait süresini belirler)
     introAt: 0,       // seviye açılış (fade-in) zamanı
     firstMove: false,
-    lives: MAX_LIVES, // kalan can (süre dolunca -1, ödüllü reklamla +1)
+    lives: MAX_LIVES, // kalan can (süre dolunca / hamle hakkı bitince -1, ödüllü reklamla +1)
     timeLimit: 0,     // bu seviye için saniye cinsinden süre hakkı
-    timeLeft: 0       // kalan süre (saniye)
+    timeLeft: 0,      // kalan süre (saniye)
+    moveLimit: 0      // bu seviye için hamle hakkı; aşınca süre bitmesiyle aynı ceza (-1 can)
   };
   // O anki 1-tabanlı seviye numarası (üretici bu numarayı kullanır)
   function levelNo() { return cfg.mode === "daily" ? game.dailyIdx + 1 : game.li + 1; }
@@ -2108,6 +2120,7 @@
     game.introAt = performance.now();
     game.timeLimit = computeTimeLimit();
     game.timeLeft = game.timeLimit;
+    game.moveLimit = computeMoveLimit();
     updateTimerUI();
 
     // Kaldığı yer + en iyi seviye kaydı (yalnız sonsuz mod)
@@ -2141,11 +2154,25 @@
     return Math.max(1, par);
   }
 
-  // Seviyenin süre hakkı (saniye). Par (gereken en az dokunuş) ve ampul sayısına
-  // göre ölçeklenir -> büyük/zor seviyeler daha çok, küçük seviyeler daha az süre alır.
+  // Seviyenin süre hakkı (saniye). Önce bu seviyenin TAHMİNİ ortalama çözüm
+  // süresi bulunur: ~10 sn tarama + par'ın kabaca 1.7 katı dokunuş, dokunuş
+  // başına ~1.6 sn (ampul başına biraz ek iz sürme). Süre hakkı = tahmin * 1.4
+  // + 8 sn tampon -> ortalama oyuncu rahat bitirir, dalgın/yavaş oyuncu zorlanır.
+  // (Telemetri yok; model yalnız par ve ampul sayısına dayanır. Eski sabit
+  // formülden belirgin daha kısa, özellikle büyük seviyelerde.)
   function computeTimeLimit() {
-    var t = 22 + game.par * 6 + (game.bulbCount - 1) * 10;
-    return clampI(Math.round(t), 22, 150);
+    var avgSolve = 10 + game.par * 2.7 + (game.bulbCount - 1) * 2.5;
+    var t = avgSolve * 1.4 + 8;
+    return clampI(Math.round(t), 20, 120);
+  }
+
+  // Seviyenin HAMLE hakkı. Par'a (gereken en az dokunuş) ve ampul sayısına göre
+  // ölçeklenir; bilerek 2-yıldız sınırının hemen üstünde tutulur -> temiz oyun
+  // asla takılmaz ama savurgan çevirme cezalandırılır. Bu sayıya ULAŞAN dokunuş
+  // seviyeyi bitirmiyorsa -1 can (süre dolması ile aynı ceza).
+  function computeMoveLimit() {
+    var m = Math.round(game.par * 1.7) + 5 + (game.bulbCount - 1) * 3;
+    return clampI(m, 7, 200);
   }
 
   // Hamle sayısına göre yıldız (3/2/1). Par'a yakınlık ödüllendirilir.
@@ -2634,7 +2661,7 @@
       game.timeLeft -= dt / 1000;
       if (game.timeLeft <= 0) {
         game.timeLeft = 0;
-        loseLife();
+        loseLife("time");
       }
     }
     updateTimerUI();
@@ -2776,8 +2803,10 @@
     }
     updateHud();
 
-    // Enerjiyi yeniden hesapla; ampul yandıysa kazanma fazına geç
+    // Enerjiyi yeniden hesapla; ampul yandıysa kazanma fazına geç.
+    // Kazandırmayan ve hamle hakkını tüketen dokunuş -> bir can gider.
     if (computePower(performance.now(), false)) beginWinWait();
+    else if (game.moves >= game.moveLimit) loseLife("moves");
   }
 
   // Son dönüşü geri al
@@ -2861,16 +2890,21 @@
     }
   }
 
-  /* Süre dolduğunda çağrılır: bir can azalt. Can kaldıysa aynı seviye sıfırlanıp
-     yeniden başlar; kalmadıysa oyun kilitlenir ve ödüllü reklam ekranı açılır. */
-  function loseLife() {
+  /* Süre dolduğunda VEYA hamle hakkı bittiğinde çağrılır: bir can azalt.
+     reason: "time" | "moves" — yalnız kullanıcı metnini belirler.
+     Can kaldıysa aynı seviye sıfırlanıp yeniden başlar; kalmadıysa oyun
+     kilitlenir ve ödüllü reklam ekranı açılır. */
+  function loseLife(reason) {
     if (game.phase !== "play") return;
+    _deadReason = reason === "moves" ? "moves" : "time";
     game.lives = Math.max(0, game.lives - 1);
     updateLives();
     Haptic.error();
     Sound.locked();
     if (game.lives > 0) {
-      showToast("Süre doldu! Bir can kaybettin", 1500);
+      showToast(_deadReason === "moves"
+        ? "Hamle hakkın bitti! Bir can kaybettin"
+        : "Süre doldu! Bir can kaybettin", 1500);
       resetLevel();
     } else {
       game.phase = "dead";
@@ -2879,8 +2913,39 @@
     }
   }
 
-  function showLifeOverlay() { lifeOverlay.classList.add("show"); }
+  var _deadReason = "time";   // son can kaybının nedeni — katman metnini uyarlar
+  function showLifeOverlay() {
+    var subEl   = lifeOverlay.querySelector(".sub");
+    var backBtn = document.getElementById("lifeBackBtn");
+    var endless = cfg.mode === "endless";
+    // 20 seviye geri dönme seçeneği yalnız sonsuz modda anlamlı
+    if (backBtn) backBtn.style.display = endless ? "" : "none";
+    if (subEl) {
+      var why = _deadReason === "moves" ? "Hamle hakkın doldu" : "Süre doldu";
+      subEl.innerHTML = why + " ve son canını da kaybettin.<br>" + (endless
+        ? "Reklam izleyip 1 canla buradan devam et ya da 1 canla 20 seviye geri dön."
+        : "Devam etmek için kısa bir reklam izleyerek 1 can kazanabilirsin.");
+    }
+    lifeOverlay.classList.add("show");
+  }
   function hideLifeOverlay() { lifeOverlay.classList.remove("show"); }
+
+  /* Reklam yerine seçilen ceza: 20 seviye geri dön (20'ye ulaşılmadıysa en
+     baştan) ve TEK canla devam et — tam dolum yok. Reklam da 1 can verir ama
+     bulunduğun seviyede; bu seçenek 1 canı 20 seviyelik tampon karşılığında verir.
+     Yalnız sonsuz modda çağrılır (günlükte seviye gerilemesi anlamsız). */
+  function regressOnDeath() {
+    if (cfg.mode !== "endless" || game.phase !== "dead") return;
+    game.li = Math.max(0, game.li - 20);
+    game.lives = 1;                       // tam dolum yok: tek canla devam
+    updateLives();
+    hideLifeOverlay();
+    game.phase = "play";                 // buildLevel'in "dead" korumasına takılmasın
+    buildLevel();
+    showToast(game.li === 0
+      ? "Canların bitti — en baştan, 1 canla başlıyorsun"
+      : "Canların bitti — 20 seviye geri, 1 canla devam · Seviye " + (game.li + 1), 2800);
+  }
 
   /* ----------------------------------------------------------------------
      11) HUD GÜNCELLE
@@ -2889,17 +2954,24 @@
   function updateHud() {
     var l, m;
     var bulbTag = game.bulbCount > 1 ? "  ·  💡×" + game.bulbCount : "";
+    // "kullanılan / hak" — hak henüz belli değilse (seviye açılışından önce) sade sayı
+    var mv = game.moveLimit > 0 ? (game.moves + " / " + game.moveLimit) : ("" + game.moves);
     if (cfg.mode === "daily") {
       l = "Günlük " + Math.min(game.dailyIdx + 1, DAILY_COUNT) + " / " + DAILY_COUNT;
-      m = game.moves + " hamle  ·  " + game.size + "×" + game.size + bulbTag;
+      m = mv + " hamle  ·  " + game.size + "×" + game.size + bulbTag;
     } else {
       l = "Seviye " + (game.li + 1);
       var best = Store.get(ekey("bestLevel"), 0);
-      m = game.moves + " hamle  ·  " + game.size + "×" + game.size + bulbTag +
+      m = mv + " hamle  ·  " + game.size + "×" + game.size + bulbTag +
           (best > game.li + 1 ? "  ·  rekor S" + best : "");
     }
     if (l !== _lvlTxt) { lvlLabel.textContent = l; _lvlTxt = l; }
     if (m !== _mvTxt)  { movesLabel.textContent = m; _mvTxt = m; }
+
+    // Hamle hakkı azaldıkça sayaç sararır sonra kızarır (süre çubuğu ile aynı dil)
+    var leftMv = game.moveLimit - game.moves;
+    movesLabel.classList.toggle("warn",   game.moveLimit > 0 && leftMv <= 4 && leftMv > 2);
+    movesLabel.classList.toggle("danger", game.moveLimit > 0 && leftMv <= 2);
   }
 
   // Can gösterge kalplerini kalan can sayısına göre boyar/soldurur
@@ -3155,6 +3227,9 @@
       showToast("1 can kazandın!", 1200);
     }, "Devam etmek için kısa bir reklam izlensin mi?\nKarşılığında 1 can kazanırsın.");
   });
+
+  // Reklam yerine: 20 seviye geri dön (tek canla devam)
+  document.getElementById("lifeBackBtn").addEventListener("click", regressOnDeath);
 
   // Yeniden boyutlandırma / yön değişimi -> yeniden yerleşim
   var resizeRAF = 0;
