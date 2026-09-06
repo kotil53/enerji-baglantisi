@@ -2955,10 +2955,9 @@
   var _lvlTxt = "", _mvTxt = "";
   function updateHud() {
     var l, m;
-    // ikincil satır dar bir alana sığmalı: önem sırası hamle -> ampul -> ızgara.
-    // Ayraç tek boşluklu; ızgara en sonda, dar ekranda ilk kırpılan o olur.
+    // ikincil satır dar ekrana sığmalı: yalnız hamle + (varsa) ampul sayısı.
+    // Izgara boyutu tahtadan zaten belli; etiketi kaldırıldı (dar ekranda "..." yapıyordu).
     var bulbTag = game.bulbCount > 1 ? " · 💡×" + game.bulbCount : "";
-    var gridTag = " · " + game.size + "×" + game.size;
     // "kullanılan / hak" — hak henüz belli değilse (seviye açılışından önce) sade sayı
     var mv = game.moveLimit > 0 ? (game.moves + " / " + game.moveLimit) : ("" + game.moves);
     if (cfg.mode === "daily") {
@@ -2966,7 +2965,7 @@
     } else {
       l = "Seviye " + (game.li + 1);
     }
-    m = mv + " hamle" + bulbTag + gridTag;
+    m = mv + " hamle" + bulbTag;
     if (l !== _lvlTxt) { lvlLabel.textContent = l; _lvlTxt = l; }
     if (m !== _mvTxt)  { movesLabel.textContent = m; _mvTxt = m; }
 
