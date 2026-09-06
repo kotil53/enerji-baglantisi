@@ -21,6 +21,10 @@ on:
         description: "İmzalı App Store IPA üret (Apple API anahtarı sırları gerekir)"
         type: boolean
         default: false
+      version:
+        description: "Sürüm no (ör. 1.0.2) — boş bırakılırsa capacitor-app/package.json'daki sürüm. App Store Connect'teki en yüksek sürümden DÜŞÜK bir değer verme: Apple derlemeyi sessizce reddeder (TestFlight'ta hiç görünmez)."
+        type: string
+        default: ""
 
 concurrency:
   group: ios-${{ github.ref }}
@@ -51,10 +55,18 @@ jobs:
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${{ inputs.version }}" ]]; then
+            # Elle girilen sürüm no (workflow_dispatch "version" girdisi).
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
           else
-            # Apple CFBundleShortVersionString yalnız 1-3 nokta ayrılmış tam sayı kabul eder
-            # ("0.0.0-ci.66" altool'da -19239 ile reddedilir) -> tag'siz CI'da 0.0.<run>.
-            echo "version=0.0.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+            # Tag ve girdi yok: sürüm capacitor-app/package.json'dan (ör. 1.0.1).
+            # CFBundleShortVersionString sabit kalır; build'leri ayıran tek şey
+            # CFBundleVersion = run_number -> tüm CI yüklemeleri App Store Connect'te
+            # AYNI sürüm altında, artan build numaralarıyla TestFlight'a düşer.
+            # ÖNEMLİ: bu değer App Store Connect'teki EN YÜKSEK sürümden düşükse
+            # (eski "0.0.<run>" gibi) Apple derlemeyi sessizce reddeder / ayrı bir ölü
+            # dizide bırakır -> yeni sürüm hattı için package.json'ı yükselt.
+            echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Native projeyi üret (sync + cap add ios + native:config + pod install)
@@ -141,10 +153,18 @@ jobs:
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${{ inputs.version }}" ]]; then
+            # Elle girilen sürüm no (workflow_dispatch "version" girdisi).
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
           else
-            # Apple CFBundleShortVersionString yalnız 1-3 nokta ayrılmış tam sayı kabul eder
-            # ("0.0.0-ci.66" altool'da -19239 ile reddedilir) -> tag'siz CI'da 0.0.<run>.
-            echo "version=0.0.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+            # Tag ve girdi yok: sürüm capacitor-app/package.json'dan (ör. 1.0.1).
+            # CFBundleShortVersionString sabit kalır; build'leri ayıran tek şey
+            # CFBundleVersion = run_number -> tüm CI yüklemeleri App Store Connect'te
+            # AYNI sürüm altında, artan build numaralarıyla TestFlight'a düşer.
+            # ÖNEMLİ: bu değer App Store Connect'teki EN YÜKSEK sürümden düşükse
+            # (eski "0.0.<run>" gibi) Apple derlemeyi sessizce reddeder / ayrı bir ölü
+            # dizide bırakır -> yeni sürüm hattı için package.json'ı yükselt.
+            echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Native projeyi üret (sync + cap add ios + native:config + pod install)

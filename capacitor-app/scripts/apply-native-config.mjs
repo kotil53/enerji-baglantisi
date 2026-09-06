@@ -94,6 +94,17 @@ patch(plist, (p) => {
   return p.slice(0, idx) + `\t<key>ITSAppUsesNonExemptEncryption</key>\n\t<false/>\n` + p.slice(idx);
 });
 
+// Minimum iOS sürümü: Capacitor 6 varsayılanı 13.0 -> Apple ITMS-90068 uyarısı veriyor
+// ("2027 baharından itibaren MinimumOSVersion 15.0+ olmalı"). Şimdiden 15.0'a çek.
+// App hedefinin IPHONEOS_DEPLOYMENT_TARGET'ı MinimumOSVersion'ı belirler; Podfile
+// `platform` satırı da Pod'lara aynı tabanı geçirir (assertDeploymentTarget).
+const pbxproj = join(root, "ios/App/App.xcodeproj/project.pbxproj");
+patch(pbxproj, (s) => {
+  if (!s.includes("IPHONEOS_DEPLOYMENT_TARGET = 13.0")) return s;
+  log("project.pbxproj       IPHONEOS_DEPLOYMENT_TARGET 13.0 -> 15.0 (ITMS-90068)");
+  return s.replace(/IPHONEOS_DEPLOYMENT_TARGET = 13\.0;/g, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;");
+});
+
 // @capacitor-community/admob 6.2.0 iOS hatası: prepareRewardInterstitialAd /
 // showRewardInterstitialAd fonksiyonları tanımlı ama CAPBridgedPlugin
 // `pluginMethods` listesine eklenmemiş -> iOS'ta JS'ten çağrılınca "not
@@ -132,6 +143,13 @@ patch(podfile, (pf) => {
     out = pf.replace(m[0], m[0] + pin);
   }
   if (out !== pf) { podfileChanged = true; log("Podfile              +GoogleUserMessagingPlatform 2.6.0 (UMP 2.x sabiti)"); }
+  return out;
+});
+
+// Pod tabanını da 15.0'a çek (yukarıdaki pbxproj ile aynı gerekçe — ITMS-90068).
+patch(podfile, (pf) => {
+  const out = pf.replace(/^platform :ios, ['"]13\.0['"]/m, "platform :ios, '15.0'");
+  if (out !== pf) { podfileChanged = true; log("Podfile              platform :ios 13.0 -> 15.0 (ITMS-90068)"); }
   return out;
 });
 
