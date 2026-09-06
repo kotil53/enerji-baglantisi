@@ -1758,39 +1758,40 @@
   var THEME_BAND = 5;   // kaç seviyede bir tema değişir
 
   // Elle seçilen alanlar: bg, köşe tonları (tintA/B), ink, accent A/B,
-  // sönük kablo tabanı (wireBase), enerjili kablo üçlüsü (wire/wireGlow/
-  // wireCore) + akan nokta (flow), kaynak gradyanı (srcA/B), ampul
-  // gradyanı (bulbA/B). Hepsi koyu zeminli; ink her zaman açık (WCAG AA).
+  // enerjili kablo üçlüsü (wire/wireGlow/wireCore) + akan nokta (flow),
+  // kaynak gradyanı (srcA/B), ampul gradyanı (bulbA/B). Hepsi koyu zeminli;
+  // ink her zaman açık (WCAG AA). Sönük kablo tabanı artık elle seçilmez —
+  // applyTheme() bg->ink'ten türetir (her temada eşit, okunur kontrast).
   var THEMES = [
     { name: "Gece Mavisi",
       bg: "#0a0e1a", tintA: "#14203c", tintB: "#1a1330", ink: "#cdd6f4",
       accentA: "#3ad0c0", accentB: "#2a95e8",
-      wireBase: "#2a3048", wire: "#ffb733", wireGlow: "#ff9a1f", wireCore: "#fff2bf", flow: "#fffdf2",
+      wire: "#ffb733", wireGlow: "#ff9a1f", wireCore: "#fff2bf", flow: "#fffdf2",
       srcA: "#7bffe6", srcB: "#12b7a0", bulbA: "#fff7cf", bulbB: "#ffc531" },
     { name: "Mor Alacakaranlık",
       bg: "#0d0a1c", tintA: "#241a44", tintB: "#3a1533", ink: "#e7d9f6",
       accentA: "#c86bd8", accentB: "#7a5cf0",
-      wireBase: "#332a48", wire: "#ffc24d", wireGlow: "#ff8fd0", wireCore: "#fff0d6", flow: "#fff6ff",
+      wire: "#ffc24d", wireGlow: "#ff8fd0", wireCore: "#fff0d6", flow: "#fff6ff",
       srcA: "#8fffe0", srcB: "#13a7b7", bulbA: "#fff4d0", bulbB: "#ffbe3a" },
     { name: "Zümrüt Derinlik",
       bg: "#07130f", tintA: "#0f2e26", tintB: "#0a2436", ink: "#d5f0e6",
       accentA: "#3ad98f", accentB: "#2ab7c8",
-      wireBase: "#243a34", wire: "#ffd24d", wireGlow: "#ffae2b", wireCore: "#fff6cf", flow: "#fffef0",
+      wire: "#ffd24d", wireGlow: "#ffae2b", wireCore: "#fff6cf", flow: "#fffef0",
       srcA: "#9bffd8", srcB: "#13b78f", bulbA: "#fff7cf", bulbB: "#ffcf3a" },
     { name: "Volkanik",
       bg: "#150a08", tintA: "#3a1710", tintB: "#301515", ink: "#f5e1d5",
       accentA: "#ff7a3d", accentB: "#ff4d6d",
-      wireBase: "#3a2a24", wire: "#ffd15a", wireGlow: "#ff7a1f", wireCore: "#fff0d0", flow: "#fffdf2",
+      wire: "#ffd15a", wireGlow: "#ff7a1f", wireCore: "#fff0d0", flow: "#fffdf2",
       srcA: "#7be6ff", srcB: "#1f9fd0", bulbA: "#e8fbff", bulbB: "#7fd8ff" },
     { name: "İndigo Gece",
       bg: "#080a1e", tintA: "#161e4a", tintB: "#221a52", ink: "#d9def7",
       accentA: "#6c8cff", accentB: "#4d5ff0",
-      wireBase: "#2a3050", wire: "#ffcb45", wireGlow: "#ff9f3d", wireCore: "#fff1c8", flow: "#fffdf4",
+      wire: "#ffcb45", wireGlow: "#ff9f3d", wireCore: "#fff1c8", flow: "#fffdf4",
       srcA: "#84ffe6", srcB: "#12b0c0", bulbA: "#fff6cf", bulbB: "#ffc835" },
     { name: "Okyanus Dibi",
       bg: "#061417", tintA: "#0c2e38", tintB: "#0a2333", ink: "#d3eef4",
       accentA: "#35c8d8", accentB: "#2a86e8",
-      wireBase: "#213b40", wire: "#ffcf5a", wireGlow: "#ffab2b", wireCore: "#fff4d6", flow: "#fdffff",
+      wire: "#ffcf5a", wireGlow: "#ffab2b", wireCore: "#fff4d6", flow: "#fdffff",
       srcA: "#8ffff0", srcB: "#12b0a7", bulbA: "#fff7d0", bulbB: "#ffc93a" }
   ];
 
@@ -1917,8 +1918,11 @@
     cs.setProperty("--e-scrim", _rgb(mix(bg, "#000000", 0.38)));
 
     // --- canvas token nesnesi ---
-    T.wireBase   = th.wireBase;
-    T.wireBaseHi = mix(th.wireBase, ink, 0.30);
+    // Sönük kablo tabanı bg->ink'ten türetilir. Elle seçilen eski değerler bazı
+    // temalarda (özellikle Volkanik) zemine gömülüp enerjisiz ağı görünmez
+    // kılıyordu; bg->ink karışımı her temada eşit, okunur bir kontrast verir.
+    T.wireBase   = mix(bg, ink, 0.30);
+    T.wireBaseHi = mix(bg, ink, 0.50);
     T.wire       = th.wire;
     T.wireGlow   = th.wireGlow;
     T.wireCore   = th.wireCore;
@@ -2339,6 +2343,15 @@
     canvas.height = Math.round(h * dpr);
     // Bundan sonra tüm çizimler CSS pikseli cinsinden yapılır
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    // Dikey boşluk varsa tahtayı bir tık yukarı yasla: uzun ekranda tam
+    // ortada "yüzmek" yerine HUD'a yakın dursun. Lift her zaman boşluğun
+    // yarısıyla sınırlı -> hiçbir yön/oryantasyonda taşma olmaz (yatay
+    // ekranda boşluk ~0 -> lift 0). transform layout kutusunu değiştirmez,
+    // getBoundingClientRect dokunuş eşlemesini yine doğru verir.
+    var slackH = Math.max(0, availH - pad * 2 - h);
+    var lift = Math.min(slackH * 0.5, Math.round(availH * 0.06));
+    canvas.style.transform = lift > 0.5 ? "translateY(-" + Math.round(lift) + "px)" : "";
   }
 
   /* ----------------------------------------------------------------------
@@ -2580,7 +2593,15 @@
     var el = now - game.phaseAt;
     if (reduceMotion) el = 1e9;               // hareket azalt: onay + yıldızlar anında görünür
     var t = clamp01(el / 280);
-    ctx.fillStyle = "rgba(" + T.dimRGB + "," + (0.76 * t).toFixed(3) + ")";
+    ctx.fillStyle = "rgba(" + T.dimRGB + "," + (0.82 * t).toFixed(3) + ")";
+    ctx.fillRect(0, 0, W, H);
+    // Metin + rozet kümesinin arkasını ayrıca radyal karart: çözülmüş bulmacada
+    // tüm hatlar parlak yanar, düz kaplama tek başına yetmiyor (metin boruya
+    // biniyordu). Merkez ~0.95 opak, kenarlar düz kaplamada kalır.
+    var fog = ctx.createRadialGradient(W / 2, H / 2, M * 0.04, W / 2, H / 2, M * 0.7);
+    fog.addColorStop(0, "rgba(" + T.dimRGB + "," + (0.72 * t).toFixed(3) + ")");
+    fog.addColorStop(1, "rgba(" + T.dimRGB + ",0)");
+    ctx.fillStyle = fog;
     ctx.fillRect(0, 0, W, H);
 
     var s = easeOutBack(clamp01(el / 430));
