@@ -105,8 +105,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    padding: 8px 14px;
+    gap: 8px;
+    padding: 8px 12px;
     color: var(--e-ink);
     font-size: 14px;
     font-weight: 600;
@@ -117,7 +117,7 @@
   #hud .moves { font-size: 12px; color: var(--e-muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .2s ease; }
   #hud .moves.warn   { color: #ffb733; font-weight: 700; }
   #hud .moves.danger { color: #ff5c5c; font-weight: 700; }
-  #hud .right { display: flex; gap: 7px; flex: 0 0 auto; }
+  #hud .right { display: flex; gap: 6px; flex: 0 0 auto; }
 
   /* HUD düğmeleri: dokunmatik için yeterince büyük (min 40px) */
   .btn {
@@ -2955,18 +2955,18 @@
   var _lvlTxt = "", _mvTxt = "";
   function updateHud() {
     var l, m;
-    var bulbTag = game.bulbCount > 1 ? "  ·  💡×" + game.bulbCount : "";
+    // ikincil satır dar bir alana sığmalı: önem sırası hamle -> ampul -> ızgara.
+    // Ayraç tek boşluklu; ızgara en sonda, dar ekranda ilk kırpılan o olur.
+    var bulbTag = game.bulbCount > 1 ? " · 💡×" + game.bulbCount : "";
+    var gridTag = " · " + game.size + "×" + game.size;
     // "kullanılan / hak" — hak henüz belli değilse (seviye açılışından önce) sade sayı
     var mv = game.moveLimit > 0 ? (game.moves + " / " + game.moveLimit) : ("" + game.moves);
     if (cfg.mode === "daily") {
       l = "Günlük " + Math.min(game.dailyIdx + 1, DAILY_COUNT) + " / " + DAILY_COUNT;
-      m = mv + " hamle  ·  " + game.size + "×" + game.size + bulbTag;
     } else {
       l = "Seviye " + (game.li + 1);
-      var best = Store.get(ekey("bestLevel"), 0);
-      m = mv + " hamle  ·  " + game.size + "×" + game.size + bulbTag +
-          (best > game.li + 1 ? "  ·  rekor S" + best : "");
     }
+    m = mv + " hamle" + bulbTag + gridTag;
     if (l !== _lvlTxt) { lvlLabel.textContent = l; _lvlTxt = l; }
     if (m !== _mvTxt)  { movesLabel.textContent = m; _mvTxt = m; }
 
