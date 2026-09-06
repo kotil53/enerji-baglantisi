@@ -2167,11 +2167,13 @@
   }
 
   // Seviyenin HAMLE hakkı. Par'a (gereken en az dokunuş) ve ampul sayısına göre
-  // ölçeklenir; bilerek 2-yıldız sınırının hemen üstünde tutulur -> temiz oyun
-  // asla takılmaz ama savurgan çevirme cezalandırılır. Bu sayıya ULAŞAN dokunuş
-  // seviyeyi bitirmiyorsa -1 can (süre dolması ile aynı ceza).
+  // ölçeklenir; bilerek 2-yıldız eşiğinin (round(par*1.7)+3) hemen üstünde
+  // tutulur -> temiz oyun asla takılmaz ama savurgan çevirme cezalandırılır.
+  // Bu sayıya ULAŞAN dokunuş seviyeyi bitirmiyorsa -1 can (süre dolması gibi).
+  // Sabit ve ampul payı bir tık kısıldı (+5/·3 -> +4/·2): tek ampulde -1,
+  // iki ampulde -2, üç ampulde -3 hamle.
   function computeMoveLimit() {
-    var m = Math.round(game.par * 1.7) + 5 + (game.bulbCount - 1) * 3;
+    var m = Math.round(game.par * 1.7) + 4 + (game.bulbCount - 1) * 2;
     return clampI(m, 7, 200);
   }
 
