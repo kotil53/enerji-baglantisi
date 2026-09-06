@@ -855,7 +855,10 @@
           this._master.gain.value = this._gain();
           this._master.connect(this.ac.destination);
         }
-        if (this.ac.state === "suspended") this.ac.resume();
+        // "suspended": sekme arka planda / ilk jest bekleniyor.
+        // "interrupted": iOS/WebKit standart dışı durumu — uygulama arka plana
+        // alınınca ya da başka ses oturumu kesince buraya düşer; resume() şart.
+        if (this.ac.state === "suspended" || this.ac.state === "interrupted") this.ac.resume();
       } catch (e) { this.ac = null; }
       return this.ac;
     },
@@ -930,6 +933,8 @@
        -------------------------------------------------------------------- */
     _mus: {
       timer: null, bus: null, step: 0, nextT: 0,
+      waking: false,     // resume() bekleniyor mu (çift uyandırmayı önler)
+      gen: 0,            // istek kuşağı — stopMusic artırır, bayat uyandırmayı geçersizler
       STEP: 0.55,        // saniye / adım
       AHEAD: 1.0,        // kaç saniye ileriye planla
       // A minör pentatonik, üç oktav (Hz)
@@ -942,22 +947,44 @@
     // Motoru başlat. muted / musicOn kapalıysa ya da AudioContext yoksa sessizce çıkar.
     // Idempotent: zaten çalışıyorsa hiçbir şey yapmaz (arka plandan dönüş, reklam bitişi).
     startMusic: function () {
-      var m = this._mus;
+      var m = this._mus, self = this;
       if (m.timer || this.muted || !this.musicOn || this.vol <= 0) return;
       var ac = this.ensure(); if (!ac) return;
+      // Bağlam hazırsa hemen kur. Değilse (arka plandan yeni döndük, iOS'ta
+      // "interrupted"/"suspended") önce uyandır — resume() asenkron; senkron
+      // kurarsak notalar donmuş currentTime'a planlanır ve sessiz kalır.
+      if (ac.state === "running") { this._spinMusic(ac); return; }
+      if (m.waking) return;
+      m.waking = true;
+      var g = m.gen;
+      var done = function () {
+        m.waking = false;
+        if (g === m.gen && !m.timer && !self.muted && self.musicOn && self.vol > 0 &&
+            self.ac && self.ac.state === "running" && !document.hidden) self._spinMusic(self.ac);
+      };
+      try {
+        var p = ac.resume();
+        if (p && p.then) p.then(done, function () { m.waking = false; });
+        else done();
+      } catch (e) { m.waking = false; }
+    },
+
+    // Müzik motorunu fiilen kur — yalnız bağlam "running" iken çağrılır.
+    _spinMusic: function (ac) {
+      var m = this._mus, self = this;
       m.bus = ac.createGain();
       m.bus.gain.setValueAtTime(0.0001, ac.currentTime);
       m.bus.gain.exponentialRampToValueAtTime(0.2, ac.currentTime + 2.5);  // yumuşak giriş
       m.bus.connect(this._out() || ac.destination);
       m.step = 0;
       m.nextT = ac.currentTime + 0.15;
-      var self = this;
       m.timer = setInterval(function () { self._musTick(); }, 120);
     },
 
     // Motoru durdur. quick=true -> hızlı sönüm (arka plan / reklam), yoksa 1.2 sn.
     stopMusic: function (quick) {
       var m = this._mus, ac = this.ac;
+      m.waking = false; m.gen++;   // bekleyen uyandırma varsa geçersizle
       if (m.timer) { clearInterval(m.timer); m.timer = null; }
       var b = m.bus; m.bus = null;
       if (b && ac) {
@@ -3172,16 +3199,26 @@
 
   // İlk kullanıcı jesti -> ses motoru + (açıksa) müzik başlar (otomatik-oynatma politikası).
   // capture:true -> iç handler'lardan önce yakala; bir kez çalışıp kendini kaldırır.
-  document.addEventListener("pointerdown", function musKick() {
-    document.removeEventListener("pointerdown", musKick, true);
-    Sound.ensure();
-    Sound.startMusic();
-  }, true);
+  // Arka plana her geçişte yeniden kurulur: iOS'ta askıya alınan ses bağlamını
+  // yalnız gerçek bir dokunuş uyandırır (olay tetikli resume() reddedilebilir).
+  var _kickArmed = false;
+  function armAudioKick() {
+    if (_kickArmed) return;
+    _kickArmed = true;
+    document.addEventListener("pointerdown", function musKick() {
+      _kickArmed = false;
+      document.removeEventListener("pointerdown", musKick, true);
+      Sound.ensure();
+      Sound.startMusic();
+    }, true);
+  }
+  armAudioKick();
 
-  // Sekme/uygulama arka plana geçince müziği duraklat, öne gelince sürdür
+  // Sekme/uygulama arka plana geçince müziği duraklat, öne gelince sürdür.
+  // Dönüşte: bağlamı uyandır (efektler için) + müziği taze kur + jest-yedeğini kur.
   document.addEventListener("visibilitychange", function () {
-    if (document.hidden) Sound.stopMusic(true);
-    else Sound.startMusic();
+    if (document.hidden) { Sound.stopMusic(true); armAudioKick(); }
+    else { Sound.ensure(); Sound.startMusic(); }
   });
 
   // HUD düğmeleri
@@ -3293,8 +3330,8 @@
         ap.addListener("backButton", function () { menuOpen ? closeMenu() : openMenu(); });
         // Uygulama arka plana/öne geçince müziği duraklat/sürdür
         // (iOS'ta visibilitychange her zaman tetiklenmez -> burada da ele al)
-        ap.addListener("pause",  function () { Sound.stopMusic(true); });
-        ap.addListener("resume", function () { Sound.startMusic(); });
+        ap.addListener("pause",  function () { Sound.stopMusic(true); armAudioKick(); });
+        ap.addListener("resume", function () { Sound.ensure(); Sound.startMusic(); });
       }
     } catch (e) {}
     try { Ads.init(); } catch (e) {}      // AdMob: onay + ATT + reklamları ön-yükle
