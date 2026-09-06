@@ -103,9 +103,14 @@ Apple boyutları farklı. En az **6.7" / 6.9"** seti gerekir (biri yeterli, Appl
 küçük cihazlara ölçekler):
 - 6.9" iPhone (16 Pro Max): **1320 × 2868**
 - 6.5" iPhone: 1242 × 2688 (alternatif)
-Kaynak: TestFlight build'i çalışan iPhone'da ekran görüntüsü al (oynanış, menü,
-kilitli parçalar, günlük mod, kazanma anı) → 3–5 adet. Simülatörden de alınır
-(iPhone 16 Pro Max, tam çözünürlük).
+
+✅ **Hazır:** `capacitor-app/fastlane/screenshots/tr/` — `01-oynanis.png`,
+`02-menu.png`, `03-kilitli-parcalar.png`, `04-gunluk-mod.png` (1320×2868, 6.9").
+Oyunun HTML'i tarayıcıda iPhone 16 Pro Max çözünürlüğünde (440×956 @3x) açılıp
+gerçek oyun durumlarından alındı — Android seti de emülatörden böyle üretilmişti.
+`ios-metadata.yml` push'unda `include_screenshots=true` ile yüklenir, ya da App
+Store Connect'e elle sürükle-bırak. İstersen gerçek cihazdan "kazanma anı" karesi
+eklenebilir.
 
 ### Metin alanları
 `ios-metadata.yml` (push) yazar · kaynak `capacitor-app/fastlane/metadata/tr/`
@@ -120,7 +125,7 @@ kilitli parçalar, günlük mod, kazanma anı) → 3–5 adet. Simülatörden de
 | Support URL | `https://github.com/kotil53/enerji-baglantisi` | `support_url.txt` |
 | Marketing URL | (boş bırakılabilir) | — (dosya yok) |
 | Privacy Policy URL | `https://kotil53.github.io/enerji-baglantisi/privacy-policy.html` | `privacy_url.txt` |
-| What's New (1.0) | İlk sürüm. | `release_notes.txt` |
+| What's New (1.0) | Enerji Bağlantısı'nın ilk sürümü. Kabloları döndür… (bkz. `release_notes.txt`) | `release_notes.txt` |
 | Price | Free | — (App Store Connect'te elle) |
 
 ### App Privacy (Apple "besin etiketi") — AdMob'a göre
