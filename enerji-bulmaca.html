@@ -947,7 +947,7 @@
       var ac = this.ensure(); if (!ac) return;
       m.bus = ac.createGain();
       m.bus.gain.setValueAtTime(0.0001, ac.currentTime);
-      m.bus.gain.exponentialRampToValueAtTime(0.055, ac.currentTime + 2.5);  // yumuşak giriş
+      m.bus.gain.exponentialRampToValueAtTime(0.09, ac.currentTime + 2.5);  // yumuşak giriş
       m.bus.connect(this._out() || ac.destination);
       m.step = 0;
       m.nextT = ac.currentTime + 0.15;
