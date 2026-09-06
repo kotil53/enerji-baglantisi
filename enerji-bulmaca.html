@@ -947,7 +947,7 @@
       var ac = this.ensure(); if (!ac) return;
       m.bus = ac.createGain();
       m.bus.gain.setValueAtTime(0.0001, ac.currentTime);
-      m.bus.gain.exponentialRampToValueAtTime(0.09, ac.currentTime + 2.5);  // yumuşak giriş
+      m.bus.gain.exponentialRampToValueAtTime(0.2, ac.currentTime + 2.5);  // yumuşak giriş
       m.bus.connect(this._out() || ac.destination);
       m.step = 0;
       m.nextT = ac.currentTime + 0.15;
@@ -1011,7 +1011,7 @@
       var ac = this.ac, m = this._mus;
       var g = ac.createGain();
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.14, t + 1.8);    // yavaş atak
+      g.gain.exponentialRampToValueAtTime(0.18, t + 1.8);    // yavaş atak
       g.gain.exponentialRampToValueAtTime(0.0001, t + 7.5);  // uzun kuyruk
       g.connect(m.bus);
       var a = ac.createOscillator(), b = ac.createOscillator();
@@ -1026,7 +1026,7 @@
       var o = ac.createOscillator(), g = ac.createGain();
       o.type = "sine"; o.frequency.value = freq;
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.08, t + 0.06);
+      g.gain.exponentialRampToValueAtTime(0.15, t + 0.06);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
       o.connect(g); g.connect(m.bus);
       o.start(t); o.stop(t + 1.2);
