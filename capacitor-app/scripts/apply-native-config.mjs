@@ -70,6 +70,34 @@ patch(buildGradle, (g) => {
   return out;
 });
 
+// Play Console, yüklenen sürümün hedeflediği API düzeyinin Google'ın o anki
+// asgari şartını karşılamasını istiyor (her yıl yükseliyor); Capacitor 6
+// varsayılanı (34) altında kalınca kapalı test/production yüklemesi
+// "1 hata" ile reddediliyor. compileSdk'yı da aynı hizada tutmak gerekiyor;
+// bu ikisi eski AGP/Gradle ile derlenemeyebileceği için ikisini de yükseltiyoruz.
+const variablesGradle = join(root, "android/variables.gradle");
+patch(variablesGradle, (g) => {
+  const out = g
+    .replace(/compileSdkVersion\s*=\s*\d+/, "compileSdkVersion = 36")
+    .replace(/targetSdkVersion\s*=\s*\d+/, "targetSdkVersion = 36");
+  if (out !== g) log("variables.gradle      compile/targetSdkVersion -> 36 (Play Console asgari şartı)");
+  return out;
+});
+
+const rootBuildGradle = join(root, "android/build.gradle");
+patch(rootBuildGradle, (g) => {
+  const out = g.replace(/com\.android\.tools\.build:gradle:[\d.]+/, "com.android.tools.build:gradle:8.7.2");
+  if (out !== g) log("build.gradle (root)   Android Gradle Plugin -> 8.7.2 (compileSdk 36 desteği)");
+  return out;
+});
+
+const gradleWrapperProps = join(root, "android/gradle/wrapper/gradle-wrapper.properties");
+patch(gradleWrapperProps, (g) => {
+  const out = g.replace(/gradle-[\d.]+-all\.zip/, "gradle-8.9-all.zip");
+  if (out !== g) log("gradle-wrapper.properties  Gradle -> 8.9 (AGP 8.7.2 gereksinimi)");
+  return out;
+});
+
 // ── iOS ──────────────────────────────────────────────────────────
 const plist = join(root, "ios/App/App/Info.plist");
 patch(plist, (p) => {
