@@ -142,6 +142,12 @@
   /* İpucu düğmesi: ödüllü reklam kancası — amber vurgu ile ayrışır */
   .btn.hint { border-color: var(--e-hint-border); background: var(--e-hint-bg); color: var(--e-hint); }
   .btn.hint:active { background: var(--e-hint-bg-hi); border-color: var(--e-hint-border-hi); }
+  /* Klavye ile gezinme: tüm gerçek <button>'larda görünür odak halkası
+     (yalnız klavye/switch-control odağında — dokunma/tıklamada çıkmaz). */
+  button:focus-visible {
+    outline: 2px solid var(--e-accent-a);
+    outline-offset: 2px;
+  }
 
   /* ---------- ALT-HUD: SÜRE ÇUBUĞU + CANLAR ---------- */
   #subhud {
@@ -186,9 +192,10 @@
     transition: opacity .2s ease, transform .2s ease, color .2s ease;
   }
   #livesLabel .heart.off { color: #333c5c; opacity: 0.55; transform: scale(0.82); }
+  #livesLabel .heart.hide { display: none; }   /* normal tavanın (MAX_LIVES) üstü: yalnız bonus canla açığa çıkar */
 
-  /* ---------- CAN BİTTİ KATMANI ---------- */
-  #lifeOverlay {
+  /* ---------- CAN BİTTİ / KUTLAMA / DEVAM / ARA ÖVGÜ KATMANLARI ---------- */
+  #lifeOverlay, #milestoneOverlay, #resumeOverlay, #praiseOverlay {
     position: fixed;
     inset: 0;
     z-index: 26;
@@ -203,8 +210,8 @@
     pointer-events: none;
     transition: opacity .28s ease;
   }
-  #lifeOverlay.show { opacity: 1; pointer-events: auto; }
-  #lifeOverlay .card {
+  #lifeOverlay.show, #milestoneOverlay.show, #resumeOverlay.show, #praiseOverlay.show { opacity: 1; pointer-events: auto; }
+  #lifeOverlay .card, #milestoneOverlay .card, #resumeOverlay .card, #praiseOverlay .card {
     width: 100%;
     max-width: 380px;
     text-align: center;
@@ -214,18 +221,18 @@
     padding: 26px 22px;
     box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
   }
-  #lifeOverlay .hearts { font-size: 30px; letter-spacing: 4px; margin-bottom: 10px; }
-  #lifeOverlay h2 { margin: 2px 0 6px; font-size: 20px; letter-spacing: 0.5px; color: #eaf1ff; }
-  #lifeOverlay .sub { margin: 0 0 18px; color: #8b93b5; font-size: 13px; line-height: 1.5; }
-  #lifeOverlay button.big {
+  #lifeOverlay .hearts, #milestoneOverlay .hearts, #resumeOverlay .hearts, #praiseOverlay .hearts { font-size: 30px; letter-spacing: 4px; margin-bottom: 10px; }
+  #lifeOverlay h2, #milestoneOverlay h2, #resumeOverlay h2, #praiseOverlay h2 { margin: 2px 0 6px; font-size: 20px; letter-spacing: 0.5px; color: #eaf1ff; }
+  #lifeOverlay .sub, #milestoneOverlay .sub, #resumeOverlay .sub { margin: 0 0 18px; color: #8b93b5; font-size: 13px; line-height: 1.5; }
+  #lifeOverlay button.big, #milestoneOverlay button.big, #resumeOverlay button.big {
     -webkit-appearance: none; appearance: none;
     width: 100%; cursor: pointer; touch-action: manipulation;
     padding: 14px; border: none; border-radius: 14px;
     background: linear-gradient(135deg, #ffd23f, #ff9a1f);
     color: #241a04; font-size: 15px; font-weight: 800; letter-spacing: 0.3px;
   }
-  #lifeOverlay button.big:active { transform: scale(0.97); }
-  /* İkincil (sessiz) seçenek: reklam yerine 20 seviye geri dön */
+  #lifeOverlay button.big:active, #milestoneOverlay button.big:active, #resumeOverlay button.big:active { transform: scale(0.97); }
+  /* İkincil (sessiz) seçenek: reklam yerine 7 seviye geri dön */
   #lifeOverlay button.ghost {
     -webkit-appearance: none; appearance: none;
     width: 100%; cursor: pointer; touch-action: manipulation;
@@ -233,6 +240,48 @@
     background: transparent; color: #9aa5c8; font-size: 13.5px; font-weight: 700; letter-spacing: 0.3px;
   }
   #lifeOverlay button.ghost:active { transform: scale(0.97); background: #10192c; }
+  /* 100 seviye kutlaması + ara övgü + kaldığın-yerden katmanında rozet/ikon zıplayarak belirir */
+  @keyframes trophyPop {
+    0%   { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+    55%  { transform: scale(1.18) rotate(6deg); opacity: 1; }
+    75%  { transform: scale(0.94) rotate(-3deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+  #milestoneOverlay.show .hearts, #praiseOverlay.show .hearts, #resumeOverlay.show .hearts { animation: trophyPop .6s cubic-bezier(.2, .9, .25, 1.4) .1s backwards; }
+
+  /* Kilometre taşı kartı: oyundaki en büyük başarı anı -> sıcak altın kenarlık/
+     parıltıyla can-bitti/kaldığın-yerden gibi nötr katmanlardan ayrışır. */
+  #milestoneOverlay .card {
+    position: relative;
+    border-color: #6b4a1a;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8), 0 0 70px -12px rgba(255, 178, 32, 0.4);
+  }
+  /* 8 yönlü konfeti: her nokta merkezden döndürülüp kendi ekseninde dışa kayar
+     (rotate + translateY ile pürüzsüz radyal dağılım — ayrı ayrı x/y hesabı gerekmez). */
+  #milestoneOverlay .confetti { position: absolute; left: 50%; top: 54px; width: 0; height: 0; pointer-events: none; }
+  #milestoneOverlay .confetti i {
+    position: absolute; left: 0; top: 0; width: 6px; height: 6px; border-radius: 2px;
+    background: var(--dot, #ffd23f);
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--a, 0deg));
+  }
+  #milestoneOverlay.show .confetti i { animation: confettiBurst .75s cubic-bezier(.2, .8, .3, 1) .12s backwards; }
+  @keyframes confettiBurst {
+    0%   { opacity: 1; transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateY(0) scale(0.7); }
+    100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a, 0deg)) translateY(-44px) scale(1); }
+  }
+  #milestoneOverlay .confetti i:nth-child(1) { --a: 0deg;   --dot: #ffd23f; }
+  #milestoneOverlay .confetti i:nth-child(2) { --a: 45deg;  --dot: #ff9a1f; animation-delay: .17s; }
+  #milestoneOverlay .confetti i:nth-child(3) { --a: 90deg;  --dot: #ffd23f; animation-delay: .06s; }
+  #milestoneOverlay .confetti i:nth-child(4) { --a: 135deg; --dot: #ff6b6b; animation-delay: .2s; }
+  #milestoneOverlay .confetti i:nth-child(5) { --a: 180deg; --dot: #ffd23f; animation-delay: .09s; }
+  #milestoneOverlay .confetti i:nth-child(6) { --a: 225deg; --dot: #ff9a1f; animation-delay: .22s; }
+  #milestoneOverlay .confetti i:nth-child(7) { --a: 270deg; --dot: #ffd23f; animation-delay: .04s; }
+  #milestoneOverlay .confetti i:nth-child(8) { --a: 315deg; --dot: #ff6b6b; animation-delay: .15s; }
+  @media (prefers-reduced-motion: reduce) {
+    #milestoneOverlay.show .hearts, #praiseOverlay.show .hearts, #resumeOverlay.show .hearts { animation: none; }
+    #milestoneOverlay .confetti { display: none; }
+  }
 
   /* ---------- OYUN SAHNESİ (canvas'ı ortalar) ---------- */
   #stage {
@@ -257,6 +306,16 @@
       0 0 0 1px rgba(var(--e-canvas-ring), 0.22),
       0 20px 60px -20px rgba(0, 0, 0, 0.8),
       inset 0 0 60px -20px rgba(var(--e-canvas-ring), 0.16);
+  }
+
+  /* ---------- ALT BANNER REKLAM ALANI ---------- */
+  /* Native banner bu kutunun üstüne bindirilir; yükseklik yalnız oyun
+     alanının ne kadar yer bırakacağını belirler (bkz. Ads._showBanner). */
+  #adBanner {
+    flex: 0 0 auto;
+    height: 0;
+    overflow: hidden;
+    transition: height .25s ease;
   }
 
   /* İlk seviyede görünen küçük ipucu */
@@ -630,6 +689,10 @@
     <div id="hint">Kablolara dokunarak döndür &bull; enerjiyi ampule ulaştır</div>
   </div>
 
+  <!-- ALT BANNER REKLAM ALANI: native banner burada belirir; yüklenene kadar
+       yüksekliği 0 -> oyun alanından yer çalmaz (bkz. Ads._showBanner) -->
+  <div id="adBanner"></div>
+
   <!-- MENÜ / AYARLAR -->
   <div id="menu">
     <div class="card">
@@ -694,7 +757,42 @@
       <h2>CANLARIN BİTTİ</h2>
       <p class="sub">Son canını da kaybettin.<br>Devam etmek için kısa bir reklam izleyerek 1 can kazanabilirsin.</p>
       <button class="big" id="lifeWatchBtn">&#127916; Reklam izle, 1 can kazan</button>
-      <button class="ghost" id="lifeBackBtn">&#8617;&#65039; 20 seviye geri dön &middot; 1 can</button>
+      <button class="ghost" id="lifeBackBtn">&#8617;&#65039; 7 seviye geri dön &middot; 1 can</button>
+    </div>
+  </div>
+
+  <!-- 100 SEVİYE KUTLAMA KATMANI -->
+  <div id="milestoneOverlay">
+    <div class="card">
+      <!-- 8 yönlü konfeti patlaması: yalnız CSS, yalnız bu katmanda -> en büyük
+           başarı anı diğer (nötr) katmanlardan görsel olarak ayrışır -->
+      <div class="confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="hearts">&#127942;</div>
+      <h2>BAŞARDIN!</h2>
+      <p class="sub"></p>
+      <button class="big" id="milestoneContinueBtn">Devam Et &#9654;&#65039;</button>
+    </div>
+  </div>
+
+  <!-- KALDIĞIN YERDEN KATMANI: oyun kapatılıp yeniden açıldığında (sonsuz modda,
+       1. seviyeden ileride) süre/oyun otomatik başlamasın diye "Devam Et" onayı
+       ister — oyuncu ekrana bakmadan/hazır olmadan süresi erimesin. -->
+  <div id="resumeOverlay">
+    <div class="card">
+      <div class="hearts">&#9199;&#65039;</div>
+      <h2>KALDIĞIN YERDEN</h2>
+      <p class="sub"></p>
+      <button class="big" id="resumeContinueBtn">Devam Et &#9654;&#65039;</button>
+    </div>
+  </div>
+
+  <!-- 25 SEVİYE ARA ÖVGÜ KATMANI: bir sonraki seviye BAŞLAMADAN önce kısa süre
+       gösterilir, butonsuz kendiliğinden kapanıp bir sonraki seviyeye geçer
+       (bkz. PRAISE_HOLD, frame()). -->
+  <div id="praiseOverlay">
+    <div class="card">
+      <div class="hearts"></div>
+      <h2></h2>
     </div>
   </div>
 </div>
@@ -1223,21 +1321,21 @@
      -------------------------------------------------------------------- */
   var ADS_CFG = {
     TEST_MODE: false,                // false -> AD_UNITS.live + canlı reklam (App Store / Play yayını). true -> Google test reklamları.
-    INTERSTITIAL_EVERY: 3,           // sonsuz modda kaç seviye tamamlamada bir geçiş reklamı
-    INTERSTITIAL_MIN_LEVEL: 3,       // bu seviyeye kadar geçiş reklamı gösterme
-    INTERSTITIAL_COOLDOWN_MS: 75000  // iki geçiş reklamı arası en az süre
+    INTERSTITIAL_EVERY: 2,           // sonsuz modda kaç seviye tamamlamada bir geçiş reklamı
+    INTERSTITIAL_MIN_LEVEL: 2,       // bu seviyeye kadar geçiş reklamı gösterme
+    INTERSTITIAL_COOLDOWN_MS: 50000  // iki geçiş reklamı arası en az süre
   };
   // "interstitial" = geçiş reklamı, "rewarded" slotu = ÖDÜLLÜ GEÇİŞ (rewarded interstitial) birimi.
   // test: Google'ın RESMİ test birimleri. live: kendi AdMob birim ID'lerin.
   // Yayına çıkarken ADS_CFG.TEST_MODE = false yap. App ID'ler native tarafta (bkz. README).
   var AD_UNITS = {
     test: {
-      android: { interstitial: "ca-app-pub-3940256099942544/1033173712", rewarded: "ca-app-pub-3940256099942544/5354046379" },
-      ios:     { interstitial: "ca-app-pub-3940256099942544/4411468910", rewarded: "ca-app-pub-3940256099942544/6978759866" }
+      android: { interstitial: "ca-app-pub-3940256099942544/1033173712", rewarded: "ca-app-pub-3940256099942544/5354046379", banner: "ca-app-pub-3940256099942544/6300978111" },
+      ios:     { interstitial: "ca-app-pub-3940256099942544/4411468910", rewarded: "ca-app-pub-3940256099942544/6978759866", banner: "ca-app-pub-3940256099942544/2934735716" }
     },
     live: {
-      android: { interstitial: "ca-app-pub-8703431820946387/7643757074", rewarded: "ca-app-pub-8703431820946387/2183169533" },
-      ios:     { interstitial: "ca-app-pub-8703431820946387/8748577885", rewarded: "ca-app-pub-8703431820946387/1980366859" }
+      android: { interstitial: "ca-app-pub-8703431820946387/7643757074", rewarded: "ca-app-pub-8703431820946387/2183169533", banner: "ca-app-pub-8703431820946387/4116217208" },
+      ios:     { interstitial: "ca-app-pub-8703431820946387/8748577885", rewarded: "ca-app-pub-8703431820946387/1980366859", banner: "ca-app-pub-8703431820946387/1061669298" }
     }
   };
 
@@ -1282,6 +1380,7 @@
         self._bind(AdMob);
         self._prepInt();
         self._prepRew();
+        self._showBanner();
         // İlk ön-yükleme başarısız olursa kalıcı takılmasın — periyodik yeniden dene
         setInterval(function () { self._prepInt(); self._prepRew(); }, 20000);
       }).catch(function (e) { self._err = "init: " + self._errMsg(e); });
@@ -1302,6 +1401,15 @@
       on("onRewardedInterstitialAdReward",       function () { self._rew.earned = true; });
       on("onRewardedInterstitialAdDismissed",    function () { self._rew.loaded = false; self._consume(false); self._prepRew(); Sound.startMusic(); });
       on("onRewardedInterstitialAdFailedToShow", function () { self._rew.loaded = false; self._consume(true);  self._prepRew(); Sound.startMusic(); });
+
+      // Banner boyutu yalnız yüklenince bilinir (cihaz genişliğine göre değişir,
+      // bkz. ADAPTIVE_BANNER) -> alanı ancak o an aç, oyun alanından baştan yer çalmasın.
+      on("bannerAdSizeChanged", function (info) {
+        if (!info || !(info.height > 0) || !adBannerEl) return;
+        adBannerEl.style.height = info.height + "px";
+        scheduleLayout();
+      });
+      on("bannerAdFailedToLoad", function (i) { if (i && i.message) self._err = "banner: " + i.message; });
     },
 
     // Ödül callback'ini bir kez çalıştırır (force=true -> kazanılmasa da ver)
@@ -1399,6 +1507,19 @@
         self._prepRew();
         Sound.startMusic();            // reklam açılmadı -> müziği geri getir
       });
+    },
+
+    // Kalıcı alt banner. Ayrı "hazırla" adımı yok -> bir kez çağrılır, kendi kendini
+    // yükler/gösterir. ID boşsa (henüz AdMob konsolunda oluşturulmadıysa) sessizce çıkar.
+    _showBanner: function () {
+      var AdMob = this._plugin();
+      if (this.removed || !AdMob || !this._ids || !this._ids.banner) return;
+      AdMob.showBanner({
+        adId: this._ids.banner,
+        adSize: "ADAPTIVE_BANNER",
+        position: "BOTTOM_CENTER",
+        isTesting: ADS_CFG.TEST_MODE
+      }).catch(function (e) { /* reklam yoksa oyun banner'sız aynen çalışır */ });
     }
   };
 
@@ -1531,13 +1652,18 @@
     var decoyProb   = Math.min((0.14 + nn * 0.035) * D.decoyK, 0.6);
     var longBranch  = nn >= 5;   // 2 hücrelik uzun çıkmaz sokaklara izin ver
 
-    // AMPUL SAYISI — seviye ilerledikçe 1 -> 2 -> 3. Etkin seviye no (nn) zorluğa
-    // göre kaydığından "zor"da erken, "rahat"da geç gelir. Küçük ızgarada tek kalır.
+    // AMPUL SAYISI — seviye ilerledikçe 1 -> 2 -> 3, sonra 100. seviyeden itibaren
+    // 4 -> 5 -> 6'ya kadar (üst sınır). Etkin seviye no (nn) zorluğa göre kaydığından
+    // "zor"da erken, "rahat"da geç gelir. Küçük ızgarada az kalır.
     var bulbs = 1;
-    if (nn >= 7)  bulbs = 2;
-    if (nn >= 14) bulbs = 3;
+    if (nn >= 7)   bulbs = 2;
+    if (nn >= 14)  bulbs = 3;
+    if (nn >= 100) bulbs = 4;
+    if (nn >= 150) bulbs = 5;
+    if (nn >= 200) bulbs = 6;
     if (size <= 4)      bulbs = 1;
-    else if (size <= 6) bulbs = Math.min(bulbs, 2);
+    else if (size <= 6) bulbs = Math.min(bulbs, 3);
+    else if (size <= 7) bulbs = Math.min(bulbs, 4);
     // Her ek ampul ana hattan çıkan bir sapma ile beslenir -> yeterli sapma ayır.
     if (bulbs > 1) branches = Math.max(branches, bulbs - 1);
 
@@ -1737,11 +1863,45 @@
   var livesLabel  = document.getElementById("livesLabel");
   var heartEls    = livesLabel.querySelectorAll(".heart");
   var lifeOverlay = document.getElementById("lifeOverlay");
+  var milestoneOverlay = document.getElementById("milestoneOverlay");
+  var resumeOverlay = document.getElementById("resumeOverlay");
+  var praiseOverlay = document.getElementById("praiseOverlay");
+  var adBannerEl  = document.getElementById("adBanner");
 
-  var MAX_LIVES = 5;   // toplam can hakkı; süre bitince 1 azalır, ödüllü reklamla 1 kazanılır
+  var MAX_LIVES = 3;   // toplam can hakkı; süre bitince 1 azalır, ödüllü reklamla 1 kazanılır
+  var BONUS_MAX_LIVES = 5; // 100 seviye ödülü MAX_LIVES'ta sabit kalmasın diye çıkabileceği üst sınır
 
   var ROT_DUR = 150;   // dönüş animasyonu süresi (ms)
   var WIN_HOLD = 1150; // ampul yandıktan sonra sonraki seviyeye geçiş beklemesi (ms)
+  var PRAISE_STEP    = 25;  // her bu kadar seviyede bir, sonraki seviye BAŞLAMADAN önce animasyonlu övgü katmanı (sonsuz mod)
+  var PRAISE_HOLD    = 1700; // ara övgü katmanının kendiliğinden kapanıp bir sonraki seviyeye geçmeden önce ekranda kalma süresi (ms)
+  var MILESTONE_STEP = 100; // her bu kadar seviyede bir kutlama katmanı + "devam et" butonu + can ödülü (sonsuz mod)
+
+  // Her övgü/kutlama seviyesi geçtikçe metin ve simge değişip güçlensin diye
+  // sıralı havuzlar: dizinin sonuna gelince son (en güçlü) ifadede sabitlenir.
+  var MINI_PRAISE_ICONS = ["✨", "🌟", "🔥", "⚡", "🚀", "🏅", "👑"];
+  var MINI_PRAISES = [
+    "Güzel gidiyorsun!",
+    "Enerjin yerinde, devam!",
+    "Kabloları ustaca çözüyorsun!",
+    "Bu tempo harika!",
+    "Artık durduramıyoruz seni!",
+    "Efsanevi bir seri yakaladın!",
+    "Tam bir usta oldun!"
+  ];
+  var BIG_PRAISE_ICONS  = ["🏆", "🥇", "👑", "💎"];
+  var BIG_PRAISE_TITLES = ["BAŞARDIN!", "MUHTEŞEMSİN!", "EFSANESİN!", "DURDURULAMAZSIN!"];
+  var BIG_PRAISE_SUBS   = [
+    "Harika gidiyorsun. +1 can kazandın!",
+    "Müthiş bir ilerleme. +1 can daha senin oldu!",
+    "Bu bambaşka bir seviye. +1 can kazandın!",
+    "İnanılmaz bir başarı. +1 can daha kazandın!"
+  ];
+  // level: tamamlanan seviye (1 tabanlı), step: PRAISE_STEP/MILESTONE_STEP,
+  // poolLen: ilgili havuzun uzunluğu -> 0 tabanlı, havuz sonunda sabitlenen dizin.
+  function praiseTier(level, step, poolLen) {
+    return Math.min(Math.floor(level / step) - 1, poolLen - 1);
+  }
 
   var cell = 60;       // bir hücrenin piksel boyutu (layout() hesaplar)
   var menuOpen = false;
@@ -1819,7 +1979,32 @@
       bg: "#061417", tintA: "#0c2e38", tintB: "#0a2333", ink: "#d3eef4",
       accentA: "#35c8d8", accentB: "#2a86e8",
       wire: "#ffcf5a", wireGlow: "#ffab2b", wireCore: "#fff4d6", flow: "#fdffff",
-      srcA: "#8ffff0", srcB: "#12b0a7", bulbA: "#fff7d0", bulbB: "#ffc93a" }
+      srcA: "#8ffff0", srcB: "#12b0a7", bulbA: "#fff7d0", bulbB: "#ffc93a" },
+    { name: "Neon Şehir",
+      bg: "#0a0518", tintA: "#2b0f45", tintB: "#0f1f4a", ink: "#f0d9ff",
+      accentA: "#ff2fd0", accentB: "#22d3ff",
+      wire: "#ffcf3d", wireGlow: "#ff8f1f", wireCore: "#fff3c2", flow: "#fffbe8",
+      srcA: "#7bffe6", srcB: "#12c7ff", bulbA: "#fff3c2", bulbB: "#ffd23f" },
+    { name: "Altın Çöl",
+      bg: "#1a0f05", tintA: "#4a2410", tintB: "#3a1d3a", ink: "#ffe9cf",
+      accentA: "#ffb020", accentB: "#ff5f6d",
+      wire: "#ffd24d", wireGlow: "#ff9a1f", wireCore: "#fff5cf", flow: "#fffef2",
+      srcA: "#8fe9ff", srcB: "#1f8fd0", bulbA: "#eafbff", bulbB: "#7fd0ff" },
+    { name: "Kutup Işıkları",
+      bg: "#04130f", tintA: "#0a3327", tintB: "#0d2a45", ink: "#d8fff0",
+      accentA: "#39ffa0", accentB: "#7a5cf0",
+      wire: "#ffd24d", wireGlow: "#ff9a2b", wireCore: "#fff6cf", flow: "#fffef2",
+      srcA: "#9bffe0", srcB: "#12c7a0", bulbA: "#fff7cf", bulbB: "#ffcf3a" },
+    { name: "Kraliyet Moru",
+      bg: "#120818", tintA: "#33104a", tintB: "#1c1440", ink: "#f3e3ff",
+      accentA: "#d4af37", accentB: "#a855f7",
+      wire: "#ffd24d", wireGlow: "#ff9a1f", wireCore: "#fff3c2", flow: "#fffbe8",
+      srcA: "#8fffe6", srcB: "#14b8a6", bulbA: "#fff6cf", bulbB: "#ffc83a" },
+    { name: "Mercan Resifi",
+      bg: "#031620", tintA: "#0a3a4a", tintB: "#123048", ink: "#d6f5ff",
+      accentA: "#ff6b6b", accentB: "#2ec4e0",
+      wire: "#ffcf52", wireGlow: "#ff8a2e", wireCore: "#fff4cf", flow: "#fffdf5",
+      srcA: "#8ffff0", srcB: "#12b0c8", bulbA: "#fff6cf", bulbB: "#ffc93a" }
   ];
 
   // --- küçük hex yardımcıları (ES5) ---
@@ -2017,7 +2202,7 @@
     dailyDone: false, // bugünkü günlük tamamlandı mı
     rows: 3, cols: 3,
     size: 3,          // ızgara kenarı (kare)
-    bulbCount: 1,     // bu seviyedeki ampul sayısı (seviye ilerledikçe 1 -> 2 -> 3)
+    bulbCount: 1,     // bu seviyedeki ampul sayısı (seviye ilerledikçe 1 -> 2 -> 3 -> ... -> 6)
     cells: [],        // 2B dizi: hücre nesneleri
     savedRots: [],    // "sıfırla" için başlangıç karıştırması
     moves: 0,
@@ -2198,14 +2383,15 @@
   }
 
   // Seviyenin HAMLE hakkı. Par'a (gereken en az dokunuş) ve ampul sayısına göre
-  // ölçeklenir; bilerek 2-yıldız eşiğinin (round(par*1.7)+3) hemen üstünde
-  // tutulur -> temiz oyun asla takılmaz ama savurgan çevirme cezalandırılır.
+  // ölçeklenir; 2-yıldız eşiğiyle (round(par*1.7)+3) artık aynı seviyede
+  // tutulur -> temiz/2-yıldızlık oyun asla takılmaz ama savurgan çevirme
+  // (1-yıldıza düşecek kadar fazla dokunuş) doğrudan can kaybettirir.
   // Bu sayıya ULAŞAN dokunuş seviyeyi bitirmiyorsa -1 can (süre dolması gibi).
-  // Sabit ve ampul payı bir tık kısıldı (+5/·3 -> +4/·2): tek ampulde -1,
-  // iki ampulde -2, üç ampulde -3 hamle.
+  // Sabit ve ampul payı bir tık daha kısıldı (+4/·2 -> +3/·1): tek ampulde -1,
+  // iki ampulde -2, üç ampulde -3 hamle (bir önceki kısıtlamaya göre).
   function computeMoveLimit() {
-    var m = Math.round(game.par * 1.7) + 4 + (game.bulbCount - 1) * 2;
-    return clampI(m, 7, 200);
+    var m = Math.round(game.par * 1.7) + 3 + (game.bulbCount - 1) * 1;
+    return clampI(m, 6, 200);
   }
 
   // Hamle sayısına göre yıldız (3/2/1). Par'a yakınlık ödüllendirilir.
@@ -2252,7 +2438,7 @@
 
   // Aktif seviyeyi başlangıç karıştırmasına döndür (aynı bulmaca)
   function resetLevel() {
-    if (menuOpen || game.phase === "dead") return;
+    if (menuOpen || game.phase === "dead" || game.phase === "milestone" || game.phase === "resume" || game.phase === "praise") return;
     for (var r = 0; r < game.rows; r++) {
       for (var c = 0; c < game.cols; c++) {
         var cellObj = game.cells[r][c];
@@ -2614,6 +2800,24 @@
     ctx.restore();
   }
 
+  // Onay rozeti: dolgulu disk + iç çentik. Kazanma ve günlük bitiş ekranı ortak
+  // kullanır -> iki "bitiş" anı aynı görsel dilde konuşur (bkz. drawDoneOverlay).
+  function drawCheckBadge(R) {
+    ctx.fillStyle = T.okA;
+    ctx.shadowColor = "rgba(" + T.okGlowRGB + ",0.6)";
+    ctx.shadowBlur = 26;
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = T.okInk;
+    ctx.lineWidth = R * 0.16;
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(-R * 0.42, 0);
+    ctx.lineTo(-R * 0.08, R * 0.36);
+    ctx.lineTo(R * 0.46, -R * 0.34);
+    ctx.stroke();
+  }
+
   // Kazanma kaplaması: onay + yıldızlar + (varsa) yeni rekor
   function drawWinOverlay(now) {
     var W = game.cols * cell, H = game.rows * cell, M = Math.min(W, H);
@@ -2635,21 +2839,7 @@
     ctx.save();
     ctx.translate(W / 2, H / 2 - M * 0.12);
     ctx.scale(s, s);
-    var R = M * 0.11;
-    // onay diski + yıldızlar temaya göre tonlanır (bkz. T.okA / T.starA)
-    ctx.fillStyle = T.okA;
-    ctx.shadowColor = "rgba(" + T.okGlowRGB + ",0.6)";
-    ctx.shadowBlur = 26;
-    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = T.okInk;
-    ctx.lineWidth = R * 0.16;
-    ctx.lineCap = "round"; ctx.lineJoin = "round";
-    ctx.beginPath();
-    ctx.moveTo(-R * 0.42, 0);
-    ctx.lineTo(-R * 0.08, R * 0.36);
-    ctx.lineTo(R * 0.46, -R * 0.34);
-    ctx.stroke();
+    drawCheckBadge(M * 0.11);   // onay diski + iç çentik — yıldızlar temaya göre tonlanır (bkz. T.okA / T.starA)
     ctx.restore();
 
     // yıldızlar (sırayla açılır)
@@ -2736,10 +2926,36 @@
           buildLevel();
         }
       } else {
-        game.li++;
-        buildLevel();
-        Ads.levelAdvanced();                   // koşullar tutarsa geçiş reklamı
+        var completedLevel = game.li + 1;
+        if (completedLevel % MILESTONE_STEP === 0) {
+          // Her 100 seviyede bir: otomatik geçme yerine kutlama katmanı aç,
+          // can ödülü ver, oyuncu "Devam Et" ile bir sonraki seviyeye kendi geçsin.
+          game.phase = "milestone";
+          game.phaseAt = now;
+          showMilestoneOverlay(completedLevel);
+        } else if (completedLevel % PRAISE_STEP === 0) {
+          // Her 25 seviyede bir (100'ün katları hariç): bir sonraki seviye
+          // BAŞLAMADAN önce animasyonlu övgü katmanı göster, kısa süre sonra
+          // kendiliğinden bir sonraki seviyeye geç (bkz. PRAISE_HOLD aşağıda).
+          game.phase = "praise";
+          game.phaseAt = now;
+          var mt = praiseTier(completedLevel, PRAISE_STEP, MINI_PRAISES.length);
+          showPraiseOverlay(MINI_PRAISE_ICONS[mt], MINI_PRAISES[mt]);
+        } else {
+          game.li++;
+          buildLevel();
+          Ads.levelAdvanced();                 // koşullar tutarsa geçiş reklamı
+        }
       }
+    }
+
+    // Ara övgü katmanı: PRAISE_HOLD kadar gösterildikten sonra kendiliğinden
+    // kapanır ve bir sonraki seviyeye geçer (buton gerekmez, akışı kısa keser).
+    if (game.phase === "praise" && !menuOpen && now - game.phaseAt > PRAISE_HOLD) {
+      hidePraiseOverlay();
+      game.li++;
+      buildLevel();
+      Ads.levelAdvanced();
     }
 
     // --- çiz ---
@@ -2783,22 +2999,36 @@
   // GÜNLÜK bulmaca tamamlandı ekranı (donmuş; menüden çıkılır)
   function drawDoneOverlay(now) {
     var W = game.cols * cell, H = game.rows * cell, M = Math.min(W, H);
-    ctx.fillStyle = "rgba(" + T.dimRGB + ",0.88)";
+    // Kazanma ekranıyla aynı giriş temposu (fade + rozet pop) -> "bitiş" anı
+    // artık aniden belirmiyor, iki ekran arasında tutarlı bir dil kuruyor.
+    var el = reduceMotion ? 1e9 : now - game.phaseAt;
+    var fade = clamp01(el / 260);
+    ctx.fillStyle = "rgba(" + T.dimRGB + "," + (0.88 * fade).toFixed(3) + ")";
     ctx.fillRect(0, 0, W, H);
+
+    var s = easeOutBack(clamp01(el / 430));
+    ctx.save();
+    ctx.translate(W / 2, H / 2 - M * 0.2);
+    ctx.scale(s, s);
+    drawCheckBadge(M * 0.085);
+    ctx.restore();
+
+    ctx.globalAlpha = fade;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillStyle = T.hint;
     ctx.font = "800 " + Math.round(M * 0.085) + "px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
-    ctx.fillText("GÜNLÜK TAMAM", W / 2, H / 2 - M * 0.14);
+    ctx.fillText("GÜNLÜK TAMAM", W / 2, H / 2 - M * 0.03);
     var st = Store.get(dkey("stars"), 0), mv = Store.get(dkey("moves"), 0);
     // yıldız özeti (DAILY_COUNT * 3 üzerinden)
     ctx.fillStyle = T.ink;
     ctx.font = "700 " + Math.round(M * 0.055) + "px system-ui, -apple-system, sans-serif";
-    ctx.fillText("★ " + st + " / " + (DAILY_COUNT * 3) + "   ·   " + mv + " hamle", W / 2, H / 2);
+    ctx.fillText("★ " + st + " / " + (DAILY_COUNT * 3) + "   ·   " + mv + " hamle", W / 2, H / 2 + M * 0.09);
     ctx.fillStyle = T.muted;
     ctx.font = "500 " + Math.round(M * 0.04) + "px system-ui, -apple-system, sans-serif";
-    ctx.fillText("Menü ☰ ile Sonsuz Mod'a geçebilirsin", W / 2, H / 2 + M * 0.13);
-    ctx.fillText("Yeni günlük bulmaca yarın", W / 2, H / 2 + M * 0.2);
+    ctx.fillText("Menü ☰ ile Sonsuz Mod'a geçebilirsin", W / 2, H / 2 + M * 0.2);
+    ctx.fillText("Yeni günlük bulmaca yarın", W / 2, H / 2 + M * 0.27);
+    ctx.globalAlpha = 1;
   }
 
   /* ----------------------------------------------------------------------
@@ -2872,9 +3102,12 @@
     updateHud();
   }
 
-  /* İPUCU — ödüllü reklam karşılığı ÖNEMLİ (yol) bir kabloyu doğru yönüne çevirir.
+  /* İPUCU — ödüllü reklam karşılığı ÖNEMLİ (yol) kabloları doğru yönüne çevirir.
+     Reklam sonrası "göster" onayı istenir; onaylanırsa iki kablo sırayla (kısa
+     gecikmeyle) düzeltilir — yeterli yanlış kablo yoksa bir tane ile yetinilir.
      Reklam yoksa/hazır değilse ücretsiz verilir (oyuncu engellenmesin).
-     Düzeltme bir hamle sayılır; seviyeyi bitiriyorsa normal kazanma akışı işler. */
+     Her düzeltme bir hamle sayılır; seviyeyi bitiriyorsa normal kazanma akışı
+     işler ve zincirdeki kalan düzeltmeler uygulanmaz. */
   function useHint() {
     if (menuOpen || game.phase !== "play") return;
     var cands = [];
@@ -2888,20 +3121,33 @@
       }
     }
     if (!cands.length) { showToast("Çözüme çok yakınsın", 1100); return; }
-    var target = cands[rndInt(cands.length)];
+    var n = Math.min(2, cands.length);
+    var targets = [];
+    for (var k = 0; k < n; k++) targets.push(cands.splice(rndInt(cands.length), 1)[0]);
     Ads.rewarded(function () {
-      game.undo.push({ c: target, from: target.rot });   // düzeltme geri-al yığınına yazılır (sayaç tutarlı kalır)
-      if (game.undo.length > 300) game.undo.shift();
-      target.rot = 0;                       // üreticinin "çözülmüş" yönü
-      target.animAt = performance.now();
-      target.hintAt = performance.now();
-      game.moves++;
-      Haptic.light();
-      Sound.rotate();
-      updateHud();
-      showToast("İpucu: bir kablo düzeltildi", 1100);
-      if (computePower(performance.now(), false)) beginWinWait();
-    }, "İpucu için kısa bir reklam izlensin mi?\nKarşılığında bir kablo doğru yönüne çevrilir.");
+      var many = targets.length > 1;
+      if (!window.confirm(many ? "İpucu hazır! İki kabloyu göstermek için Tamam'a bas." : "İpucu hazır! Kabloyu göstermek için Tamam'a bas.")) return;
+      applyHintChain(targets, 0);
+    }, "İpucu için kısa bir reklam izlensin mi?\nKarşılığında " + (targets.length > 1 ? "iki kablo" : "bir kablo") + " doğru yönüne çevrilir.");
+  }
+
+  // Aday kabloları sırayla (kısa gecikmeyle) doğru yöne çevirir; seviye biterse durur.
+  function applyHintChain(targets, idx) {
+    if (idx >= targets.length) return;
+    var target = targets[idx];
+    game.undo.push({ c: target, from: target.rot });   // düzeltme geri-al yığınına yazılır (sayaç tutarlı kalır)
+    if (game.undo.length > 300) game.undo.shift();
+    target.rot = 0;                       // üreticinin "çözülmüş" yönü
+    target.animAt = performance.now();
+    target.hintAt = performance.now();
+    game.moves++;
+    Haptic.light();
+    Sound.rotate();
+    updateHud();
+    var last = idx === targets.length - 1;
+    if (last) showToast(targets.length > 1 ? "İpucu: iki kablo düzeltildi" : "İpucu: bir kablo düzeltildi", 1100);
+    if (computePower(performance.now(), false)) { beginWinWait(); return; }
+    if (!last) setTimeout(function () { applyHintChain(targets, idx + 1); }, 260);
   }
 
   // Enerji ampule ulaştı: girdiyi kilitle, ampul(ler) görsel olarak TAMAMEN
@@ -2968,25 +3214,38 @@
     var subEl   = lifeOverlay.querySelector(".sub");
     var backBtn = document.getElementById("lifeBackBtn");
     var endless = cfg.mode === "endless";
-    // 20 seviye geri dönme seçeneği yalnız sonsuz modda anlamlı
-    if (backBtn) backBtn.style.display = endless ? "" : "none";
+    // 7 seviye geriye dönme seçeneği yalnız sonsuz modda anlamlı
+    if (backBtn) {
+      backBtn.style.display = endless ? "" : "none";
+      if (endless) backBtn.innerHTML = "↩️ Seviye " + (regressTargetLi(game.li) + 1) + "'e dön · 1 can";
+    }
     if (subEl) {
       var why = _deadReason === "moves" ? "Hamle hakkın doldu" : "Süre doldu";
       subEl.innerHTML = why + " ve son canını da kaybettin.<br>" + (endless
-        ? "Reklam izleyip 1 canla buradan devam et ya da 1 canla 20 seviye geri dön."
+        ? "Reklam izleyip 1 canla buradan devam et ya da 1 canla 7 seviye geriye dön."
         : "Devam etmek için kısa bir reklam izleyerek 1 can kazanabilirsin.");
     }
     lifeOverlay.classList.add("show");
   }
   function hideLifeOverlay() { lifeOverlay.classList.remove("show"); }
 
-  /* Reklam yerine seçilen ceza: 20 seviye geri dön (20'ye ulaşılmadıysa en
-     baştan) ve TEK canla devam et — tam dolum yok. Reklam da 1 can verir ama
-     bulunduğun seviyede; bu seçenek 1 canı 20 seviyelik tampon karşılığında verir.
-     Yalnız sonsuz modda çağrılır (günlükte seviye gerilemesi anlamsız). */
+  /* Canlar bitince geri dönülecek seviyeyi hesaplar: bulunduğun seviyeden
+     (li 0 tabanlı, gösterilen seviye li+1) HER ZAMAN tam 7 seviye geriye gider,
+     0'ın altına inmez. Önceki "bölüm sınırına yuvarla" mantığı, bölümün
+     başındaki seviyelerde (8, 15, 22...) yalnız 1 seviyelik cüzi bir düşüşe
+     yol açıyordu — bu yüzden sabit -7'ye değiştirildi, her zaman gerçek bir
+     bölümlük ceza hissettirsin diye. Örn. seviye 14 -> 7, 21 -> 14, 8 -> 1. */
+  function regressTargetLi(li) {
+    return Math.max(0, li - 7);
+  }
+
+  /* Reklam yerine seçilen ceza: 7 seviye geri dön ve TEK canla devam et —
+     tam dolum yok. Reklam da 1 can verir ama bulunduğun seviyede; bu seçenek
+     1 canı 7 seviyelik bir gerileme karşılığında verir. Yalnız sonsuz modda
+     çağrılır (günlükte seviye gerilemesi anlamsız). */
   function regressOnDeath() {
     if (cfg.mode !== "endless" || game.phase !== "dead") return;
-    game.li = Math.max(0, game.li - 20);
+    game.li = regressTargetLi(game.li);
     game.lives = 1;                       // tam dolum yok: tek canla devam
     updateLives();
     hideLifeOverlay();
@@ -2994,8 +3253,50 @@
     buildLevel();
     showToast(game.li === 0
       ? "Canların bitti — en baştan, 1 canla başlıyorsun"
-      : "Canların bitti — 20 seviye geri, 1 canla devam · Seviye " + (game.li + 1), 2800);
+      : "Canların bitti — Seviye " + (game.li + 1) + "'e geri döndün, 1 canla devam", 2800);
   }
+
+  /* Her MILESTONE_STEP (100) seviyede bir açılan kutlama katmanı: oyuncuyu
+     övüp +1 can ödülü verir, "Devam Et" ile bir sonraki seviyeye kendi
+     geçmesini sağlar — otomatik ilerlemenin aksine kısa bir mola/başarı anı.
+     Övgü başlığı/simgesi her 100'lük dilimde bir sonraki (daha güçlü)
+     ifadeye geçer (BIG_PRAISE_* havuzları, sonunda son ifadede sabitlenir). */
+  function showMilestoneOverlay(completedLevel) {
+    var iconEl  = milestoneOverlay.querySelector(".hearts");
+    var titleEl = milestoneOverlay.querySelector("h2");
+    var subEl   = milestoneOverlay.querySelector(".sub");
+    var mt = praiseTier(completedLevel, MILESTONE_STEP, BIG_PRAISE_TITLES.length);
+    if (iconEl)  iconEl.textContent = BIG_PRAISE_ICONS[mt];
+    if (titleEl) titleEl.textContent = BIG_PRAISE_TITLES[mt];
+    game.lives = Math.min(BONUS_MAX_LIVES, game.lives + 1);   // 100 seviye ödülü: +1 can, MAX_LIVES'ta sabit kalmaz
+    updateLives();
+    if (subEl) subEl.textContent = "Seviye " + completedLevel + "'i tamamladın. " + BIG_PRAISE_SUBS[mt];
+    milestoneOverlay.classList.add("show");
+  }
+  function hideMilestoneOverlay() { milestoneOverlay.classList.remove("show"); }
+
+  /* Oyun kapatılıp sonsuz modda (1. seviyeden ileride) yeniden açıldığında
+     süre/oyun otomatik başlamasın diye oyuncudan "Devam Et" onayı bekleten
+     katman. game.phase "resume" olduğu sürece dokunma/ipucu/geri-al/süre gibi
+     tüm play-bağımlı akışlar zaten game.phase !== "play" kontrolüyle devre
+     dışı kalır (bkz. onPointerDown, frame). */
+  function showResumeOverlay(level) {
+    var subEl = resumeOverlay.querySelector(".sub");
+    if (subEl) subEl.textContent = "Seviye " + level + "'de kalmıştın. Hazır olduğunda devam et.";
+    resumeOverlay.classList.add("show");
+  }
+  function hideResumeOverlay() { resumeOverlay.classList.remove("show"); }
+
+  /* Her PRAISE_STEP (25) seviyede bir (100'ün katları hariç) beliren, tam
+     ekran animasyonlu övgü katmanı — bir sonraki seviye BAŞLAMADAN önce
+     gösterilir (bkz. frame()'deki PRAISE_HOLD kontrolü), oyuncunun bir şey
+     yapması gerekmez, kendiliğinden kapanıp sıradaki seviyeye geçilir. */
+  function showPraiseOverlay(icon, text) {
+    praiseOverlay.querySelector(".hearts").textContent = icon;
+    praiseOverlay.querySelector("h2").textContent = text;
+    praiseOverlay.classList.add("show");
+  }
+  function hidePraiseOverlay() { praiseOverlay.classList.remove("show"); }
 
   /* ----------------------------------------------------------------------
      11) HUD GÜNCELLE
@@ -3023,9 +3324,14 @@
     movesLabel.classList.toggle("danger", game.moveLimit > 0 && leftMv <= 2);
   }
 
-  // Can gösterge kalplerini kalan can sayısına göre boyar/soldurur
+  // Can gösterge kalplerini kalan can sayısına göre boyar/soldurur. Normalde
+  // yalnız MAX_LIVES kadar slot görünür; 100 seviye ödülüyle can bunun
+  // üstüne çıkarsa (bkz. BONUS_MAX_LIVES) fazladan kalp slotları da açığa
+  // çıkar, can o seviyenin altına düşünce kendiliğinden tekrar gizlenir.
   function updateLives() {
+    var slotMax = Math.max(MAX_LIVES, game.lives);
     for (var i = 0; i < heartEls.length; i++) {
+      heartEls[i].classList.toggle("hide", i >= slotMax);
       heartEls[i].classList.toggle("off", i >= game.lives);
     }
   }
@@ -3159,6 +3465,8 @@
       }
       kill.forEach(function (k) { localStorage.removeItem(k); });
     } catch (e) {}
+    game.lives = MAX_LIVES;   // ilerlemeyle birlikte canlar da baştan doldurulsun
+    updateLives();
     if (cfg.mode === "daily") startDaily();
     else {
       Store.set("themeSeed", 0);   // sonsuz ilerleme sıfırlandı -> tema sırası da yeniden tohumlansın
@@ -3287,8 +3595,24 @@
     }, "Devam etmek için kısa bir reklam izlensin mi?\nKarşılığında 1 can kazanırsın.");
   });
 
-  // Reklam yerine: 20 seviye geri dön (tek canla devam)
+  // Reklam yerine: 7 seviye geri dön (tek canla devam)
   document.getElementById("lifeBackBtn").addEventListener("click", regressOnDeath);
+
+  // 100 seviye kutlama katmanı: "Devam Et" -> bir sonraki seviyeye geç
+  document.getElementById("milestoneContinueBtn").addEventListener("click", function () {
+    hideMilestoneOverlay();
+    game.li++;
+    game.phase = "play";
+    buildLevel();
+    Ads.levelAdvanced();
+  });
+
+  // Kaldığın yerden katmanı: oyuncu hazır olunca süre/oyun başlasın (bkz. BAŞLAT)
+  document.getElementById("resumeContinueBtn").addEventListener("click", function () {
+    hideResumeOverlay();
+    game.phase = "play";
+    game.phaseAt = performance.now();
+  });
 
   // Yeniden boyutlandırma / yön değişimi -> yeniden yerleşim
   var resizeRAF = 0;
@@ -3350,7 +3674,18 @@
     buildLevel();
   }
   // İlk açılış: modu/zorluğu tanıtmak için menüyü göster
-  if (Store.get("seen", false) !== true) { Store.set("seen", true); openMenu(); }
+  if (Store.get("seen", false) !== true) {
+    Store.set("seen", true); openMenu();
+  } else if (cfg.mode === "endless" && game.li > 0) {
+    // Geri dönen oyuncu: süre/oyun otomatik başlayıp haksız yere erimesin diye
+    // oyuncu "Devam Et"e basana kadar faz "play" değil -> frame() süreyi
+    // azaltmaz, onPointerDown/useHint/undoLast dokunuşu yoksayar (bkz. ilgili
+    // fonksiyonlar). Açılış animasyonu (#intro, z-index 100) bu katmanı (26)
+    // örttüğü için katman animasyon kapanınca kendiliğinden görünür olur.
+    game.phase = "resume";
+    game.phaseAt = performance.now();
+    showResumeOverlay(game.li + 1);
+  }
 
   requestAnimationFrame(function () { layout(); });  // ilk ölçüler hazır olunca
   requestAnimationFrame(frame);
