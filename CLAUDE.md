@@ -48,16 +48,84 @@ Kullanılan eklentiler ([capacitor-app/package.json](capacitor-app/package.json)
 - **`Notify`** — yerel "geri dön" hatırlatıcıları. **Sunucu yok.** Her açılışta/öne gelişte
   sıfırdan planlanır. Varsayılan açık, ilk açılışta izin bir kez istenir.
 - **`Ads`** — AdMob geçiş + ödüllü-geçiş (rewarded interstitial). `ADS_CFG` ayarları,
-  `AD_UNITS.test` / `AD_UNITS.live` birim ID'leri.
-- **`RNG`** — sonsuz modda `Math.random`; günlük modda `mulberry32(hash(todayKey()))` ile
-  deterministik (herkeste aynı bulmaca). `buildLevel` geçici olarak değiştirir.
+  `AD_UNITS.test` / `AD_UNITS.live` birim ID'leri. **Tuzak:** eklentinin
+  `showRewardInterstitialAd()` sözü reklam KAPANINCA değil ödül verilince çözülür (reklam hâlâ
+  ekranda). `Ads.rewarded(cb)` bu yüzden `cb`'yi `Dismissed` olayında çalıştırır; reklam
+  ekrandayken `window.confirm` gibi WebView'i bloke eden bir şey açılırsa ✕ çalışmaz. Reklam
+  sonrası onaylar `askConfirm` ile (bkz. `useHint`).
+- **`RNG`** — sonsuz modda `Math.random`; günlük modda `mulberry32(hash(todayKey()))`,
+  seviyeler modunda `mulberry32(hash("seviye."+zorluk) ^ seviyeNo)` ile deterministik
+  (herkeste aynı bulmaca). `buildLevel` geçici olarak değiştirir.
 
-### İki mod
+### Üç mod
 
-- **`endless`** — sabit seviye yok; her seviye rastgele üretilir ve giderek zorlaşır.
+- **`campaign`** ("Seviyeler") — `CAMPAIGN_LEVELS = 200` sabit seviye: n. seviye zorluk +
+  seviye no'ya göre tohumlanır, herkeste ve her denemede aynıdır. Yeni oyuncunun varsayılan
+  modu; `mode` kaydı olmayıp sonsuzda ilerlemiş eski oyuncu `endless`'te kalır. 200. seviye
+  bitince kutlama katmanı "Sonsuz Moda Geç" der (`finishCampaign`): `campaign.<zorluk>.done`
+  işaretlenir, sonsuz mod aynı zorlukta **Seviye 201**'den açılır (`endless.<zorluk>.lastLevel`
+  en az 200'e çekilir, daha ilerisi korunur). Bitmiş "Seviyeler" yeniden açılınca baştan oynanır.
+- **`endless`** — seviyeler rastgele üretilir ve giderek zorlaşır; sabit sınır yok.
   Zorluk `DIFFS` (rahat/normal/zor) hem "etkin seviye no"yu kaydırır hem ızgara/hat/kilit
-  parametrelerini ayarlar.
+  parametrelerini ayarlar. `campaign` ile aynı üretici (`levelParams`) ve `game.li` akışını
+  paylaşır; yalnız kayıt ön eki (`ekey`: `campaign.` / `endless.`) ve RNG farklıdır.
+  "Seviye sayan mod" kontrolleri `cfg.mode !== "daily"` ile yapılır.
+  **Kilitli:** `endlessUnlocked()` — "Seviyeler" herhangi bir zorlukta bitene (`campaign.<zorluk>.done`)
+  kadar Sonsuz kutucuğu kilitlidir, kayıtlı `mode = "endless"` başlangıçta `campaign`'e döner, günlük
+  set bitince `afterDailyMode()` Seviyeler'e yönlendirir. Sonsuzun kayıtlı ilerlemesi silinmez, açılınca sürer.
 - **`daily`** — `DAILY_COUNT = 7` deterministik günlük bulmaca.
+
+### Can ve ipucu
+
+- **Can** — tavan `MAX_LIVES = 3` (100 seviye ödülüyle `BONUS_MAX_LIVES = 5`'e kadar), süre bitince −1.
+  Can kaldıysa oyun **durur** (`game.phase = "timeUp"`, `#timeUpOverlay` "SÜRE DOLDU"); seviye otomatik
+  başlamaz, oyuncu "Yeniden başla"ya basınca `resetLevel` ile baştan başlar (katman açılır açılmaz gelen
+  panik dokunuşu 500 ms yok sayılır). Can 0 ise aşağıdaki "Canlar bitti" katmanı. **Kalıcı** (`Store`: `lives.n`, `lives.t`) ve zamanla dolar (`LIFE_REGEN_MS` = 20 dk, yalnız
+  `MAX_LIVES`'ın altındayken; duvar saatinden tembel hesap, sunucu yok). Değişim **yalnız `setLives`** ile
+  (`game.lives`'a doğrudan yazma); açılışta `loadLives`, saniyede bir `tickLives` (`frame`).
+  "Canlar bitti" katmanı (`#lifeOverlay`): reklam → +1 can, tahta korunur, süre yenilenir; "Tekrar dene"
+  ücretsiz ama **can vermez** (can 0'da kalır, sonraki her süre aşımında katman yine çıkar — oyuncu
+  kilitlenmez). Katman açıkken can zamanla dolarsa oyun kaldığı yerden sürer (`resumeAfterLifeGain`).
+- **İpucu** — reklam karşılığı en çok 2 yanlış yol kablosunu düzeltir. Seviye başına `HINTS_PER_LEVEL = 2`
+  hak (`game.hintsLeft`; `buildLevel` ve `winRetry` doldurur, **can kaybı / `resetLevel` doldurmaz** —
+  yoksa can kaybederek ipucu biriktirilir). İpucu kullanılan seviye en çok `HINT_MAX_STARS = 2` yıldız
+  alır (`game.hinted`, `onWin`; 3 yıldız = yardımsız). Hak reklam **teslim edilince** düşer.
+  **Aday = `hintWrong`**, yani kopuk kablo: `rot ≠ 0` tek başına "yanlış" değildir (düz kablo 180°'de, çıkmaz
+  sapmalı T iki yönde çalışır; eski `rot ≠ 0` testi 4800 tahtanın %78'inde çalışan parçayı seçebiliyordu).
+  İpucuyla düzelen kablolar `game.hintFixed`'te tutulur, `resetLevel` (can kaybı / Yeniden başla) bunları
+  yeniden düzeltir; sonuç tahtayı çözülü bırakırsa sondan geri alınır. `buildLevel` / `winRetry` listeyi boşaltır.
+- **Ödüllü reklam sözleşmesi** — `Ads.rewarded(cb, ask)`: eklenti yoksa (tarayıcı) ya da reklamsızsa ödül
+  bedava; eklenti var ama reklam hazır değilse ödül **verilmez** ("reklam şu an hazır değil"; can için
+  ücretsiz "Tekrar dene" zaten var). Reklam sürerken oyun süresi akmaz (`Ads.isShowing()`). `ask`
+  (`{title, text, yes}`) verilirse reklamdan önce `askConfirm` ile onay alınır.
+
+### Ekranlar ve gezinme (bölüm 11b)
+
+Oyun tuvali hep arkada durur; ekranlar üstüne biner. `screenNow`: `game` | `home` | `levels` |
+`settings` | `pause`. Herhangi bir ekran açıkken `menuOpen = true` → süre, ipucu nabzı ve girdi
+durur (`frame()`, `onPointerDown` bu bayrağa bakar). Geçişler yalnız `showScreen(name)` üzerinden.
+
+- **Ana menü** (`#home`) — açılış animasyonundan sonra görünür. Büyük Oyna/Devam Et geçerli modu
+  sürdürür; kutucuklar Seviyeler (haritayı açar) / Sonsuz / Günlük; zorluk seçimi; ⚙ Ayarlar.
+- **Seviye haritası** (`#levels`, `renderLevels`) — yalnız `campaign`; 25'lik bölümler
+  (`PACK_NAMES`), 5 sütun = bir tema bandı (alt şerit rengi). Açılmış seviyeler **yeniden
+  oynanabilir**; kilitli = `n > max(bestLevel, sıradaki)`.
+- **Ayarlar** (`#settings`) — ses, müzik, ses düzeyi, hatırlatıcılar, ilerlemeyi sıfırla
+  (`askConfirm` — `window.confirm` kullanılmaz). `syncMenu()` açık ekranı tazeler; `Notify`
+  izin sonucunu buradan yansıtır (adını değiştirme).
+- **Duraklat** (`#pause`) — oyun içi ☰. Devam / Yeniden başla / Ana menü + hızlı ses düğmeleri.
+- **Seviye tamam kartı** (`#win`, `showWinCard`) — ampuller yanınca `WIN_CARD_DELAY` sonra açılır;
+  otomatik geçiş **yok**, `[Sonraki]` / `[Tekrar]` / `[Seviyeler|Ana menü]`. Kilometre taşı
+  (100'ün katı, "Seviyeler" sonu) ve 25'lik ara övgü katmanları `advanceAfterWin()` içinden
+  tetiklenir; kilometre taşında `[Menü]` gizlidir (kutlama/can ödülü atlanmasın).
+  `game.phase`: `play` → `winWait` → `win` → `card`.
+
+Kurallar: **`lastLevel` yalnız ileri gider** (`buildLevel`, `onWin`) — haritadan eski seviye
+oynamak "Devam Et"i geri çekmez. Ana menüden aynı tahtaya dönüş (`levelKey` / `game.key`)
+tahtayı yeniden kurmaz; hamleler ve süre korunur (`playMode`). Ekran ve ikon stilleri `--e-*`
+tema değişkenlerinden gelir, ikonlar `<body>` başındaki SVG sprite'ındandır (`#i-*`).
+Açılış animasyonu `click` ile kapanır — `pointerdown` olursa o dokunuşun click'i arkadaki
+ana menü düğmesine düşüp oyunu istemeden başlatır.
 
 Seviye üretici (bölüm 2, `generateLevel` / `randomPath`) **çözülebilirliği garanti eder**:
 önce çözülmüş yol çizilir, sonra çıkmaz dallar + yanıltıcı parçalar eklenir, en son
