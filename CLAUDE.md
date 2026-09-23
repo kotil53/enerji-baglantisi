@@ -161,7 +161,9 @@ adımların otomasyonu). CI her derlemede `cap add` yaptığı için gereklidir:
 AdMob `APPLICATION_ID` (Android manifest + iOS `Info.plist`), ATT metni,
 `versionCode`/`versionName`, ve Podfile'a `GoogleUserMessagingPlatform` **2.6.0** sabiti
 (admob 6.x eski UMP 2.x API'si kullanır; CocoaPods varsayılan UMP 3.x pod'u Swift
-derlemesini kırar).
+derlemesini kırar). Android SDK düzeyleri de burada sabitlenir (`variables.gradle`):
+`compileSdk`/`targetSdk` **36** (Play asgari şartı, AGP 8.7.2 + Gradle 8.9 gerektirir),
+`minSdk` **24** (Play Console "otomatik koruma" 22'yi reddeder).
 
 ## CI ve yayın
 

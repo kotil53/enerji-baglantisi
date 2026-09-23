@@ -84,6 +84,15 @@ patch(variablesGradle, (g) => {
   return out;
 });
 
+// Play Console'da "otomatik koruma" açıkken minSdk en az 24 olmalı; Capacitor 6
+// varsayılanı (22) yüklemede "minimum SDK sürümü 24 veya daha yüksek olmalı"
+// hatasıyla reddediliyor. 24 = Android 7.0 (cihazların büyük çoğunluğu).
+patch(variablesGradle, (g) => {
+  const out = g.replace(/minSdkVersion\s*=\s*\d+/, "minSdkVersion = 24");
+  if (out !== g) log("variables.gradle      minSdkVersion -> 24 (Play otomatik koruma şartı)");
+  return out;
+});
+
 const rootBuildGradle = join(root, "android/build.gradle");
 patch(rootBuildGradle, (g) => {
   const out = g.replace(/com\.android\.tools\.build:gradle:[\d.]+/, "com.android.tools.build:gradle:8.7.2");
