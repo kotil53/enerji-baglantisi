@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a0e1a">
+<meta name="theme-color" content="#1f2d56">
 <meta name="format-detection" content="telephone=no">
 <title>Enerji Bağlantısı</title>
 
@@ -39,31 +39,31 @@
      rgba() içinde kullanılanlar "r, g, b" üçlüsü olarak tutulur.
      ======================================================================= */
   :root {
-    --e-bg: #0a0e1a;
-    --e-tint-a: #14203c;
-    --e-tint-b: #1a1330;
+    --e-bg: #1f2d56;
+    --e-tint-a: #233a6e;
+    --e-tint-b: #332460;
     --e-ink: #cdd6f4;
-    --e-ink-hi: #e8eefc;
-    --e-muted: #8b93b5;
-    --e-faint: #6f7aa0;
-    --e-panel: #141d33;
-    --e-panel-2: #0e1526;
-    --e-panel-hi: #1c2842;
-    --e-border: #2a3550;
-    --e-border-hi: #3b4a70;
-    --e-border-soft: #212c46;
-    --e-seg-bg: #101a30;
+    --e-ink-hi: #dfe4f8;
+    --e-muted: #808cae;
+    --e-faint: #687498;
+    --e-panel: #283b66;
+    --e-panel-2: #223662;
+    --e-panel-hi: #334671;
+    --e-border: #41537c;
+    --e-border-hi: #51638a;
+    --e-border-soft: #34456f;
+    --e-seg-bg: #283b66;
     --e-accent-a: #3ad0c0;
     --e-accent-b: #2a95e8;
-    --e-on-accent: #04121f;
+    --e-on-accent: #0e1427;
     --e-hint: #ffd23f;
-    --e-hint-bg: #2a2410;
-    --e-hint-border: #5a4a1e;
-    --e-hint-bg-hi: #342c14;
-    --e-hint-border-hi: #7a6526;
-    --e-canvas-bg: 8, 12, 24;
-    --e-canvas-ring: 80, 140, 255;
-    --e-scrim: 6, 9, 18;
+    --e-hint-bg: #333953;
+    --e-hint-border: #5e544c;
+    --e-hint-bg-hi: #3e4051;
+    --e-hint-border-hi: #6b5c4a;
+    --e-canvas-bg: 27, 40, 76;
+    --e-canvas-ring: 36, 89, 147;
+    --e-scrim: 19, 28, 53;
     /* enerjili kablo / ampul / kaynak tonları (ana menü logosu ve altın düğmeler tema ile değişir) */
     --e-wire: #ffb733;
     --e-wire-glow: #ff9a1f;
@@ -763,6 +763,7 @@
   .row.danger .ri, .row.danger .rl { color: var(--e-danger); }
   .row.slider { flex-wrap: wrap; row-gap: 0; cursor: default; }
   .row.slider .rl label { cursor: inherit; }
+  .row.slider .seg-row { flex: 1 1 100%; margin-top: 8px; }
   .switch {
     position: relative; flex: 0 0 auto; width: 46px; height: 28px; border-radius: 999px;
     background: var(--e-seg-bg); border: 1px solid var(--e-border-hi);
@@ -1039,6 +1040,7 @@
     <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M9.5 7V4.5h5V7M7 7l1 12.5h8L17 7"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
     <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.5 2.3 4 5.3 4 8.5s-1.5 6.2-4 8.5c-2.5-2.3-4-5.3-4-8.5s1.5-6.2 4-8.5z"/></symbol>
   </defs>
 </svg>
 
@@ -1050,8 +1052,8 @@
       <span class="moves" id="movesLabel">0 hamle</span>
     </div>
     <div class="right">
-      <button class="btn" id="soundBtn" title="Ses aç/kapat"     aria-label="Ses">&#x1F50A;</button>
-      <button class="btn" id="menuBtn"  title="Duraklat"         aria-label="Duraklat">&#x2630;</button>
+      <button class="btn" id="soundBtn" title="Ses aç/kapat"     aria-label="Ses" data-i18n-attr="title:hud.soundToggleTitle;aria-label:hud.soundAria">&#x1F50A;</button>
+      <button class="btn" id="menuBtn"  title="Duraklat"         aria-label="Duraklat" data-i18n-attr="title:hud.pauseTitle;aria-label:hud.pauseAria">&#x2630;</button>
     </div>
   </div>
 
@@ -1071,23 +1073,23 @@
   <!-- OYUN ALANI -->
   <div id="stage">
     <canvas id="game"></canvas>
-    <div id="hint">Kablolara dokunarak döndür &bull; enerjiyi ampule ulaştır</div>
+    <div id="hint" data-i18n="game.hint">Kablolara dokunarak döndür &bull; enerjiyi ampule ulaştır</div>
   </div>
 
-  <!-- ALT ÇUBUK: ipucu (kısa reklam) / geri al / yeniden başla -->
+  <!-- ALT ÇUBUK: ipucu (günde birkaçı ücretsiz, sonra reklamla) / geri al / yeniden başla -->
   <div id="boosters">
-    <button class="booster hint" id="hintBtn" type="button" title="İpucu — kısa bir reklam izlenir" aria-label="İpucu, kısa bir reklam izlenir">
+    <button class="booster hint" id="hintBtn" type="button" title="İpucu — günde birkaçı ücretsiz, sonra reklamla" aria-label="İpucu, günde birkaçı ücretsiz, sonra reklamla" data-i18n-attr="title:booster.hintTitle;aria-label:booster.hintAria">
       <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 17.5h6M10 20.5h4M12 3.5a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2v.1h5v-.1c0-.8.4-1.5 1-2A6 6 0 0012 3.5z"/></svg>
-      <span id="hintLbl">İpucu 2/2</span>
+      <span id="hintLbl">İpucu 3/3</span>
       <i class="badge" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="3"/><path d="M10.5 9.5v5l4-2.5z" fill="currentColor" stroke="none"/></svg></i>
     </button>
-    <button class="booster" id="undoBtn" type="button" title="Son dönüşü geri al" aria-label="Geri al">
+    <button class="booster" id="undoBtn" type="button" title="Son dönüşü geri al" aria-label="Geri al" data-i18n-attr="title:booster.undoTitle;aria-label:booster.undoAria">
       <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 6L4.5 10l4 4"/><path d="M5 10h9a5 5 0 010 10h-3"/></svg>
-      <span>Geri al</span>
+      <span data-i18n="booster.undoLabel">Geri al</span>
     </button>
-    <button class="booster" id="resetBtn" type="button" title="Seviyeyi baştan başlat" aria-label="Seviyeyi yeniden başlat">
+    <button class="booster" id="resetBtn" type="button" title="Seviyeyi baştan başlat" aria-label="Seviyeyi yeniden başlat" data-i18n-attr="title:booster.resetTitle;aria-label:booster.resetAria">
       <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 11-2.4-5.5"/><path d="M19.5 4.5v4.5H15"/></svg>
-      <span>Yeniden başla</span>
+      <span data-i18n="common.restart">Yeniden başla</span>
     </button>
   </div>
 
@@ -1097,11 +1099,11 @@
 
   <!-- ANA MENÜ: açılışta ve "Ana menü"de görünür. Oyna/Devam Et + mod kutucukları + zorluk.
        Oyun tuvali arkada durur; ekran açıkken süre/girdi durur (menuOpen). -->
-  <section id="home" class="screen" aria-label="Ana menü">
+  <section id="home" class="screen" aria-label="Ana menü" data-i18n-attr="aria-label:home.ariaLabel">
     <div class="topbar">
-      <button class="ibtn" id="homeSettingsBtn" type="button" aria-label="Ayarlar" title="Ayarlar"><svg class="i"><use href="#i-sliders"/></svg></button>
+      <button class="ibtn" id="homeSettingsBtn" type="button" aria-label="Ayarlar" title="Ayarlar" data-i18n-attr="aria-label:home.settingsAria;title:home.settingsAria"><svg class="i"><use href="#i-sliders"/></svg></button>
       <span></span>
-      <span class="pill" title="Toplam yıldız" aria-label="Toplam yıldız"><svg class="i f"><use href="#i-star"/></svg><b id="homeStars">0</b></span>
+      <span class="pill" title="Toplam yıldız" aria-label="Toplam yıldız" data-i18n-attr="title:home.starsAria;aria-label:home.starsAria"><svg class="i f"><use href="#i-star"/></svg><b id="homeStars">0</b></span>
     </div>
     <div class="scroll">
       <div class="home-inner">
@@ -1129,7 +1131,7 @@
             </g>
           </svg>
           <h1>ENERJİ BAĞLANTISI</h1>
-          <p>Kabloları döndür, enerjiyi ampule ulaştır</p>
+          <p data-i18n="app.tagline">Kabloları döndür, enerjiyi ampule ulaştır</p>
         </div>
 
         <button class="cta rise" id="homePlay" type="button" style="--i:1" data-autofocus>
@@ -1138,83 +1140,97 @@
         </button>
 
         <div class="tiles rise" style="--i:2">
-          <button class="tile" type="button" data-play="campaign"><svg class="i" aria-hidden="true"><use href="#i-grid"/></svg><span>Seviyeler</span><small id="tileCampaign"></small></button>
-          <button class="tile" type="button" data-play="endless" id="tileEndlessBtn"><svg class="i" aria-hidden="true"><use href="#i-infinity"/></svg><span>Sonsuz</span><small id="tileEndless"></small></button>
-          <button class="tile" type="button" data-play="daily" id="tileDailyBtn"><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg><span>Günlük</span><small id="tileDaily"></small></button>
+          <button class="tile" type="button" data-play="campaign"><svg class="i" aria-hidden="true"><use href="#i-grid"/></svg><span data-i18n="tiles.campaign">Seviyeler</span><small id="tileCampaign"></small></button>
+          <button class="tile" type="button" data-play="endless" id="tileEndlessBtn"><svg class="i" aria-hidden="true"><use href="#i-infinity"/></svg><span data-i18n="tiles.endless">Sonsuz</span><small id="tileEndless"></small></button>
+          <button class="tile" type="button" data-play="daily" id="tileDailyBtn"><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg><span data-i18n="tiles.daily">Günlük</span><small id="tileDaily"></small></button>
         </div>
 
         <div class="grp rise" style="--i:3">
-          <span class="lbl" id="diffLbl">Zorluk</span>
+          <span class="lbl" id="diffLbl" data-i18n="diff.label">Zorluk</span>
           <div class="seg-row" role="radiogroup" aria-labelledby="diffLbl">
-            <button class="seg" type="button" role="radio" data-diff="rahat">Rahat</button>
-            <button class="seg" type="button" role="radio" data-diff="normal">Normal</button>
-            <button class="seg" type="button" role="radio" data-diff="zor">Zor</button>
+            <button class="seg" type="button" role="radio" data-diff="rahat" data-i18n="diff.rahat">Rahat</button>
+            <button class="seg" type="button" role="radio" data-diff="normal" data-i18n="diff.normal">Normal</button>
+            <button class="seg" type="button" role="radio" data-diff="zor" data-i18n="diff.zor">Zor</button>
           </div>
         </div>
       </div>
     </div>
     <div class="credit">
       <span class="kotiliy-mark" role="img" aria-label="kotiliy"></span>
-      <span>kotiliy tarafından geliştirildi</span>
+      <span data-i18n="common.developedBy">kotiliy tarafından geliştirildi</span>
     </div>
   </section>
 
   <!-- SEVİYE HARİTASI: "Seviyeler" modu. 25'lik bölümler; açılmış seviyeler yeniden oynanabilir. -->
-  <section id="levels" class="screen" aria-label="Seviyeler">
+  <section id="levels" class="screen" aria-label="Seviyeler" data-i18n-attr="aria-label:tiles.campaign">
     <div class="topbar">
-      <button class="ibtn" type="button" data-back aria-label="Geri" title="Geri"><svg class="i"><use href="#i-back"/></svg></button>
-      <h1 class="topbar-title">Seviyeler</h1>
-      <span class="pill" title="Kazanılan yıldız" aria-label="Kazanılan yıldız"><svg class="i f"><use href="#i-star"/></svg><b id="levelsStars">0</b></span>
+      <button class="ibtn" type="button" data-back aria-label="Geri" title="Geri" data-i18n-attr="aria-label:common.back;title:common.back"><svg class="i"><use href="#i-back"/></svg></button>
+      <h1 class="topbar-title" data-i18n="tiles.campaign">Seviyeler</h1>
+      <span class="pill" title="Kazanılan yıldız" aria-label="Kazanılan yıldız" data-i18n-attr="title:levels.starsAria;aria-label:levels.starsAria"><svg class="i f"><use href="#i-star"/></svg><b id="levelsStars">0</b></span>
     </div>
     <div class="wrap">
-      <div class="seg-row" role="radiogroup" aria-label="Zorluk">
-        <button class="seg" type="button" role="radio" data-diff="rahat">Rahat</button>
-        <button class="seg" type="button" role="radio" data-diff="normal">Normal</button>
-        <button class="seg" type="button" role="radio" data-diff="zor">Zor</button>
+      <div class="seg-row" role="radiogroup" aria-label="Zorluk" data-i18n-attr="aria-label:diff.label">
+        <button class="seg" type="button" role="radio" data-diff="rahat" data-i18n="diff.rahat">Rahat</button>
+        <button class="seg" type="button" role="radio" data-diff="normal" data-i18n="diff.normal">Normal</button>
+        <button class="seg" type="button" role="radio" data-diff="zor" data-i18n="diff.zor">Zor</button>
       </div>
     </div>
     <div class="scroll map" id="levelsScroll"></div>
   </section>
 
   <!-- AYARLAR -->
-  <section id="settings" class="screen" aria-label="Ayarlar">
+  <section id="settings" class="screen" aria-label="Ayarlar" data-i18n-attr="aria-label:home.settingsAria">
     <div class="topbar">
-      <button class="ibtn" type="button" data-back aria-label="Geri" title="Geri"><svg class="i"><use href="#i-back"/></svg></button>
-      <h1 class="topbar-title">Ayarlar</h1>
+      <button class="ibtn" type="button" data-back aria-label="Geri" title="Geri" data-i18n-attr="aria-label:common.back;title:common.back"><svg class="i"><use href="#i-back"/></svg></button>
+      <h1 class="topbar-title" data-i18n="home.settingsAria">Ayarlar</h1>
       <span></span>
     </div>
     <div class="scroll page">
       <div class="list">
         <button class="row" id="setSound" type="button" role="switch" aria-checked="true">
           <svg class="i ri" aria-hidden="true"><use href="#i-sound"/></svg>
-          <span class="rl">Ses<small>Efektler ve müzik birlikte</small></span>
+          <span class="rl"><span data-i18n="settings.sound">Ses</span><small data-i18n="settings.soundDesc">Efektler ve müzik birlikte</small></span>
           <span class="switch"></span>
         </button>
         <button class="row" id="setMusic" type="button" role="switch" aria-checked="true">
           <svg class="i ri" aria-hidden="true"><use href="#i-music"/></svg>
-          <span class="rl">Müzik</span>
+          <span class="rl" data-i18n="settings.music">Müzik</span>
           <span class="switch"></span>
         </button>
         <div class="row slider" id="setVolRow">
           <svg class="i ri" aria-hidden="true"><use href="#i-sound"/></svg>
-          <span class="rl"><label for="volRange">Ses düzeyi</label></span>
+          <span class="rl"><label for="volRange" data-i18n="settings.volumeLabel">Ses düzeyi</label></span>
           <span class="rv" id="volVal">%100</span>
           <input class="range" type="range" id="volRange" min="0" max="100" step="5" value="100">
         </div>
         <button class="row" id="setNotify" type="button" role="switch" aria-checked="false">
           <svg class="i ri" aria-hidden="true"><use href="#i-bell"/></svg>
-          <span class="rl">Hatırlatıcılar<small>Bir süre oynamazsan haber verir</small></span>
+          <span class="rl"><span data-i18n="settings.notify">Hatırlatıcılar</span><small data-i18n="settings.notifyDesc">Bir süre oynamazsan haber verir</small></span>
           <span class="switch"></span>
+        </button>
+        <div class="row slider" id="setLangRow">
+          <svg class="i ri" aria-hidden="true"><use href="#i-globe"/></svg>
+          <span class="rl" data-i18n="settings.language">Dil</span>
+          <div class="seg-row" role="radiogroup" aria-label="Dil" data-i18n-attr="aria-label:settings.language">
+            <button class="seg" type="button" role="radio" data-lang="tr">Türkçe</button>
+            <button class="seg" type="button" role="radio" data-lang="en">English</button>
+            <button class="seg" type="button" role="radio" data-lang="ar">العربية</button>
+            <button class="seg" type="button" role="radio" data-lang="es">Español</button>
+          </div>
+        </div>
+        <button class="row" id="setRate" type="button">
+          <svg class="i ri" aria-hidden="true"><use href="#i-star"/></svg>
+          <span class="rl"><span data-i18n="settings.rate">Bizi puanlayın</span><small data-i18n="settings.rateDesc">Mağazada puan ver, yorum yaz</small></span>
         </button>
         <button class="row danger" id="setReset" type="button">
           <svg class="i ri" aria-hidden="true"><use href="#i-trash"/></svg>
-          <span class="rl">İlerlemeyi sıfırla</span>
+          <span class="rl" data-i18n="settings.resetProgress">İlerlemeyi sıfırla</span>
           <span class="rv" id="setResetVal"></span>
         </button>
       </div>
       <div class="about">
         <span class="kotiliy-mark" role="img" aria-label="kotiliy"></span>
-        <span>kotiliy tarafından geliştirildi</span>
+        <span data-i18n="common.developedBy">kotiliy tarafından geliştirildi</span>
       </div>
     </div>
   </section>
@@ -1222,16 +1238,16 @@
   <!-- DURAKLAT: oyun içi ☰. Süre durur; tahta olduğu gibi kalır. -->
   <div id="pause" class="overlay" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
     <div class="dlg">
-      <h2 id="pauseTitle">DURAKLATILDI</h2>
+      <h2 id="pauseTitle" data-i18n="pause.title">DURAKLATILDI</h2>
       <p class="sub" id="pauseSub"></p>
       <div class="quick">
-        <button class="ibtn" id="pauseSound" type="button" aria-label="Ses" aria-pressed="true"><svg class="i"><use href="#i-sound"/></svg></button>
-        <button class="ibtn" id="pauseMusic" type="button" aria-label="Müzik" aria-pressed="true"><svg class="i"><use href="#i-music"/></svg></button>
+        <button class="ibtn" id="pauseSound" type="button" aria-label="Ses" aria-pressed="true" data-i18n-attr="aria-label:pause.soundAria"><svg class="i"><use href="#i-sound"/></svg></button>
+        <button class="ibtn" id="pauseMusic" type="button" aria-label="Müzik" aria-pressed="true" data-i18n-attr="aria-label:pause.musicAria"><svg class="i"><use href="#i-music"/></svg></button>
       </div>
       <div class="dlg-actions">
-        <button class="cta" id="pauseResume" type="button" data-autofocus><span class="t"><b>Devam Et</b></span><svg class="i f" aria-hidden="true"><use href="#i-play"/></svg></button>
-        <button class="btn2" id="pauseRestart" type="button"><svg class="i" aria-hidden="true"><use href="#i-restart"/></svg>Yeniden başla</button>
-        <button class="btn2 ghost" id="pauseHome" type="button"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg>Ana menü</button>
+        <button class="cta" id="pauseResume" type="button" data-autofocus><span class="t"><b data-i18n="common.continue">Devam Et</b></span><svg class="i f" aria-hidden="true"><use href="#i-play"/></svg></button>
+        <button class="btn2" id="pauseRestart" type="button"><svg class="i" aria-hidden="true"><use href="#i-restart"/></svg><span data-i18n="common.restart">Yeniden başla</span></button>
+        <button class="btn2 ghost" id="pauseHome" type="button"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg><span data-i18n="common.mainMenu">Ana menü</span></button>
       </div>
     </div>
   </div>
@@ -1243,7 +1259,7 @@
       <p class="sub" id="confirmText"></p>
       <div class="dlg-actions">
         <button class="btn2 danger" id="confirmYes" type="button"></button>
-        <button class="btn2" id="confirmNo" type="button" data-autofocus>Vazgeç</button>
+        <button class="btn2" id="confirmNo" type="button" data-autofocus data-i18n="common.cancel">Vazgeç</button>
       </div>
     </div>
   </div>
@@ -1262,7 +1278,7 @@
       <div class="dlg-actions">
         <button class="cta gold" id="winNext" type="button" data-autofocus><span class="t"><b id="winNextLabel">Sonraki seviye</b></span><svg class="i" aria-hidden="true"><use href="#i-next"/></svg></button>
         <div class="btn-row">
-          <button class="btn2" id="winRetry" type="button"><svg class="i" aria-hidden="true"><use href="#i-restart"/></svg>Tekrar</button>
+          <button class="btn2" id="winRetry" type="button"><svg class="i" aria-hidden="true"><use href="#i-restart"/></svg><span data-i18n="common.retryShort">Tekrar</span></button>
           <button class="btn2" id="winMenu" type="button"><svg class="i" aria-hidden="true" id="winMenuIco"><use href="#i-grid"/></svg><span id="winMenuLabel">Seviyeler</span></button>
         </div>
       </div>
@@ -1270,18 +1286,18 @@
   </div>
 
   <!-- CANLAR BİTTİ KATMANI -->
-  <div id="lifeOverlay">
+  <div id="lifeOverlay" role="dialog" aria-modal="true" aria-labelledby="lifeOverlayTitle" aria-hidden="true">
     <div class="card">
       <div class="hearts">&#128148;</div>
-      <h2>CANLARIN BİTTİ</h2>
-      <p class="sub">Ramak kaldı! Kısa bir reklamla aynı yerden, süren yenilenerek devam edebilir ya da seviyeyi baştan deneyebilirsin (baştan denemek can kazandırmaz).</p>
+      <h2 id="lifeOverlayTitle" data-i18n="life.title">CANLARIN BİTTİ</h2>
+      <p class="sub" data-i18n="life.sub">Ramak kaldı! Kısa bir reklamla aynı yerden, süren yenilenerek devam edebilir ya da seviyeyi baştan deneyebilirsin (baştan denemek can kazandırmaz).</p>
       <button class="big" id="lifeWatchBtn" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="17" height="12" rx="3"/><path d="M10.5 9.5v5l4-2.5z" fill="currentColor" stroke="none"/></svg>
-        <span class="t"><b>+1 can</b><small>Reklam izle</small></span>
+        <span class="t"><b data-i18n="life.watchTitle">+1 can</b><small data-i18n="common.watchAd">Reklam izle</small></span>
       </button>
       <button class="ghost" id="lifeRetryBtn" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12a7.5 7.5 0 11-2.4-5.5"/><path d="M19.5 4.5v4.5H15"/></svg>
-        Tekrar dene
+        <span data-i18n="common.retry">Tekrar dene</span>
       </button>
       <p class="sub lifeTimer" id="lifeTimer"></p>
     </div>
@@ -1291,9 +1307,9 @@
   <div id="timeUpOverlay" role="dialog" aria-modal="true" aria-labelledby="timeUpTitle" aria-hidden="true">
     <div class="card">
       <div class="hearts">&#9200;</div>
-      <h2 id="timeUpTitle">SÜRE DOLDU</h2>
-      <p class="sub">Bir can kaybettin. Hazır olduğunda seviyeyi baştan başlat.</p>
-      <button class="big" id="timeUpBtn" type="button">Yeniden başla</button>
+      <h2 id="timeUpTitle" data-i18n="timeup.title">SÜRE DOLDU</h2>
+      <p class="sub" data-i18n="timeup.sub">Bir can kaybettin. Hazır olduğunda seviyeyi baştan başlat.</p>
+      <button class="big" id="timeUpBtn" type="button" data-i18n="common.restart">Yeniden başla</button>
     </div>
   </div>
 
@@ -1303,10 +1319,10 @@
       <!-- 8 yönlü konfeti patlaması: yalnız CSS, yalnız bu katmanda -> en büyük
            başarı anı diğer (nötr) katmanlardan görsel olarak ayrışır -->
       <div class="confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="hearts">&#127942;</div>
-      <h2>BAŞARDIN!</h2>
+      <div class="hearts"></div>
+      <h2></h2>
       <p class="sub"></p>
-      <button class="big" id="milestoneContinueBtn">Devam Et &#9654;&#65039;</button>
+      <button class="big" id="milestoneContinueBtn"></button>
     </div>
   </div>
 
@@ -1386,12 +1402,12 @@
   </svg>
 
   <div class="title">ENERJİ BAĞLANTISI</div>
-  <div class="tagline">Kabloları döndür, enerjiyi ampule ulaştır</div>
-  <div class="skip">dokun &#9656; geç</div>
+  <div class="tagline" data-i18n="app.tagline">Kabloları döndür, enerjiyi ampule ulaştır</div>
+  <div class="skip" data-i18n="intro.skip">dokun &#9656; geç</div>
 
   <div class="credit">
     <span class="kotiliy-mark" role="img" aria-label="kotiliy"></span>
-    <span>kotiliy tarafından geliştirildi</span>
+    <span data-i18n="common.developedBy">kotiliy tarafından geliştirildi</span>
   </div>
 </div>
 
@@ -1458,6 +1474,482 @@
       try { localStorage.setItem(this._p + k, JSON.stringify(v)); } catch (e) {}
     }
   };
+
+  /* --------------------------------------------------------------------
+     0a) DİL (i18n) — tr / en / ar / es. Kapsam yalnızca oyun içi arayüz
+     (mağaza sayfaları hariç). Arapça'da yalnız metin çevrilir; düzen
+     bilerek LTR bırakılır (aynalama/RTL YOK — bkz. CLAUDE.md kararı).
+     İlk açılışta cihaz diline bakılır (navigator.language); desteklenmeyen
+     bir dilse İngilizce'ye düşer. Ayarlar > Dil'den elle değiştirilebilir,
+     seçim Store'da kalıcıdır.
+     -------------------------------------------------------------------- */
+  var LANGS = ["tr", "en", "ar", "es"];
+  var LOCALE_TAGS = { tr: "tr-TR", en: "en-US", ar: "ar-SA-u-nu-latn", es: "es-ES" };
+  var I18N = {
+    tr: {
+      "common.back": "Geri", "common.cancel": "Vazgeç", "common.watchAd": "Reklam izle",
+      "common.developedBy": "kotiliy tarafından geliştirildi", "common.mainMenu": "Ana menü",
+      "common.continue": "Devam Et", "common.play": "Oyna", "common.restart": "Yeniden başla",
+      "common.retry": "Tekrar dene", "common.retryShort": "Tekrar", "common.reset": "Sıfırla",
+      "diff.rahat": "Rahat", "diff.normal": "Normal", "diff.zor": "Zor", "diff.label": "Zorluk",
+      "mode.campaign": "Seviyeler", "mode.endless": "Sonsuz", "mode.daily": "Günlük",
+      "game.hint": "Kablolara dokunarak döndür • enerjiyi ampule ulaştır",
+      "app.tagline": "Kabloları döndür, enerjiyi ampule ulaştır",
+      "intro.skip": "dokun ▸ geç",
+      "hud.soundToggleTitle": "Ses aç/kapat", "hud.soundAria": "Ses",
+      "hud.pauseTitle": "Duraklat", "hud.pauseAria": "Duraklat", "hud.livesAria": "Canlar",
+      "hud.levelOf": "Seviye {n} / {total}", "hud.levelSimple": "Seviye {n}",
+      "hud.daily": "Günlük {n} / {total}", "hud.moves": "{n} hamle", "hud.bulbSuffix": " · 💡×{n}",
+      "booster.hintTitle": "İpucu — günde birkaçı ücretsiz, sonra reklamla", "booster.hintAria": "İpucu, günde birkaçı ücretsiz, sonra reklamla",
+      "booster.undoTitle": "Son dönüşü geri al", "booster.undoAria": "Geri al", "booster.undoLabel": "Geri al",
+      "booster.resetTitle": "Seviyeyi baştan başlat", "booster.resetAria": "Seviyeyi yeniden başlat",
+      "hint.label": "İpucu {n}/{total}",
+      "hint.ariaLeft": "İpucu, bugün {n} ücretsiz hakkın kaldı",
+      "hint.ariaGone": "İpucu, ücretsiz hakkın bitti; reklam izleyerek devam edebilirsin",
+      "home.ariaLabel": "Ana menü", "home.settingsAria": "Ayarlar", "home.starsAria": "Toplam yıldız",
+      "home.dailyDoneSub": "Bugünkü günlük tamam ✓", "home.dailySub": "Günlük · {n} / {total}",
+      "home.modeSub": "{mode} · Seviye {n} · {diff}",
+      "tiles.campaign": "Seviyeler", "tiles.endless": "Sonsuz", "tiles.daily": "Günlük",
+      "tiles.new": "Yeni", "tiles.locked": "Kilitli", "tiles.best": "En iyi {n}", "tiles.dailyDone": "Tamam ✓",
+      "levels.starsAria": "Kazanılan yıldız", "levels.suffixLocked": ", kilitli",
+      "levels.suffixStars": ", {n} yıldız", "levels.suffixNext": ", sıradaki",
+      "levels.packAria": "Bölüm {n}", "levels.packRange": "Seviye {a}–{b}",
+      "settings.sound": "Ses", "settings.soundDesc": "Efektler ve müzik birlikte",
+      "settings.music": "Müzik", "settings.volumeLabel": "Ses düzeyi", "settings.volumeValue": "%{n}",
+      "settings.notify": "Hatırlatıcılar", "settings.notifyDesc": "Bir süre oynamazsan haber verir",
+      "settings.rate": "Bizi puanlayın", "settings.rateDesc": "Mağazada puan ver, yorum yaz",
+      "settings.resetProgress": "İlerlemeyi sıfırla", "settings.language": "Dil",
+      "pause.title": "DURAKLATILDI", "pause.soundAria": "Ses", "pause.musicAria": "Müzik",
+      "pause.modeSub": "{mode} · Seviye {n}",
+      "win.dailyFinalTitle": "GÜNLÜK TAMAM!", "win.perfectTitle": "MÜKEMMEL!",
+      "win.dailyTitle": "BULMACA TAMAM", "win.levelTitle": "SEVİYE TAMAM",
+      "win.dailyFinalSub": "★ {stars} / {max} · {moves} hamle",
+      "win.dailySub": "Günlük {n} / {total} · {stars} yıldız",
+      "win.levelSubCampaign": "Seviye {n} / {total} · {stars} yıldız",
+      "win.levelSubEndless": "Seviye {n} · {stars} yıldız",
+      "chip.target": "Hedef {n}", "chip.hintUsed": "İpucu • en çok {n} yıldız",
+      "chip.newBest": "Yeni rekor", "chip.starGain": "+{n} yıldız",
+      "win.nextEndlessDaily": "Sonsuz Mod'a Geç", "win.nextLevelsDaily": "Seviyelere Geç",
+      "win.nextDailyPuzzle": "Sonraki bulmaca", "win.nextLevel": "Sonraki seviye",
+      "life.title": "CANLARIN BİTTİ",
+      "life.sub": "Ramak kaldı! Kısa bir reklamla aynı yerden, süren yenilenerek devam edebilir ya da seviyeyi baştan deneyebilirsin (baştan denemek can kazandırmaz).",
+      "life.watchTitle": "+1 can", "life.timerText": "Bir can {clock} sonra dolacak",
+      "timeup.title": "SÜRE DOLDU", "timeup.sub": "Bir can kaybettin. Hazır olduğunda seviyeyi baştan başlat.",
+      "milestone.campaignDoneTitle": "{n} SEVİYE TAMAM!",
+      "milestone.campaignDoneSub": "Bütün {n} seviyeyi bitirdin. Şimdi Sonsuz Mod başlıyor.",
+      "milestone.sub": "Seviye {n}'i tamamladın. {praise}", "milestone.continueEndless": "Sonsuz Moda Geç",
+      "toast.closeToSolve": "Çözüme çok yakınsın",
+      "toast.hintAppliedTwo": "İpucu: iki kablo düzeltildi", "toast.hintAppliedOne": "İpucu: bir kablo düzeltildi",
+      "toast.lifeGainedTimer": "Canın doldu • kaldığın yerden devam",
+      "toast.lifeGainedWatch": "1 can kazandın • süre yenilendi",
+      "toast.lifeGainedIdle": "+1 can • zamanla doldu",
+      "toast.notifyAppOnly": "Bildirimler yalnızca uygulamada çalışır",
+      "toast.notifyOff": "Bildirimler kapalı", "toast.notifyOn": "Bildirimler açık",
+      "toast.notifyDenied": "Bildirim izni verilmedi",
+      "toast.adNotReady": "Reklam şu an hazır değil • birazdan tekrar dene",
+      "toast.endlessStarted": "Sonsuz Mod başladı • Seviye {n}",
+      "toast.endlessLocked": "Sonsuz Mod kilitli — önce {n} seviyeyi bitir",
+      "toast.levelLocked": "Kilitli — sıradaki: Seviye {n}",
+      "toast.musicNeedsSound": "Müzik için önce sesi aç 🔊",
+      "toast.progressReset": "İlerleme sıfırlandı",
+      "toast.campaignStarted": "Seviyeler • {n} seviye", "toast.endlessMode": "Sonsuz mod",
+      "toast.diffChanged": "Zorluk: {label}",
+      "toast.dailySetDone": "Bugünkü günlük bitti — yarın yenisi!",
+      "toast.dailyStarted": "Günlük bulmaca • {date}",
+      "toast.soundOff": "Ses kapalı", "toast.soundOn": "Ses açık", "toast.retryFromStart": "Baştan dene",
+      "confirm.hintReadyTitle": "İpucu hazır!",
+      "confirm.hintReadyTextTwo": "İki kablo doğru yönüne çevrilecek.",
+      "confirm.hintReadyTextOne": "Bir kablo doğru yönüne çevrilecek.",
+      "confirm.showHint": "İpucunu göster", "confirm.watchAdForHintTitle": "İpucu için reklam izle",
+      "confirm.watchAdForHintText": "Kısa bir reklam izlenir; karşılığında {wire} doğru yönüne çevrilir. İpucu kullanılan seviyede en çok {max} yıldız alınır.",
+      "confirm.wireTwo": "iki kablo", "confirm.wireOne": "bir kablo",
+      "confirm.resetTitle": "İlerleme sıfırlansın mı?",
+      "confirm.resetText": "Sıfırlanacak: {mode}. Kazandığın tüm seviye ve yıldızlar silinir; bu işlem geri alınamaz.",
+      "confirm.lifeAdTitle": "+1 can kazan",
+      "confirm.lifeAdText": "Kısa bir reklam izlenir. Karşılığında 1 can kazanır, tahta olduğu gibi kalır ve süren yenilenir.",
+      "notify.channelName": "Hatırlatıcılar", "notify.channelDesc": "Oyuna geri dönme hatırlatıcıları",
+      "notify.reminder2": "İki gün oldu — seriyi bozma! 🔥",
+      "notify.reminder3": "Uzun zaman oldu. Kaldığın yerden devam et 🧩",
+      "notify.dailyTitle": "Günlük bulmaca hazır", "notify.dailyBody": "Bugünün günlük bulmacası seni bekliyor 📅",
+      "done.title": "GÜNLÜK TAMAM", "done.summary": "★ {st} / {max} · {mv} hamle",
+      "done.goEndless": "Ana menüden Sonsuz Mod'a geçebilirsin", "done.goLevels": "Ana menüden Seviyeler'e geçebilirsin",
+      "done.tomorrow": "Yeni günlük bulmaca yarın",
+      "packNames": ["Kıvılcım", "Devre", "Röle", "Şalter", "Trafo", "Dinamo", "Santral", "Şebeke"],
+      "bigPraiseTitles": ["BAŞARDIN!", "MUHTEŞEMSİN!", "EFSANESİN!", "DURDURULAMAZSIN!"],
+      "bigPraiseSubs": [
+        "Harika gidiyorsun. +1 can kazandın!", "Müthiş bir ilerleme. +1 can daha senin oldu!",
+        "Bu bambaşka bir seviye. +1 can kazandın!", "İnanılmaz bir başarı. +1 can daha kazandın!"
+      ],
+      "miniPraises": [
+        "Güzel gidiyorsun!", "Enerjin yerinde, devam!", "Kabloları ustaca çözüyorsun!", "Bu tempo harika!",
+        "Artık durduramıyoruz seni!", "Efsanevi bir seri yakaladın!", "Tam bir usta oldun!"
+      ],
+      "comeBack": [
+        "Enerji seni bekliyor ⚡ Yeni bir bulmaca çözelim mi?",
+        "Kablolar yine karıştı 🔌 Birkaç seviye seni özledi.",
+        "Beynini çalıştıracak bir bulmaca hazır 💡"
+      ]
+    },
+    en: {
+      "common.back": "Back", "common.cancel": "Cancel", "common.watchAd": "Watch ad",
+      "common.developedBy": "developed by kotiliy", "common.mainMenu": "Main menu",
+      "common.continue": "Continue", "common.play": "Play", "common.restart": "Restart",
+      "common.retry": "Try again", "common.retryShort": "Retry", "common.reset": "Reset",
+      "diff.rahat": "Easy", "diff.normal": "Normal", "diff.zor": "Hard", "diff.label": "Difficulty",
+      "mode.campaign": "Levels", "mode.endless": "Endless", "mode.daily": "Daily",
+      "game.hint": "Tap wires to rotate • get the energy to the bulb",
+      "app.tagline": "Rotate the wires, power up the bulb",
+      "intro.skip": "tap ▸ skip",
+      "hud.soundToggleTitle": "Toggle sound", "hud.soundAria": "Sound",
+      "hud.pauseTitle": "Pause", "hud.pauseAria": "Pause", "hud.livesAria": "Lives",
+      "hud.levelOf": "Level {n} / {total}", "hud.levelSimple": "Level {n}",
+      "hud.daily": "Daily {n} / {total}", "hud.moves": "{n} moves", "hud.bulbSuffix": " · 💡×{n}",
+      "booster.hintTitle": "Hint — a few free each day, then via ads", "booster.hintAria": "Hint, a few free each day, then via ads",
+      "booster.undoTitle": "Undo the last turn", "booster.undoAria": "Undo", "booster.undoLabel": "Undo",
+      "booster.resetTitle": "Restart the level", "booster.resetAria": "Restart the level",
+      "hint.label": "Hint {n}/{total}",
+      "hint.ariaLeft": "Hint, {n} free credits left today",
+      "hint.ariaGone": "Hint, your free credits are used up; you can continue by watching an ad",
+      "home.ariaLabel": "Main menu", "home.settingsAria": "Settings", "home.starsAria": "Total stars",
+      "home.dailyDoneSub": "Today's daily complete ✓", "home.dailySub": "Daily · {n} / {total}",
+      "home.modeSub": "{mode} · Level {n} · {diff}",
+      "tiles.campaign": "Levels", "tiles.endless": "Endless", "tiles.daily": "Daily",
+      "tiles.new": "New", "tiles.locked": "Locked", "tiles.best": "Best {n}", "tiles.dailyDone": "Done ✓",
+      "levels.starsAria": "Stars earned", "levels.suffixLocked": ", locked",
+      "levels.suffixStars": ", {n} stars", "levels.suffixNext": ", next",
+      "levels.packAria": "Section {n}", "levels.packRange": "Level {a}–{b}",
+      "settings.sound": "Sound", "settings.soundDesc": "Effects and music together",
+      "settings.music": "Music", "settings.volumeLabel": "Volume", "settings.volumeValue": "{n}%",
+      "settings.notify": "Reminders", "settings.notifyDesc": "Notifies you if you haven't played in a while",
+      "settings.rate": "Rate us", "settings.rateDesc": "Leave a rating and review in the store",
+      "settings.resetProgress": "Reset progress", "settings.language": "Language",
+      "pause.title": "PAUSED", "pause.soundAria": "Sound", "pause.musicAria": "Music",
+      "pause.modeSub": "{mode} · Level {n}",
+      "win.dailyFinalTitle": "DAILY COMPLETE!", "win.perfectTitle": "PERFECT!",
+      "win.dailyTitle": "PUZZLE COMPLETE", "win.levelTitle": "LEVEL COMPLETE",
+      "win.dailyFinalSub": "★ {stars} / {max} · {moves} moves",
+      "win.dailySub": "Daily {n} / {total} · {stars} stars",
+      "win.levelSubCampaign": "Level {n} / {total} · {stars} stars",
+      "win.levelSubEndless": "Level {n} · {stars} stars",
+      "chip.target": "Target {n}", "chip.hintUsed": "Hint used • max {n} stars",
+      "chip.newBest": "New record", "chip.starGain": "+{n} stars",
+      "win.nextEndlessDaily": "Go to Endless Mode", "win.nextLevelsDaily": "Go to Levels",
+      "win.nextDailyPuzzle": "Next puzzle", "win.nextLevel": "Next level",
+      "life.title": "OUT OF LIVES",
+      "life.sub": "So close! Watch a short ad to continue right where you were with your time refreshed, or try the level again from scratch (retrying doesn't grant a life).",
+      "life.watchTitle": "+1 life", "life.timerText": "A life refills in {clock}",
+      "timeup.title": "TIME'S UP", "timeup.sub": "You lost a life. Restart the level whenever you're ready.",
+      "milestone.campaignDoneTitle": "{n} LEVELS COMPLETE!",
+      "milestone.campaignDoneSub": "You finished all {n} levels. Endless Mode starts now.",
+      "milestone.sub": "You completed level {n}. {praise}", "milestone.continueEndless": "Go to Endless Mode",
+      "toast.closeToSolve": "You're very close to the solution",
+      "toast.hintAppliedTwo": "Hint: two wires fixed", "toast.hintAppliedOne": "Hint: one wire fixed",
+      "toast.lifeGainedTimer": "Your life refilled • continue where you left off",
+      "toast.lifeGainedWatch": "You earned 1 life • time refreshed",
+      "toast.lifeGainedIdle": "+1 life • refilled over time",
+      "toast.notifyAppOnly": "Notifications only work in the app",
+      "toast.notifyOff": "Notifications off", "toast.notifyOn": "Notifications on",
+      "toast.notifyDenied": "Notification permission denied",
+      "toast.adNotReady": "Ad isn't ready right now • try again shortly",
+      "toast.endlessStarted": "Endless Mode started • Level {n}",
+      "toast.endlessLocked": "Endless Mode is locked — finish {n} levels first",
+      "toast.levelLocked": "Locked — next up: Level {n}",
+      "toast.musicNeedsSound": "Turn on sound first for music 🔊",
+      "toast.progressReset": "Progress reset",
+      "toast.campaignStarted": "Levels • {n} levels", "toast.endlessMode": "Endless mode",
+      "toast.diffChanged": "Difficulty: {label}",
+      "toast.dailySetDone": "Today's daily is done — a new one tomorrow!",
+      "toast.dailyStarted": "Daily puzzle • {date}",
+      "toast.soundOff": "Sound off", "toast.soundOn": "Sound on", "toast.retryFromStart": "Retrying from start",
+      "confirm.hintReadyTitle": "Hint ready!",
+      "confirm.hintReadyTextTwo": "Two wires will be turned to their correct direction.",
+      "confirm.hintReadyTextOne": "One wire will be turned to its correct direction.",
+      "confirm.showHint": "Show hint", "confirm.watchAdForHintTitle": "Watch an ad for a hint",
+      "confirm.watchAdForHintText": "A short ad will play; in return, {wire} will be turned to the correct direction. A level where a hint is used earns at most {max} stars.",
+      "confirm.wireTwo": "two wires", "confirm.wireOne": "one wire",
+      "confirm.resetTitle": "Reset progress?",
+      "confirm.resetText": "Will be reset: {mode}. All levels and stars you've earned will be deleted; this cannot be undone.",
+      "confirm.lifeAdTitle": "Earn +1 life",
+      "confirm.lifeAdText": "A short ad will play. In return, you'll earn 1 life, the board stays as it is, and your time refreshes.",
+      "notify.channelName": "Reminders", "notify.channelDesc": "Reminders to come back to the game",
+      "notify.reminder2": "It's been two days — don't break your streak! 🔥",
+      "notify.reminder3": "It's been a while. Pick up right where you left off 🧩",
+      "notify.dailyTitle": "Daily puzzle ready", "notify.dailyBody": "Today's daily puzzle is waiting for you 📅",
+      "done.title": "DAILY COMPLETE", "done.summary": "★ {st} / {max} · {mv} moves",
+      "done.goEndless": "You can switch to Endless Mode from the main menu", "done.goLevels": "You can switch to Levels from the main menu",
+      "done.tomorrow": "A new daily puzzle tomorrow",
+      "packNames": ["Spark", "Circuit", "Relay", "Switch", "Transformer", "Dynamo", "Power Plant", "Grid"],
+      "bigPraiseTitles": ["YOU DID IT!", "YOU'RE AMAZING!", "YOU'RE LEGENDARY!", "YOU'RE UNSTOPPABLE!"],
+      "bigPraiseSubs": [
+        "You're doing great. You earned +1 life!", "Amazing progress. You got +1 more life!",
+        "This is a whole new level. You earned +1 life!", "Incredible achievement. You earned +1 more life!"
+      ],
+      "miniPraises": [
+        "You're doing great!", "Your energy is on point, keep going!", "You're solving wires like a pro!",
+        "This pace is awesome!", "Nobody can stop you now!", "You're on a legendary streak!",
+        "You've become a true master!"
+      ],
+      "comeBack": [
+        "Energy is waiting for you ⚡ Ready to solve a new puzzle?",
+        "The wires got tangled again 🔌 A few levels miss you.",
+        "A brain-teasing puzzle is ready 💡"
+      ]
+    },
+    ar: {
+      "common.back": "رجوع", "common.cancel": "إلغاء", "common.watchAd": "مشاهدة إعلان",
+      "common.developedBy": "من تطوير kotiliy", "common.mainMenu": "القائمة الرئيسية",
+      "common.continue": "متابعة", "common.play": "العب", "common.restart": "إعادة البدء",
+      "common.retry": "أعد المحاولة", "common.retryShort": "إعادة", "common.reset": "إعادة الضبط",
+      "diff.rahat": "سهل", "diff.normal": "متوسط", "diff.zor": "صعب", "diff.label": "الصعوبة",
+      "mode.campaign": "المستويات", "mode.endless": "بلا نهاية", "mode.daily": "يومي",
+      "game.hint": "المس الأسلاك لتديرها • أوصل الطاقة للمصباح",
+      "app.tagline": "أدر الأسلاك ووصّل الطاقة للمصباح",
+      "intro.skip": "المس ▸ تخطّ",
+      "hud.soundToggleTitle": "تبديل الصوت", "hud.soundAria": "الصوت",
+      "hud.pauseTitle": "إيقاف مؤقت", "hud.pauseAria": "إيقاف مؤقت", "hud.livesAria": "الأرواح",
+      "hud.levelOf": "المستوى {n} / {total}", "hud.levelSimple": "المستوى {n}",
+      "hud.daily": "يومي {n} / {total}", "hud.moves": "{n} حركة", "hud.bulbSuffix": " · 💡×{n}",
+      "booster.hintTitle": "تلميح — بعضها مجاني يوميًا، ثم عبر الإعلانات", "booster.hintAria": "تلميح، بعضها مجاني يوميًا، ثم عبر الإعلانات",
+      "booster.undoTitle": "التراجع عن آخر تدوير", "booster.undoAria": "تراجع", "booster.undoLabel": "تراجع",
+      "booster.resetTitle": "إعادة بدء المستوى", "booster.resetAria": "إعادة بدء المستوى",
+      "hint.label": "تلميح {n}/{total}",
+      "hint.ariaLeft": "تلميح، تبقّى لديك {n} تلميحًا مجانيًا اليوم",
+      "hint.ariaGone": "تلميح، انتهت تلميحاتك المجانية، يمكنك المتابعة بمشاهدة إعلان",
+      "home.ariaLabel": "القائمة الرئيسية", "home.settingsAria": "الإعدادات", "home.starsAria": "إجمالي النجوم",
+      "home.dailyDoneSub": "اكتملت لعبة اليوم اليومية ✓", "home.dailySub": "يومي · {n} / {total}",
+      "home.modeSub": "{mode} · المستوى {n} · {diff}",
+      "tiles.campaign": "المستويات", "tiles.endless": "بلا نهاية", "tiles.daily": "يومي",
+      "tiles.new": "جديد", "tiles.locked": "مقفل", "tiles.best": "الأفضل {n}", "tiles.dailyDone": "تم ✓",
+      "levels.starsAria": "النجوم المكتسبة", "levels.suffixLocked": "، مقفل",
+      "levels.suffixStars": "، {n} نجوم", "levels.suffixNext": "، التالي",
+      "levels.packAria": "الجزء {n}", "levels.packRange": "المستوى {a}–{b}",
+      "settings.sound": "الصوت", "settings.soundDesc": "المؤثرات والموسيقى معًا",
+      "settings.music": "الموسيقى", "settings.volumeLabel": "مستوى الصوت", "settings.volumeValue": "{n}%",
+      "settings.notify": "التذكيرات", "settings.notifyDesc": "يُنبهك إذا لم تلعب لفترة",
+      "settings.rate": "قيّمنا", "settings.rateDesc": "أضف تقييمًا ومراجعة في المتجر",
+      "settings.resetProgress": "إعادة ضبط التقدم", "settings.language": "اللغة",
+      "pause.title": "متوقف مؤقتًا", "pause.soundAria": "الصوت", "pause.musicAria": "الموسيقى",
+      "pause.modeSub": "{mode} · المستوى {n}",
+      "win.dailyFinalTitle": "اكتملت المهمة اليومية!", "win.perfectTitle": "ممتاز!",
+      "win.dailyTitle": "اكتمل اللغز", "win.levelTitle": "اكتمل المستوى",
+      "win.dailyFinalSub": "★ {stars} / {max} · {moves} حركة",
+      "win.dailySub": "يومي {n} / {total} · {stars} نجوم",
+      "win.levelSubCampaign": "المستوى {n} / {total} · {stars} نجوم",
+      "win.levelSubEndless": "المستوى {n} · {stars} نجوم",
+      "chip.target": "الهدف {n}", "chip.hintUsed": "استُخدم تلميح • بحد أقصى {n} نجوم",
+      "chip.newBest": "رقم قياسي جديد", "chip.starGain": "+{n} نجوم",
+      "win.nextEndlessDaily": "الانتقال لوضع اللانهاية", "win.nextLevelsDaily": "الانتقال إلى المستويات",
+      "win.nextDailyPuzzle": "اللغز التالي", "win.nextLevel": "المستوى التالي",
+      "life.title": "نفدت أرواحك",
+      "life.sub": "أوشكت! يمكنك متابعة اللعب من حيث توقفت مع تجديد الوقت بمشاهدة إعلان قصير، أو إعادة المحاولة من البداية (إعادة المحاولة لا تمنحك روحًا).",
+      "life.watchTitle": "+1 روح", "life.timerText": "ستمتلئ روح خلال {clock}",
+      "timeup.title": "انتهى الوقت", "timeup.sub": "خسرت روحًا. أعد بدء المستوى عندما تكون مستعدًا.",
+      "milestone.campaignDoneTitle": "اكتملت {n} مستوى!",
+      "milestone.campaignDoneSub": "أنهيت جميع مستويات {n}. يبدأ الآن وضع اللانهاية.",
+      "milestone.sub": "أكملت المستوى {n}. {praise}", "milestone.continueEndless": "الانتقال لوضع اللانهاية",
+      "toast.closeToSolve": "أنت قريب جدًا من الحل",
+      "toast.hintAppliedTwo": "تلميح: تم إصلاح سلكين", "toast.hintAppliedOne": "تلميح: تم إصلاح سلك واحد",
+      "toast.lifeGainedTimer": "امتلأت روحك • تابع من حيث توقفت",
+      "toast.lifeGainedWatch": "ربحت روحًا واحدة • تم تجديد الوقت",
+      "toast.lifeGainedIdle": "+1 روح • امتلأت مع الوقت",
+      "toast.notifyAppOnly": "الإشعارات تعمل فقط داخل التطبيق",
+      "toast.notifyOff": "الإشعارات متوقفة", "toast.notifyOn": "الإشعارات مفعّلة",
+      "toast.notifyDenied": "لم يُمنح إذن الإشعارات",
+      "toast.adNotReady": "الإعلان غير جاهز الآن • حاول مجددًا بعد قليل",
+      "toast.endlessStarted": "بدأ وضع اللانهاية • المستوى {n}",
+      "toast.endlessLocked": "وضع اللانهاية مقفل — أنهِ {n} مستوى أولاً",
+      "toast.levelLocked": "مقفل — التالي: المستوى {n}",
+      "toast.musicNeedsSound": "فعّل الصوت أولاً لتشغيل الموسيقى 🔊",
+      "toast.progressReset": "تمت إعادة ضبط التقدم",
+      "toast.campaignStarted": "المستويات • {n} مستوى", "toast.endlessMode": "وضع اللانهاية",
+      "toast.diffChanged": "الصعوبة: {label}",
+      "toast.dailySetDone": "انتهت لعبة اليوم اليومية — واحدة جديدة غدًا!",
+      "toast.dailyStarted": "اللغز اليومي • {date}",
+      "toast.soundOff": "الصوت متوقف", "toast.soundOn": "الصوت مفعّل", "toast.retryFromStart": "إعادة المحاولة من البداية",
+      "confirm.hintReadyTitle": "التلميح جاهز!",
+      "confirm.hintReadyTextTwo": "سيتم تدوير سلكين إلى الاتجاه الصحيح.",
+      "confirm.hintReadyTextOne": "سيتم تدوير سلك واحد إلى الاتجاه الصحيح.",
+      "confirm.showHint": "أظهر التلميح", "confirm.watchAdForHintTitle": "شاهد إعلانًا للحصول على تلميح",
+      "confirm.watchAdForHintText": "سيتم عرض إعلان قصير؛ مقابل ذلك سيتم تدوير {wire} إلى الاتجاه الصحيح. المستوى الذي يُستخدم فيه تلميح يحصل على {max} نجوم كحد أقصى.",
+      "confirm.wireTwo": "سلكين", "confirm.wireOne": "سلك واحد",
+      "confirm.resetTitle": "هل تريد إعادة ضبط التقدم؟",
+      "confirm.resetText": "سيُعاد ضبط: {mode}. سيتم حذف جميع المستويات والنجوم التي حصلت عليها؛ لا يمكن التراجع عن هذا الإجراء.",
+      "confirm.lifeAdTitle": "احصل على +1 روح",
+      "confirm.lifeAdText": "سيتم عرض إعلان قصير. مقابل ذلك ستربح روحًا واحدة، وستبقى اللوحة كما هي، وسيتجدد وقتك.",
+      "notify.channelName": "التذكيرات", "notify.channelDesc": "تذكيرات للعودة إلى اللعبة",
+      "notify.reminder2": "مرّ يومان — لا تكسر سلسلتك! 🔥",
+      "notify.reminder3": "مرّ وقت طويل. تابع من حيث توقفت 🧩",
+      "notify.dailyTitle": "اللغز اليومي جاهز", "notify.dailyBody": "لغز اليوم اليومي بانتظارك 📅",
+      "done.title": "اكتمل التحدي اليومي", "done.summary": "★ {st} / {max} · {mv} حركة",
+      "done.goEndless": "يمكنك الانتقال لوضع اللانهاية من القائمة الرئيسية", "done.goLevels": "يمكنك الانتقال إلى المستويات من القائمة الرئيسية",
+      "done.tomorrow": "لغز يومي جديد غدًا",
+      "packNames": ["شرارة", "دائرة", "مُرحّل", "مفتاح", "محوّل", "دينامو", "محطة طاقة", "شبكة"],
+      "bigPraiseTitles": ["لقد نجحت!", "أنت رائع!", "أنت أسطورة!", "لا يمكن إيقافك!"],
+      "bigPraiseSubs": [
+        "أداؤك رائع. ربحت روحًا إضافية (+1)!", "تقدم مذهل. حصلت على روح إضافية أخرى (+1)!",
+        "هذا مستوى مختلف تمامًا. ربحت روحًا إضافية (+1)!", "إنجاز لا يصدق. ربحت روحًا إضافية أخرى (+1)!"
+      ],
+      "miniPraises": [
+        "أنت تبلي حسنًا!", "طاقتك في أوجها، واصل!", "تحل الأسلاك باحتراف!", "هذه الوتيرة رائعة!",
+        "لا أحد يستطيع إيقافك الآن!", "حققت سلسلة أسطورية!", "أصبحت خبيرًا حقيقيًا!"
+      ],
+      "comeBack": [
+        "الطاقة تنتظرك ⚡ هل نحل لغزًا جديدًا؟",
+        "تشابكت الأسلاك مجددًا 🔌 اشتاقت إليك بعض المستويات.",
+        "لغز يحفّز عقلك جاهز 💡"
+      ]
+    },
+    es: {
+      "common.back": "Atrás", "common.cancel": "Cancelar", "common.watchAd": "Ver anuncio",
+      "common.developedBy": "desarrollado por kotiliy", "common.mainMenu": "Menú principal",
+      "common.continue": "Continuar", "common.play": "Jugar", "common.restart": "Reiniciar",
+      "common.retry": "Reintentar", "common.retryShort": "Reintentar", "common.reset": "Restablecer",
+      "diff.rahat": "Fácil", "diff.normal": "Normal", "diff.zor": "Difícil", "diff.label": "Dificultad",
+      "mode.campaign": "Niveles", "mode.endless": "Infinito", "mode.daily": "Diario",
+      "game.hint": "Toca los cables para girarlos • lleva la energía a la bombilla",
+      "app.tagline": "Gira los cables y lleva la energía a la bombilla",
+      "intro.skip": "toca ▸ saltar",
+      "hud.soundToggleTitle": "Activar/desactivar sonido", "hud.soundAria": "Sonido",
+      "hud.pauseTitle": "Pausa", "hud.pauseAria": "Pausa", "hud.livesAria": "Vidas",
+      "hud.levelOf": "Nivel {n} / {total}", "hud.levelSimple": "Nivel {n}",
+      "hud.daily": "Diario {n} / {total}", "hud.moves": "{n} movimientos", "hud.bulbSuffix": " · 💡×{n}",
+      "booster.hintTitle": "Pista — algunas gratis cada día, luego con anuncios", "booster.hintAria": "Pista, algunas gratis cada día, luego con anuncios",
+      "booster.undoTitle": "Deshacer el último giro", "booster.undoAria": "Deshacer", "booster.undoLabel": "Deshacer",
+      "booster.resetTitle": "Reiniciar el nivel", "booster.resetAria": "Reiniciar el nivel",
+      "hint.label": "Pista {n}/{total}",
+      "hint.ariaLeft": "Pista, te quedan {n} pistas gratis hoy",
+      "hint.ariaGone": "Pista, se acabaron tus pistas gratis; puedes continuar viendo un anuncio",
+      "home.ariaLabel": "Menú principal", "home.settingsAria": "Ajustes", "home.starsAria": "Estrellas totales",
+      "home.dailyDoneSub": "Diario de hoy completado ✓", "home.dailySub": "Diario · {n} / {total}",
+      "home.modeSub": "{mode} · Nivel {n} · {diff}",
+      "tiles.campaign": "Niveles", "tiles.endless": "Infinito", "tiles.daily": "Diario",
+      "tiles.new": "Nuevo", "tiles.locked": "Bloqueado", "tiles.best": "Mejor {n}", "tiles.dailyDone": "Hecho ✓",
+      "levels.starsAria": "Estrellas ganadas", "levels.suffixLocked": ", bloqueado",
+      "levels.suffixStars": ", {n} estrellas", "levels.suffixNext": ", siguiente",
+      "levels.packAria": "Sección {n}", "levels.packRange": "Nivel {a}–{b}",
+      "settings.sound": "Sonido", "settings.soundDesc": "Efectos y música juntos",
+      "settings.music": "Música", "settings.volumeLabel": "Volumen", "settings.volumeValue": "{n}%",
+      "settings.notify": "Recordatorios", "settings.notifyDesc": "Te avisa si no juegas por un tiempo",
+      "settings.rate": "Califícanos", "settings.rateDesc": "Deja una calificación y una reseña en la tienda",
+      "settings.resetProgress": "Restablecer progreso", "settings.language": "Idioma",
+      "pause.title": "EN PAUSA", "pause.soundAria": "Sonido", "pause.musicAria": "Música",
+      "pause.modeSub": "{mode} · Nivel {n}",
+      "win.dailyFinalTitle": "¡DIARIO COMPLETO!", "win.perfectTitle": "¡PERFECTO!",
+      "win.dailyTitle": "PUZLE COMPLETO", "win.levelTitle": "NIVEL COMPLETO",
+      "win.dailyFinalSub": "★ {stars} / {max} · {moves} movimientos",
+      "win.dailySub": "Diario {n} / {total} · {stars} estrellas",
+      "win.levelSubCampaign": "Nivel {n} / {total} · {stars} estrellas",
+      "win.levelSubEndless": "Nivel {n} · {stars} estrellas",
+      "chip.target": "Objetivo {n}", "chip.hintUsed": "Pista usada • máx. {n} estrellas",
+      "chip.newBest": "Nuevo récord", "chip.starGain": "+{n} estrellas",
+      "win.nextEndlessDaily": "Ir al Modo Infinito", "win.nextLevelsDaily": "Ir a Niveles",
+      "win.nextDailyPuzzle": "Siguiente puzle", "win.nextLevel": "Siguiente nivel",
+      "life.title": "SIN VIDAS",
+      "life.sub": "¡Casi lo logras! Mira un anuncio corto para continuar donde estabas con el tiempo renovado, o vuelve a intentar el nivel desde cero (reintentar no otorga una vida).",
+      "life.watchTitle": "+1 vida", "life.timerText": "Una vida se recargará en {clock}",
+      "timeup.title": "SE ACABÓ EL TIEMPO", "timeup.sub": "Perdiste una vida. Reinicia el nivel cuando estés listo.",
+      "milestone.campaignDoneTitle": "¡{n} NIVELES COMPLETOS!",
+      "milestone.campaignDoneSub": "Terminaste los {n} niveles. Ahora comienza el Modo Infinito.",
+      "milestone.sub": "Completaste el nivel {n}. {praise}", "milestone.continueEndless": "Ir al Modo Infinito",
+      "toast.closeToSolve": "Estás muy cerca de la solución",
+      "toast.hintAppliedTwo": "Pista: se corrigieron dos cables", "toast.hintAppliedOne": "Pista: se corrigió un cable",
+      "toast.lifeGainedTimer": "Tu vida se recargó • continúa donde lo dejaste",
+      "toast.lifeGainedWatch": "Ganaste 1 vida • se renovó el tiempo",
+      "toast.lifeGainedIdle": "+1 vida • se recargó con el tiempo",
+      "toast.notifyAppOnly": "Las notificaciones solo funcionan en la app",
+      "toast.notifyOff": "Notificaciones desactivadas", "toast.notifyOn": "Notificaciones activadas",
+      "toast.notifyDenied": "Permiso de notificaciones denegado",
+      "toast.adNotReady": "El anuncio no está listo ahora • inténtalo en breve",
+      "toast.endlessStarted": "Modo Infinito iniciado • Nivel {n}",
+      "toast.endlessLocked": "El Modo Infinito está bloqueado: termina primero {n} niveles",
+      "toast.levelLocked": "Bloqueado — siguiente: Nivel {n}",
+      "toast.musicNeedsSound": "Activa el sonido primero para la música 🔊",
+      "toast.progressReset": "Progreso restablecido",
+      "toast.campaignStarted": "Niveles • {n} niveles", "toast.endlessMode": "Modo infinito",
+      "toast.diffChanged": "Dificultad: {label}",
+      "toast.dailySetDone": "El diario de hoy terminó — ¡uno nuevo mañana!",
+      "toast.dailyStarted": "Puzle diario • {date}",
+      "toast.soundOff": "Sonido desactivado", "toast.soundOn": "Sonido activado", "toast.retryFromStart": "Reintentando desde el inicio",
+      "confirm.hintReadyTitle": "¡Pista lista!",
+      "confirm.hintReadyTextTwo": "Se girarán dos cables a su dirección correcta.",
+      "confirm.hintReadyTextOne": "Se girará un cable a su dirección correcta.",
+      "confirm.showHint": "Mostrar pista", "confirm.watchAdForHintTitle": "Mira un anuncio para obtener una pista",
+      "confirm.watchAdForHintText": "Se reproducirá un anuncio corto; a cambio, se girará {wire} a la dirección correcta. Un nivel donde se usa una pista gana como máximo {max} estrellas.",
+      "confirm.wireTwo": "dos cables", "confirm.wireOne": "un cable",
+      "confirm.resetTitle": "¿Restablecer el progreso?",
+      "confirm.resetText": "Se restablecerá: {mode}. Se eliminarán todos los niveles y estrellas que has ganado; esta acción no se puede deshacer.",
+      "confirm.lifeAdTitle": "Gana +1 vida",
+      "confirm.lifeAdText": "Se reproducirá un anuncio corto. A cambio, ganarás 1 vida, el tablero se mantiene igual y tu tiempo se renueva.",
+      "notify.channelName": "Recordatorios", "notify.channelDesc": "Recordatorios para volver al juego",
+      "notify.reminder2": "Han pasado dos días — ¡no rompas tu racha! 🔥",
+      "notify.reminder3": "Ha pasado un tiempo. Continúa donde lo dejaste 🧩",
+      "notify.dailyTitle": "Puzle diario listo", "notify.dailyBody": "El puzle diario de hoy te espera 📅",
+      "done.title": "DIARIO COMPLETO", "done.summary": "★ {st} / {max} · {mv} movimientos",
+      "done.goEndless": "Puedes cambiar al Modo Infinito desde el menú principal", "done.goLevels": "Puedes cambiar a Niveles desde el menú principal",
+      "done.tomorrow": "Un nuevo puzle diario mañana",
+      "packNames": ["Chispa", "Circuito", "Relé", "Interruptor", "Transformador", "Dinamo", "Central", "Red"],
+      "bigPraiseTitles": ["¡LO LOGRASTE!", "¡ERES INCREÍBLE!", "¡ERES LEGENDARIO!", "¡ERES IMPARABLE!"],
+      "bigPraiseSubs": [
+        "Lo estás haciendo genial. ¡Ganaste +1 vida!", "Progreso increíble. ¡Conseguiste +1 vida más!",
+        "Este es un nivel totalmente distinto. ¡Ganaste +1 vida!", "Un logro increíble. ¡Ganaste +1 vida más!"
+      ],
+      "miniPraises": [
+        "¡Vas genial!", "¡Tu energía está al máximo, sigue así!", "¡Resuelves los cables como un profesional!",
+        "¡Este ritmo es increíble!", "¡Ya nadie puede detenerte!", "¡Lograste una racha legendaria!",
+        "¡Te has convertido en un verdadero maestro!"
+      ],
+      "comeBack": [
+        "La energía te espera ⚡ ¿Resolvemos un nuevo puzle?",
+        "Los cables se enredaron otra vez 🔌 Algunos niveles te extrañan.",
+        "Hay un puzle listo para ejercitar tu mente 💡"
+      ]
+    }
+  };
+  function detectLang() {
+    try {
+      var nav = ((navigator.language || navigator.userLanguage || "tr") + "").toLowerCase().slice(0, 2);
+      if (LANGS.indexOf(nav) !== -1) return nav;
+    } catch (e) {}
+    return "en";
+  }
+  var LANG = Store.get("lang", null);
+  if (!LANG || LANGS.indexOf(LANG) === -1) { LANG = detectLang(); Store.set("lang", LANG); }
+  document.documentElement.lang = LANG;
+
+  function t(key, vars) {
+    var s = (I18N[LANG] && I18N[LANG][key] != null) ? I18N[LANG][key] : I18N.tr[key];
+    if (s == null) return key;
+    if (vars) { for (var k in vars) s = s.split("{" + k + "}").join(vars[k]); }
+    return s;
+  }
+  function tArr(key) { return (I18N[LANG] && I18N[LANG][key]) || I18N.tr[key] || []; }
+  function diffLabel(d) { return t("diff." + d); }
+  function applyI18n() {
+    document.documentElement.lang = LANG;
+    var els = document.querySelectorAll("[data-i18n]"), i;
+    for (i = 0; i < els.length; i++) els[i].textContent = t(els[i].getAttribute("data-i18n"));
+    var attrEls = document.querySelectorAll("[data-i18n-attr]");
+    for (i = 0; i < attrEls.length; i++) {
+      var pairs = attrEls[i].getAttribute("data-i18n-attr").split(";");
+      for (var j = 0; j < pairs.length; j++) {
+        var kv = pairs[j].split(":");
+        if (kv[0] && kv[1]) attrEls[i].setAttribute(kv[0], t(kv[1]));
+      }
+    }
+  }
+  // Ayarlar > Dil: seçim kalıcı, açık ekranı ve tüm dinamik etiketleri tazeler.
+  function setLang(l) {
+    if (LANGS.indexOf(l) === -1 || l === LANG) return;
+    LANG = l;
+    Store.set("lang", l);
+    applyI18n();
+    syncLangSegs();
+    updateHud();
+    updateHintBtn();
+    updateLives();
+    if (screenNow === "levels") renderLevels();
+    syncMenu();
+  }
 
   // --- Ses: WebAudio ile sentezlenir (harici ses dosyası yok) ---
   var Sound = {
@@ -1696,6 +2188,37 @@
   };
 
   /* --------------------------------------------------------------------
+     PUANLAMA — mağazanın "yorum yaz" sayfasını açar
+     --------------------------------------------------------------------
+     Native SKStoreReviewController / Play In-App Review API BİLEREK
+     kullanılmıyor: ikisi de yalnız yıldız alır, yazılı yorum almaz — ve
+     Apple bu API'nin bir düğmeden elle tetiklenmesini istemiyor (sistem
+     kendi sıklık/zamanlamasına göre gösterir, düğmeye basınca göstermez).
+     Bu yüzden Ayarlar'daki "Bizi puanlayın" doğrudan mağaza uygulamasının
+     puan+yorum ekranını açar. `market://` / `itms-apps://` özel şemaları
+     Capacitor'ın webview navigasyon yakalaması sayesinde native tarafta
+     ilgili mağaza uygulamasına yönlenir; tarayıcıda (native yok) Play
+     mağaza sayfası yeni sekmede açılır.
+     -------------------------------------------------------------------- */
+  var STORE_CFG = {
+    androidPackage: "com.enerji.baglantisi",
+    iosAppId: "6806667594"
+  };
+  var Rate = {
+    url: function () {
+      var plat = (window.Capacitor && Capacitor.getPlatform && Capacitor.getPlatform()) || "web";
+      if (plat === "ios") return "itms-apps://itunes.apple.com/app/id" + STORE_CFG.iosAppId + "?action=write-review";
+      if (plat === "android") return "market://details?id=" + STORE_CFG.androidPackage;
+      return "https://play.google.com/store/apps/details?id=" + STORE_CFG.androidPackage;
+    },
+    open: function () {
+      var isNative = !!window.Capacitor;
+      var url = this.url();
+      try { if (isNative) window.location.href = url; else window.open(url, "_blank"); } catch (e) {}
+    }
+  };
+
+  /* --------------------------------------------------------------------
      BİLDİRİMLER — yerel hatırlatıcılar (@capacitor/local-notifications)
      --------------------------------------------------------------------
      Sunucu YOK: yalnızca cihazda planlanan "geri dön" hatırlatıcıları.
@@ -1722,8 +2245,8 @@
       // Android bildirim kanalı (yoksa oluşturulur; iOS'ta yok sayılır)
       try {
         if (LN.createChannel) LN.createChannel({
-          id: this.CH, name: "Hatırlatıcılar",
-          description: "Oyuna geri dönme hatırlatıcıları",
+          id: this.CH, name: t("notify.channelName"),
+          description: t("notify.channelDesc"),
           importance: 3, visibility: 1
         });
       } catch (e) {}
@@ -1783,18 +2306,18 @@
     // Menüdeki Açık/Kapalı -> izin iste + planla / iptal et
     set: function (on) {
       var self = this;
-      if (!this.available()) { showToast("Bildirimler yalnızca uygulamada çalışır"); return; }
+      if (!this.available()) { showToast(t("toast.notifyAppOnly")); return; }
       if (!on) {
         this.enabled = false; Store.set("notify.enabled", false);
         this.cancelAll();
-        syncMenu(); showToast("Bildirimler kapalı", 900);
+        syncMenu(); showToast(t("toast.notifyOff"), 900);
         return;
       }
       this._request().then(function (ok) {
         self.enabled = ok; Store.set("notify.enabled", ok);
         syncMenu();
-        if (ok) { self.schedule(); showToast("Bildirimler açık", 900); }
-        else showToast("Bildirim izni verilmedi");
+        if (ok) { self.schedule(); showToast(t("toast.notifyOn"), 900); }
+        else showToast(t("toast.notifyDenied"));
       });
     },
 
@@ -1820,16 +2343,12 @@
       }
       function pick(a) { return a[(Math.random() * a.length) | 0]; }
 
-      var comeBack = [
-        "Enerji seni bekliyor ⚡ Yeni bir bulmaca çözelim mi?",
-        "Kablolar yine karıştı 🔌 Birkaç seviye seni özledi.",
-        "Beynini çalıştıracak bir bulmaca hazır 💡"
-      ];
+      var brand = "Enerji Bağlantısı";   // uygulama adı: her dilde sabit (mağaza/marka adıyla tutarlı)
       var list = [
-        { id: this._ids[0], title: "Enerji Bağlantısı", body: pick(comeBack),                              schedule: { at: at(1, 19) } },
-        { id: this._ids[1], title: "Enerji Bağlantısı", body: "İki gün oldu — seriyi bozma! 🔥",           schedule: { at: at(3, 19) } },
-        { id: this._ids[2], title: "Enerji Bağlantısı", body: "Uzun zaman oldu. Kaldığın yerden devam et 🧩", schedule: { at: at(7, 19) } },
-        { id: this._ids[3], title: "Günlük bulmaca hazır", body: "Bugünün günlük bulmacası seni bekliyor 📅",  schedule: { at: at(1, 10) } }
+        { id: this._ids[0], title: brand, body: pick(tArr("comeBack")),                     schedule: { at: at(1, 19) } },
+        { id: this._ids[1], title: brand, body: t("notify.reminder2"),                      schedule: { at: at(3, 19) } },
+        { id: this._ids[2], title: brand, body: t("notify.reminder3"),                      schedule: { at: at(7, 19) } },
+        { id: this._ids[3], title: t("notify.dailyTitle"), body: t("notify.dailyBody"),     schedule: { at: at(1, 10) } }
       ];
       for (var i = 0; i < list.length; i++) list[i].channelId = this.CH;
 
@@ -2024,13 +2543,13 @@
         if (this.ready && !this._rew.loading) this._prepRew();   // sonraki sefer için tekrar dene
         var why = !this.ready ? "init tamamlanmadı" + (this._err ? " — " + this._err : "") :
                   "ödüllü reklam yüklenmedi" + (this._err ? " — " + this._err : " (yükleniyor…)");
-        showToast(ADS_CFG.TEST_MODE ? "Reklam gösterilemedi: " + why : "Reklam şu an hazır değil • birazdan tekrar dene",
+        showToast(ADS_CFG.TEST_MODE ? "Reklam gösterilemedi: " + why : t("toast.adNotReady"),
                   ADS_CFG.TEST_MODE ? 4500 : 2800);
         return;
       }
       var self = this;
       if (ask) {
-        askConfirm({ title: ask.title, text: ask.text, yes: ask.yes || "Reklam izle", tone: "hint" }, function () { self._show(cb); });
+        askConfirm({ title: ask.title, text: ask.text, yes: ask.yes || t("common.watchAd"), tone: "hint" }, function () { self._show(cb); });
       } else {
         this._show(cb);
       }
@@ -2042,7 +2561,7 @@
       var AdMob = this._plugin();
       if (!AdMob || !this._rew.loaded) {
         this._prepRew();
-        showToast("Reklam şu an hazır değil • birazdan tekrar dene", 2800);
+        showToast(t("toast.adNotReady"), 2800);
         return;
       }
       var self = this;
@@ -2108,7 +2627,7 @@
     return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
   }
   function prettyDate() {
-    try { return new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long" }); }
+    try { return new Date().toLocaleDateString(LOCALE_TAGS[LANG] || "en-US", { day: "numeric", month: "long" }); }
     catch (e) { return todayKey(); }
   }
 
@@ -2120,7 +2639,6 @@
     normal: { nAdj:  0, grow: 2, sizeCap: 8, lenK: 1.0,  brK: 1.0, lockK: 1.0, decoyK: 1.0  },
     zor:    { nAdj:  2, grow: 2, sizeCap: 9, lenK: 1.35, brK: 1.5, lockK: 1.5, decoyK: 1.15 }
   };
-  var DIFF_LABEL = { rahat: "Rahat", normal: "Normal", zor: "Zor" };
 
   var CAMPAIGN_LEVELS = 200;             // "Seviyeler" modundaki sabit seviye sayısı; bitince sonsuz moda geçilir
 
@@ -2463,11 +2981,19 @@
   var undoBtn     = document.getElementById("undoBtn");
   var resetBtn    = document.getElementById("resetBtn");
 
-  var MAX_LIVES = 3;   // toplam can hakkı; süre bitince 1 azalır, ödüllü reklamla 1 kazanılır
-  var BONUS_MAX_LIVES = 5; // 100 seviye ödülü MAX_LIVES'ta sabit kalmasın diye çıkabileceği üst sınır
+  var MAX_LIVES = 2;   // toplam can hakkı; süre bitince 1 azalır, ödüllü reklamla 1 kazanılır
+  var BONUS_MAX_LIVES = 4; // artık aktif can ödülü yok; yalnız eski sürümden (MAX_LIVES=3) kalma kayıtlı canları aniden kesmemek için üst sınır
   var LIFE_REGEN_MS = 20 * 60 * 1000; // can MAX_LIVES'ın altındayken her bu kadar sürede +1 (duvar saati; uygulama kapalıyken de işler)
-  var HINTS_PER_LEVEL = 2;  // bir seviyede en çok bu kadar ödüllü ipucu (hak can kaybında/yeniden başlamada dolmaz)
+  var HINT_FREE_DAILY = 3;  // günde bu kadar ipucu reklamsız (gece yarısı todayKey() ile sıfırlanır); bitince ipucu reklam karşılığı sınırsız sürer
   var HINT_MAX_STARS = 2;   // ipucu kullanılan seviyede en çok bu kadar yıldız (3 yıldız = yardımsız)
+
+  // Günlük ücretsiz ipucu hakkı: tüm modlarda ortak, seviyeye/denemeye göre sıfırlanmaz — yalnız gün değişince
+  // (todayKey) tazelenir. Kalıcı (Store: hints.date / hints.left); Store.get ucuz olduğu için ihtiyaç anında okunur.
+  function freeHintsLeft() {
+    if (Store.get("hints.date", "") !== todayKey()) { Store.set("hints.date", todayKey()); Store.set("hints.left", HINT_FREE_DAILY); }
+    return Store.get("hints.left", HINT_FREE_DAILY);
+  }
+  function useFreeHint() { Store.set("hints.left", Math.max(0, freeHintsLeft() - 1)); }
 
   var ROT_DUR = 150;   // dönüş animasyonu süresi (ms)
   var WIN_CARD_DELAY = 500; // ampuller yandıktan sonra "SEVİYE TAMAM" kartı açılmadan önce yanık tahtayı görme süresi (ms)
@@ -2478,24 +3004,10 @@
 
   // Her övgü/kutlama seviyesi geçtikçe metin ve simge değişip güçlensin diye
   // sıralı havuzlar: dizinin sonuna gelince son (en güçlü) ifadede sabitlenir.
+  // Metin havuzları (miniPraises / bigPraiseTitles / bigPraiseSubs) dile göre
+  // değiştiğinden I18N içinde tutulur (bkz. tArr); simgeler dilden bağımsızdır.
   var MINI_PRAISE_ICONS = ["✨", "🌟", "🔥", "⚡", "🚀", "🏅", "👑"];
-  var MINI_PRAISES = [
-    "Güzel gidiyorsun!",
-    "Enerjin yerinde, devam!",
-    "Kabloları ustaca çözüyorsun!",
-    "Bu tempo harika!",
-    "Artık durduramıyoruz seni!",
-    "Efsanevi bir seri yakaladın!",
-    "Tam bir usta oldun!"
-  ];
   var BIG_PRAISE_ICONS  = ["🏆", "🥇", "👑", "💎"];
-  var BIG_PRAISE_TITLES = ["BAŞARDIN!", "MUHTEŞEMSİN!", "EFSANESİN!", "DURDURULAMAZSIN!"];
-  var BIG_PRAISE_SUBS   = [
-    "Harika gidiyorsun. +1 can kazandın!",
-    "Müthiş bir ilerleme. +1 can daha senin oldu!",
-    "Bu bambaşka bir seviye. +1 can kazandın!",
-    "İnanılmaz bir başarı. +1 can daha kazandın!"
-  ];
   // level: tamamlanan seviye (1 tabanlı), step: PRAISE_STEP/MILESTONE_STEP,
   // poolLen: ilgili havuzun uzunluğu -> 0 tabanlı, havuz sonunda sabitlenen dizin.
   function praiseTier(level, step, poolLen) {
@@ -2550,57 +3062,57 @@
   // applyTheme() bg->ink'ten türetir (her temada eşit, okunur kontrast).
   var THEMES = [
     { name: "Gece Mavisi",
-      bg: "#0a0e1a", tintA: "#14203c", tintB: "#1a1330", ink: "#cdd6f4",
+      bg: "#1f2d56", tintA: "#233a6e", tintB: "#332460", ink: "#cdd6f4",
       accentA: "#3ad0c0", accentB: "#2a95e8",
       wire: "#ffb733", wireGlow: "#ff9a1f", wireCore: "#fff2bf", flow: "#fffdf2",
       srcA: "#7bffe6", srcB: "#12b7a0", bulbA: "#fff7cf", bulbB: "#ffc531" },
     { name: "Mor Alacakaranlık",
-      bg: "#0d0a1c", tintA: "#241a44", tintB: "#3a1533", ink: "#e7d9f6",
+      bg: "#281e59", tintA: "#3c2a75", tintB: "#6b255e", ink: "#e7d9f6",
       accentA: "#c86bd8", accentB: "#7a5cf0",
       wire: "#ffc24d", wireGlow: "#ff8fd0", wireCore: "#fff0d6", flow: "#fff6ff",
       srcA: "#8fffe0", srcB: "#13a7b7", bulbA: "#fff4d0", bulbB: "#ffbe3a" },
     { name: "Zümrüt Derinlik",
-      bg: "#07130f", tintA: "#0f2e26", tintB: "#0a2436", ink: "#d5f0e6",
+      bg: "#1c503e", tintA: "#1e604f", tintB: "#13496e", ink: "#d5f0e6",
       accentA: "#3ad98f", accentB: "#2ab7c8",
       wire: "#ffd24d", wireGlow: "#ffae2b", wireCore: "#fff6cf", flow: "#fffef0",
       srcA: "#9bffd8", srcB: "#13b78f", bulbA: "#fff7cf", bulbB: "#ffcf3a" },
     { name: "Volkanik",
-      bg: "#150a08", tintA: "#3a1710", tintB: "#301515", ink: "#f5e1d5",
+      bg: "#51251d", tintA: "#6f2a1d", tintB: "#5f2828", ink: "#f5e1d5",
       accentA: "#ff7a3d", accentB: "#ff4d6d",
       wire: "#ffd15a", wireGlow: "#ff7a1f", wireCore: "#fff0d0", flow: "#fffdf2",
       srcA: "#7be6ff", srcB: "#1f9fd0", bulbA: "#e8fbff", bulbB: "#7fd8ff" },
     { name: "İndigo Gece",
-      bg: "#080a1e", tintA: "#161e4a", tintB: "#221a52", ink: "#d9def7",
+      bg: "#181e60", tintA: "#23317e", tintB: "#352885", ink: "#d9def7",
       accentA: "#6c8cff", accentB: "#4d5ff0",
       wire: "#ffcb45", wireGlow: "#ff9f3d", wireCore: "#fff1c8", flow: "#fffdf4",
       srcA: "#84ffe6", srcB: "#12b0c0", bulbA: "#fff6cf", bulbB: "#ffc835" },
     { name: "Okyanus Dibi",
-      bg: "#061417", tintA: "#0c2e38", tintB: "#0a2333", ink: "#d3eef4",
+      bg: "#164d59", tintA: "#165b6f", tintB: "#13496b", ink: "#d3eef4",
       accentA: "#35c8d8", accentB: "#2a86e8",
       wire: "#ffcf5a", wireGlow: "#ffab2b", wireCore: "#fff4d6", flow: "#fdffff",
       srcA: "#8ffff0", srcB: "#12b0a7", bulbA: "#fff7d0", bulbB: "#ffc93a" },
     { name: "Neon Şehir",
-      bg: "#0a0518", tintA: "#2b0f45", tintB: "#0f1f4a", ink: "#f0d9ff",
+      bg: "#26125d", tintA: "#4c197c", tintB: "#183582", ink: "#f0d9ff",
       accentA: "#ff2fd0", accentB: "#22d3ff",
       wire: "#ffcf3d", wireGlow: "#ff8f1f", wireCore: "#fff3c2", flow: "#fffbe8",
       srcA: "#7bffe6", srcB: "#12c7ff", bulbA: "#fff3c2", bulbB: "#ffd23f" },
     { name: "Altın Çöl",
-      bg: "#1a0f05", tintA: "#4a2410", tintB: "#3a1d3a", ink: "#ffe9cf",
+      bg: "#603611", tintA: "#813e1a", tintB: "#673167", ink: "#ffe9cf",
       accentA: "#ffb020", accentB: "#ff5f6d",
       wire: "#ffd24d", wireGlow: "#ff9a1f", wireCore: "#fff5cf", flow: "#fffef2",
       srcA: "#8fe9ff", srcB: "#1f8fd0", bulbA: "#eafbff", bulbB: "#7fd0ff" },
     { name: "Kutup Işıkları",
-      bg: "#04130f", tintA: "#0a3327", tintB: "#0d2a45", ink: "#d8fff0",
+      bg: "#115745", tintA: "#136b51", tintB: "#164b7d", ink: "#d8fff0",
       accentA: "#39ffa0", accentB: "#7a5cf0",
       wire: "#ffd24d", wireGlow: "#ff9a2b", wireCore: "#fff6cf", flow: "#fffef2",
       srcA: "#9bffe0", srcB: "#12c7a0", bulbA: "#fff7cf", bulbB: "#ffcf3a" },
     { name: "Kraliyet Moru",
-      bg: "#120818", tintA: "#33104a", tintB: "#1c1440", ink: "#f3e3ff",
+      bg: "#401b56", tintA: "#581a81", tintB: "#312273", ink: "#f3e3ff",
       accentA: "#d4af37", accentB: "#a855f7",
       wire: "#ffd24d", wireGlow: "#ff9a1f", wireCore: "#fff3c2", flow: "#fffbe8",
       srcA: "#8fffe6", srcB: "#14b8a6", bulbA: "#fff6cf", bulbB: "#ffc83a" },
     { name: "Mercan Resifi",
-      bg: "#031620", tintA: "#0a3a4a", tintB: "#123048", ink: "#d6f5ff",
+      bg: "#094a6c", tintA: "#106885", tintB: "#1e537e", ink: "#d6f5ff",
       accentA: "#ff6b6b", accentB: "#2ec4e0",
       wire: "#ffcf52", wireGlow: "#ff8a2e", wireCore: "#fff4cf", flow: "#fffdf5",
       srcA: "#8ffff0", srcB: "#12b0c8", bulbA: "#fff6cf", bulbB: "#ffc93a" }
@@ -2826,7 +3338,6 @@
     firstMove: false,
     idleMs: 0,        // oynanışta menü kapalıyken son girdiden beri geçen süre (ipucu nabzı için)
     lives: MAX_LIVES, // kalan can (süre dolunca -1, ödüllü reklamla +1, zamanla +1); kalıcı, bkz. setLives / loadLives
-    hintsLeft: HINTS_PER_LEVEL, // bu seviyede kalan ödüllü ipucu hakkı (buildLevel / winRetry doldurur, resetLevel dokunmaz)
     hinted: false,    // bu seviyede ipucu kullanıldı mı -> yıldız tavanı (HINT_MAX_STARS)
     hintFixed: [],    // ipucuyla düzeltilen hücreler; resetLevel bunları yeniden düzeltir (buildLevel / winRetry boşaltır)
     timeLimit: 0,    // bu seviye için saniye cinsinden süre hakkı
@@ -2958,9 +3469,8 @@
     game.introAt = performance.now();
     game.timeLimit = computeTimeLimit();
     game.timeLeft = game.timeLimit;
-    game.hintsLeft = HINTS_PER_LEVEL;   // ipucu hakkı seviye başına (yeni tahta = yeni hak)
     game.hinted = false;
-    game.hintFixed = [];
+    game.hintFixed = [];   // ipucu hakkı artık günlük (freeHintsLeft) — yeni tahtada sıfırlanmaz
     updateTimerUI();
 
     // Kaldığı yer + en iyi seviye kaydı (seviyeler + sonsuz mod; günlük hariç).
@@ -3002,11 +3512,12 @@
   // kabaca 1.7 katı dokunuş, dokunuş başına ~1.6 sn (ampul başına biraz ek iz
   // sürme). Süre hakkı = tahmin * 1.15 + 5 sn tampon -> ortalama oyuncu yetişir
   // ama tereddüt edemez. (Telemetri yok; model yalnız par ve ampul sayısına
-  // dayanır. Önceki *1.4 + 8 formülünden ~%20 kısa.)
+  // dayanır. Önceki *1.4 + 8 formülünden ~%20 kısa.) Standart can sayısı 3'ten
+  // 2'ye düşürüldüğünde süre baskısını da artırmak için sonuç ayrıca %20 kısaltılır.
   function computeTimeLimit() {
     var avgSolve = 10 + game.par * 2.7 + (game.bulbCount - 1) * 2.5;
-    var t = avgSolve * 1.15 + 5;
-    return clampI(Math.round(t), 15, 100);
+    var t = (avgSolve * 1.15 + 5) * 0.8;
+    return clampI(Math.round(t), 12, 80);
   }
 
   // Hamle sayısına göre yıldız (3/2/1). Par'a yakınlık ödüllendirilir.
@@ -3544,16 +4055,16 @@
     ctx.textBaseline = "middle";
     ctx.fillStyle = T.hint;
     ctx.font = "800 " + Math.round(M * 0.085) + "px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
-    ctx.fillText("GÜNLÜK TAMAM", W / 2, H / 2 - M * 0.03);
+    ctx.fillText(t("done.title"), W / 2, H / 2 - M * 0.03);
     var st = Store.get(dkey("stars"), 0), mv = Store.get(dkey("moves"), 0);
     // yıldız özeti (DAILY_COUNT * 3 üzerinden)
     ctx.fillStyle = T.ink;
     ctx.font = "700 " + Math.round(M * 0.055) + "px system-ui, -apple-system, sans-serif";
-    ctx.fillText("★ " + st + " / " + (DAILY_COUNT * 3) + "   ·   " + mv + " hamle", W / 2, H / 2 + M * 0.09);
+    ctx.fillText(t("done.summary", { st: st, max: DAILY_COUNT * 3, mv: mv }), W / 2, H / 2 + M * 0.09);
     ctx.fillStyle = T.muted;
     ctx.font = "500 " + Math.round(M * 0.04) + "px system-ui, -apple-system, sans-serif";
-    ctx.fillText(endlessUnlocked() ? "Ana menüden Sonsuz Mod'a geçebilirsin" : "Ana menüden Seviyeler'e geçebilirsin", W / 2, H / 2 + M * 0.2);
-    ctx.fillText("Yeni günlük bulmaca yarın", W / 2, H / 2 + M * 0.27);
+    ctx.fillText(endlessUnlocked() ? t("done.goEndless") : t("done.goLevels"), W / 2, H / 2 + M * 0.2);
+    ctx.fillText(t("done.tomorrow"), W / 2, H / 2 + M * 0.27);
     ctx.globalAlpha = 1;
   }
 
@@ -3628,26 +4139,29 @@
     updateHud();
   }
 
-  /* İPUCU — ödüllü reklam karşılığı ÖNEMLİ (yol) kabloları doğru yönüne çevirir.
-     Reklam KAPANINCA oyun içi "İpucunu göster" penceresi açılır (reklamın üstünde
-     değil, bkz. Ads.rewarded); düğmeye basılınca iki kablo sırayla (kısa gecikmeyle)
-     düzeltilir — yeterli yanlış kablo yoksa bir tane ile yetinilir. Pencere tek
-     düğmeli; geri tuşu/perde de "göster" sayılır -> izlenen reklamın ödülü kaybolmaz.
-     Reklam sürerken ve "İpucu hazır" penceresi açıkken süre akmaz (bkz. Ads.isShowing,
-     askConfirm) -> izlenen reklamın ipucu, süre bitti diye boşa gitmez. Reklam hazır
-     değilse (mobil) ipucu verilmez; tarayıcıda (eklenti yok) bedava.
-     Seviye başına HINTS_PER_LEVEL hak (game.hintsLeft): hak reklam izlenip ödül teslim
-     edilince düşer, resetLevel'da dolmaz (can kaybederek ipucu biriktirilmesin). İpucu
-     kullanılan seviye en çok HINT_MAX_STARS yıldız alır (game.hinted, bkz. onWin).
+  /* İPUCU — ÖNEMLİ (yol) kabloları doğru yönüne çevirir. Günde HINT_FREE_DAILY hak
+     tamamen bedava (reklamsız, anında uygulanır); bu hak biterse ipucu reklam
+     karşılığı SINIRSIZ devam eder (izlenen reklam sayısına üst sınır yok).
+     Ödüllü reklam yolunda: Reklam KAPANINCA oyun içi "İpucunu göster" penceresi
+     açılır (reklamın üstünde değil, bkz. Ads.rewarded); düğmeye basılınca iki kablo
+     sırayla (kısa gecikmeyle) düzeltilir — yeterli yanlış kablo yoksa bir tane ile
+     yetinilir. Pencere tek düğmeli; geri tuşu/perde de "göster" sayılır -> izlenen
+     reklamın ödülü kaybolmaz. Reklam sürerken ve "İpucu hazır" penceresi açıkken
+     süre akmaz (bkz. Ads.isShowing, askConfirm) -> izlenen reklamın ipucu, süre
+     bitti diye boşa gitmez. Reklam hazır değilse (mobil) ipucu verilmez; tarayıcıda
+     (eklenti yok) zaten bedava.
+     Günlük hak (freeHintsLeft/useFreeHint, Store: hints.date/hints.left) tüm modlarda
+     ortaktır, gün değişince (todayKey) tazelenir; seviye/deneme değişince SIFIRLANMAZ.
+     İpucu kullanılan seviye en çok HINT_MAX_STARS yıldız alır (game.hinted, bkz. onWin) —
+     bedava ya da reklamlı fark etmez, kullanım kullanımdır.
      Aday = hintWrong (gerçekten kopuk kablo; rot 0'dan farklı olmak yetmez). İpucuyla
      düzelen kablolar game.hintFixed'te tutulur ve resetLevel'da yeniden düzeltilir ->
-     süre dolup seviye baştan başlasa da izlenen reklamın ipucu boşa gitmez.
+     süre dolup seviye baştan başlasa da harcanan hak/reklamın ipucu boşa gitmez.
      Her düzeltme bir hamle sayılır; seviyeyi bitiriyorsa normal kazanma akışı
      işler ve zincirdeki kalan düzeltmeler uygulanmaz. */
   function useHint() {
     if (menuOpen || game.phase !== "play") return;
     game.idleMs = 0;
-    if (game.hintsLeft <= 0) { showToast("Bu seviyede ipucu hakkın bitti", 1400); return; }
     var cands = [];
     for (var r = 0; r < game.rows; r++) {
       for (var c = 0; c < game.cols; c++) {
@@ -3656,27 +4170,35 @@
         if (hintWrong(cl)) cands.push(cl);
       }
     }
-    if (!cands.length) { showToast("Çözüme çok yakınsın", 1100); return; }
+    if (!cands.length) { showToast(t("toast.closeToSolve"), 1100); return; }
     var n = Math.min(2, cands.length);
     var targets = [];
     for (var k = 0; k < n; k++) targets.push(cands.splice(rndInt(cands.length), 1)[0]);
+    if (freeHintsLeft() > 0) {
+      useFreeHint();
+      game.hinted = true;
+      updateHintBtn();
+      applyHintChain(targets, 0);
+      return;
+    }
     Ads.rewarded(function () {
-      if (game.phase !== "play") return;   // reklam sürerken durum değiştiyse (ör. uygulama arka plana atıldı) ipucu uygulanmaz, hak düşmez
-      game.hintsLeft = Math.max(0, game.hintsLeft - 1);
+      if (game.phase !== "play") return;   // reklam sürerken durum değiştiyse (ör. uygulama arka plana atıldı) ipucu uygulanmaz
       game.hinted = true;
       updateHintBtn();
       askConfirm({
-        title: "İpucu hazır!",
-        text: targets.length > 1 ? "İki kablo doğru yönüne çevrilecek." : "Bir kablo doğru yönüne çevrilecek.",
-        yes: "İpucunu göster",
+        title: t("confirm.hintReadyTitle"),
+        text: targets.length > 1 ? t("confirm.hintReadyTextTwo") : t("confirm.hintReadyTextOne"),
+        yes: t("confirm.showHint"),
         tone: "hint",
         solo: true
       }, function () { applyHintChain(targets, 0); });
     }, {
-      title: "İpucu için reklam izle",
-      text: "Kısa bir reklam izlenir; karşılığında " + (targets.length > 1 ? "iki kablo" : "bir kablo") + " doğru yönüne çevrilir. " +
-            "Bu seviyede " + game.hintsLeft + " ipucu hakkın var. İpucu kullanılan seviyede en çok " + HINT_MAX_STARS + " yıldız alınır.",
-      yes: "Reklam izle"
+      title: t("confirm.watchAdForHintTitle"),
+      text: t("confirm.watchAdForHintText", {
+        wire: targets.length > 1 ? t("confirm.wireTwo") : t("confirm.wireOne"),
+        max: HINT_MAX_STARS
+      }),
+      yes: t("common.watchAd")
     });
   }
 
@@ -3695,19 +4217,16 @@
     return false;
   }
 
-  // İpucu düğmesinin etiketi/pasifliği: "İpucu kalan/toplam"; hak bitince pasif (aria-disabled, dokununca toast)
+  // İpucu düğmesinin etiketi: "İpucu kalan/toplam" (günlük bedava hak). Hak bitince de düğme
+  // AKTİF kalır -> ipucu reklam karşılığı sınırsız devam eder (bkz. useHint).
   var _hintTxt = "";
   function updateHintBtn() {
-    var n = game.hintsLeft;
-    var txt = "İpucu " + n + "/" + HINTS_PER_LEVEL;
-    if (txt !== _hintTxt) {
-      _hintTxt = txt;
-      hintLbl.textContent = txt;
-      hintBtn.setAttribute("aria-label", n > 0
-        ? "İpucu, bu seviyede " + n + " hak kaldı, kısa reklam izlenir"
-        : "İpucu, bu seviyede hakkın bitti");
-    }
-    setBtnOff(hintBtn, n <= 0);
+    var n = freeHintsLeft();
+    var txt = t("hint.label", { n: n, total: HINT_FREE_DAILY });
+    _hintTxt = txt;
+    hintLbl.textContent = txt;
+    hintBtn.setAttribute("aria-label", n > 0 ? t("hint.ariaLeft", { n: n }) : t("hint.ariaGone"));
+    setBtnOff(hintBtn, false);
   }
 
   // Aday kabloları sırayla (kısa gecikmeyle) doğru yöne çevirir; seviye biterse durur.
@@ -3725,7 +4244,7 @@
     Sound.rotate();
     updateHud();
     var last = idx === targets.length - 1;
-    if (last) showToast(targets.length > 1 ? "İpucu: iki kablo düzeltildi" : "İpucu: bir kablo düzeltildi", 1100);
+    if (last) showToast(targets.length > 1 ? t("toast.hintAppliedTwo") : t("toast.hintAppliedOne"), 1100);
     if (computePower(performance.now(), false)) { beginWinWait(); return; }
     if (!last) setTimeout(function () { applyHintChain(targets, idx + 1); }, 260);
   }
@@ -3795,8 +4314,17 @@
          sonraki her süre aşımında bu katman yine çıkar; oyuncu asla kilitlenmez)
      Reklamın değeri "ilerlemeni koru + can" olduğu için ücretsiz seçenek onu anlamsız kılmaz.
      Katman açıkken can zamanla dolarsa (bkz. tickLives) oyun kaldığı yerden sürer. */
-  function showLifeOverlay() { lifeOverlay.classList.add("show"); }
-  function hideLifeOverlay() { lifeOverlay.classList.remove("show"); }
+  function showLifeOverlay() {
+    lifeOverlay.classList.add("show");
+    lifeOverlay.setAttribute("aria-hidden", "false");
+    setTimeout(function () {
+      try { document.getElementById("lifeWatchBtn").focus({ preventScroll: true }); } catch (e) {}
+    }, 60);
+  }
+  function hideLifeOverlay() {
+    lifeOverlay.classList.remove("show");
+    lifeOverlay.setAttribute("aria-hidden", "true");
+  }
   // "Süre doldu" katmanı (can kaldı): düğmeye odaklanır ki Enter/Boşluk ile de başlatılabilsin
   function showTimeUpOverlay() {
     timeUpOverlay.classList.add("show");
@@ -3822,24 +4350,25 @@
   }
 
   /* Her MILESTONE_STEP (100) seviyede bir açılan kutlama katmanı: oyuncuyu
-     övüp +1 can ödülü verir, "Devam Et" ile bir sonraki seviyeye kendi
-     geçmesini sağlar — otomatik ilerlemenin aksine kısa bir mola/başarı anı.
-     Övgü başlığı/simgesi her 100'lük dilimde bir sonraki (daha güçlü)
-     ifadeye geçer (BIG_PRAISE_* havuzları, sonunda son ifadede sabitlenir). */
+     övüp "Devam Et" ile bir sonraki seviyeye kendi geçmesini sağlar —
+     otomatik ilerlemenin aksine kısa bir mola/başarı anı. Övgü başlığı/simgesi
+     her 100'lük dilimde bir sonraki (daha güçlü) ifadeye geçer (BIG_PRAISE_*
+     havuzları, sonunda son ifadede sabitlenir). Can ödülü vermez (standart
+     tavan MAX_LIVES'ta sabit kalır). */
   function showMilestoneOverlay(completedLevel) {
     var iconEl  = milestoneOverlay.querySelector(".hearts");
     var titleEl = milestoneOverlay.querySelector("h2");
     var subEl   = milestoneOverlay.querySelector(".sub");
     var btnEl   = document.getElementById("milestoneContinueBtn");
-    var mt = praiseTier(completedLevel, MILESTONE_STEP, BIG_PRAISE_TITLES.length);
+    var bigTitles = tArr("bigPraiseTitles"), bigSubs = tArr("bigPraiseSubs");
+    var mt = praiseTier(completedLevel, MILESTONE_STEP, bigTitles.length);
     var end = isCampaignEnd(completedLevel);
     if (iconEl)  iconEl.textContent = end ? "🏆" : BIG_PRAISE_ICONS[mt];
-    if (titleEl) titleEl.textContent = end ? CAMPAIGN_LEVELS + " SEVİYE TAMAM!" : BIG_PRAISE_TITLES[mt];
-    setLives(game.lives + 1);   // 100 seviye ödülü: +1 can (BONUS_MAX_LIVES'a kadar; MAX_LIVES'ta sabit kalmaz)
+    if (titleEl) titleEl.textContent = end ? t("milestone.campaignDoneTitle", { n: CAMPAIGN_LEVELS }) : bigTitles[mt];
     if (subEl) subEl.textContent = end
-      ? "Bütün " + CAMPAIGN_LEVELS + " seviyeyi bitirdin. +1 can kazandın! Şimdi Sonsuz Mod başlıyor."
-      : "Seviye " + completedLevel + "'i tamamladın. " + BIG_PRAISE_SUBS[mt];
-    if (btnEl) btnEl.innerHTML = (end ? "Sonsuz Moda Geç" : "Devam Et") + " &#9654;&#65039;";
+      ? t("milestone.campaignDoneSub", { n: CAMPAIGN_LEVELS })
+      : t("milestone.sub", { n: completedLevel, praise: bigSubs[mt] });
+    if (btnEl) btnEl.innerHTML = (end ? t("milestone.continueEndless") : t("common.continue")) + " &#9654;&#65039;";
     milestoneOverlay.classList.add("show");
   }
   // "Seviyeler" modunda son (CAMPAIGN_LEVELS.) seviye tamamlandı mı
@@ -3854,7 +4383,7 @@
     var k = "endless." + cfg.diff + ".lastLevel";   // ekey() geçerli moda bağlı; hedef sonsuz
     Store.set(k, Math.max(Store.get(k, 0), CAMPAIGN_LEVELS));
     applyMode("endless");
-    showToast("Sonsuz Mod başladı • Seviye " + (game.li + 1), 2600);
+    showToast(t("toast.endlessStarted", { n: game.li + 1 }), 2600);
     Ads.levelAdvanced();
   }
   function hideMilestoneOverlay() { milestoneOverlay.classList.remove("show"); }
@@ -3887,34 +4416,36 @@
     var isFinal = daily && game.dailyDone;
     var stars = game.stars, i, title, sub;
     if (isFinal) {
-      title = "GÜNLÜK TAMAM!";
-      sub = "★ " + Store.get(dkey("stars"), 0) + " / " + (DAILY_COUNT * 3) + " · " + Store.get(dkey("moves"), 0) + " hamle";
+      title = t("win.dailyFinalTitle");
+      sub = t("win.dailyFinalSub", { stars: Store.get(dkey("stars"), 0), max: DAILY_COUNT * 3, moves: Store.get(dkey("moves"), 0) });
     } else if (daily) {
-      title = stars === 3 ? "MÜKEMMEL!" : "BULMACA TAMAM";
-      sub = "Günlük " + (game.dailyIdx + 1) + " / " + DAILY_COUNT + " · " + stars + " yıldız";
+      title = stars === 3 ? t("win.perfectTitle") : t("win.dailyTitle");
+      sub = t("win.dailySub", { n: game.dailyIdx + 1, total: DAILY_COUNT, stars: stars });
     } else {
-      title = stars === 3 ? "MÜKEMMEL!" : "SEVİYE TAMAM";
-      sub = "Seviye " + lv + (cfg.mode === "campaign" ? " / " + CAMPAIGN_LEVELS : "") + " · " + stars + " yıldız";
+      title = stars === 3 ? t("win.perfectTitle") : t("win.levelTitle");
+      sub = cfg.mode === "campaign"
+        ? t("win.levelSubCampaign", { n: lv, total: CAMPAIGN_LEVELS, stars: stars })
+        : t("win.levelSubEndless", { n: lv, stars: stars });
     }
     byId("winTitle").textContent = title;
     byId("winSub").textContent = sub;
 
     var chips = byId("winChips");
     chips.textContent = "";
-    chips.appendChild(chipEl(game.moves + " hamle", "", "check"));
-    chips.appendChild(chipEl("Hedef " + game.par, "", "target"));
-    if (game.hinted) chips.appendChild(chipEl("İpucu • en çok " + HINT_MAX_STARS + " yıldız", "", null));
-    if (game.newBest) chips.appendChild(chipEl("Yeni rekor", "gold", null));
-    if (game.starGain > 0) chips.appendChild(chipEl("+" + game.starGain + " yıldız", "gold", "star"));
+    chips.appendChild(chipEl(t("hud.moves", { n: game.moves }), "", "check"));
+    chips.appendChild(chipEl(t("chip.target", { n: game.par }), "", "target"));
+    if (game.hinted) chips.appendChild(chipEl(t("chip.hintUsed", { n: HINT_MAX_STARS }), "", null));
+    if (game.newBest) chips.appendChild(chipEl(t("chip.newBest"), "gold", null));
+    if (game.starGain > 0) chips.appendChild(chipEl(t("chip.starGain", { n: game.starGain }), "gold", "star"));
 
     var nextLabel, menuLabel, menuIco;
     if (daily) {
-      nextLabel = isFinal ? (endlessUnlocked() ? "Sonsuz Mod'a Geç" : "Seviyelere Geç") : "Sonraki bulmaca";
-      menuLabel = "Ana menü"; menuIco = "home";
+      nextLabel = isFinal ? (endlessUnlocked() ? t("win.nextEndlessDaily") : t("win.nextLevelsDaily")) : t("win.nextDailyPuzzle");
+      menuLabel = t("common.mainMenu"); menuIco = "home";
     } else {
-      nextLabel = isCampaignEnd(lv) ? "Devam Et" : "Sonraki seviye";
-      if (cfg.mode === "campaign") { menuLabel = "Seviyeler"; menuIco = "grid"; }
-      else { menuLabel = "Ana menü"; menuIco = "home"; }
+      nextLabel = isCampaignEnd(lv) ? t("common.continue") : t("win.nextLevel");
+      if (cfg.mode === "campaign") { menuLabel = t("tiles.campaign"); menuIco = "grid"; }
+      else { menuLabel = t("common.mainMenu"); menuIco = "home"; }
     }
     byId("winNextLabel").textContent = nextLabel;
     byId("winMenuLabel").textContent = menuLabel;
@@ -3968,8 +4499,9 @@
       // övgü katmanı göster, kısa süre sonra kendiliğinden geç (bkz. PRAISE_HOLD, frame()).
       game.phase = "praise";
       game.phaseAt = performance.now();
-      var mt = praiseTier(completedLevel, PRAISE_STEP, MINI_PRAISES.length);
-      showPraiseOverlay(MINI_PRAISE_ICONS[mt], MINI_PRAISES[mt]);
+      var miniPraises = tArr("miniPraises");
+      var mt = praiseTier(completedLevel, PRAISE_STEP, miniPraises.length);
+      showPraiseOverlay(MINI_PRAISE_ICONS[mt], miniPraises[mt]);
     } else {
       game.li++;
       buildLevel();
@@ -3998,8 +4530,7 @@
   function winRetry() {
     if (game.phase !== "card") return;
     hideWinCard();
-    game.hintsLeft = HINTS_PER_LEVEL;   // yeni deneme: ipucu hakkı ve "yardımsız 3 yıldız" şansı yeniden doğar
-    game.hinted = false;
+    game.hinted = false;   // yeni deneme: "yardımsız 3 yıldız" şansı yeniden doğar (ipucu hakkı günlük, burada sıfırlanmaz)
     game.hintFixed = [];                // yeni deneme baştan karışık başlar (ipucu düzeltmeleri de dahil)
     updateHintBtn();
     resetLevel();
@@ -4024,15 +4555,15 @@
     var l, m;
     // ikincil satır dar ekrana sığmalı: yalnız hamle + (varsa) ampul sayısı.
     // Izgara boyutu tahtadan zaten belli; etiketi kaldırıldı (dar ekranda "..." yapıyordu).
-    var bulbTag = game.bulbCount > 1 ? " · 💡×" + game.bulbCount : "";
+    var bulbTag = game.bulbCount > 1 ? t("hud.bulbSuffix", { n: game.bulbCount }) : "";
     if (cfg.mode === "daily") {
-      l = "Günlük " + Math.min(game.dailyIdx + 1, DAILY_COUNT) + " / " + DAILY_COUNT;
+      l = t("hud.daily", { n: Math.min(game.dailyIdx + 1, DAILY_COUNT), total: DAILY_COUNT });
     } else {
-      l = "Seviye " + (game.li + 1) + (cfg.mode === "campaign" ? " / " + CAMPAIGN_LEVELS : "");
+      l = cfg.mode === "campaign" ? t("hud.levelOf", { n: game.li + 1, total: CAMPAIGN_LEVELS }) : t("hud.levelSimple", { n: game.li + 1 });
     }
-    m = game.moves + " hamle" + bulbTag;
-    if (l !== _lvlTxt) { lvlLabel.textContent = l; _lvlTxt = l; }
-    if (m !== _mvTxt)  { movesLabel.textContent = m; _mvTxt = m; }
+    m = t("hud.moves", { n: game.moves }) + bulbTag;
+    lvlLabel.textContent = l; _lvlTxt = l;
+    movesLabel.textContent = m; _mvTxt = m;
     setBtnOff(undoBtn,  !game.undo.length);   // geri alınacak hamle yok
     setBtnOff(resetBtn, game.moves === 0);    // sıfırlanacak bir şey yok
     updateHintBtn();                          // ipucu hakkı (seviye başına)
@@ -4051,7 +4582,7 @@
     var on = false;
     if (game.phase === "play") {
       if (!menuOpen) game.idleMs += dt;
-      on = game.idleMs >= IDLE_NUDGE_MS && game.hintsLeft > 0;   // hak bitince halka çağırmaz
+      on = game.idleMs >= IDLE_NUDGE_MS;   // ipucu artık hep alınabilir (bedava hak ya da reklam) -> hak koşulu yok
     }
     if (on !== _nudgeOn) { _nudgeOn = on; hintBtn.classList.toggle("hinting", on); }
   }
@@ -4066,7 +4597,7 @@
       heartEls[i].classList.toggle("hide", i >= slotMax);
       heartEls[i].classList.toggle("off", i >= game.lives);
     }
-    livesLabel.setAttribute("aria-label", "Canlar: " + game.lives + " / " + MAX_LIVES);
+    livesLabel.setAttribute("aria-label", t("hud.livesAria") + ": " + game.lives + " / " + MAX_LIVES);
   }
 
   /* CAN — kalıcı + zamanla dolan. Store: lives.n (kalan can) ve lives.t (bir sonraki canın dolum
@@ -4119,11 +4650,11 @@
     if (now - _lifeChk < 1000) return;
     _lifeChk = now;
     if (regenLives()) {
-      if (game.phase === "dead") resumeAfterLifeGain("Canın doldu • kaldığın yerden devam");
-      else if (screenNow === "game") showToast("+1 can • zamanla doldu", 1400);
+      if (game.phase === "dead") resumeAfterLifeGain(t("toast.lifeGainedTimer"));
+      else if (screenNow === "game") showToast(t("toast.lifeGainedIdle"), 1400);
     }
     var txt = (game.lives < MAX_LIVES && _lifeT)
-      ? "Bir can " + lifeClock(_lifeT + LIFE_REGEN_MS - Date.now()) + " sonra dolacak" : "";
+      ? t("life.timerText", { clock: lifeClock(_lifeT + LIFE_REGEN_MS - Date.now()) }) : "";
     if (txt !== _lifeTimerTxt) { _lifeTimerTxt = txt; lifeTimerEl.textContent = txt; }
   }
 
@@ -4179,9 +4710,9 @@
   }
 
   /* --- ilerleme özetleri (ana menü + ayarlar + duraklat) --- */
-  function modeName(m) { return m === "campaign" ? "Seviyeler" : (m === "endless" ? "Sonsuz" : "Günlük"); }
+  function modeName(m) { return m === "campaign" ? t("mode.campaign") : (m === "endless" ? t("mode.endless") : t("mode.daily")); }
   // Geçerli modun kısa adı (zorluk dahil)
-  function modeLabel() { return cfg.mode === "daily" ? "Günlük" : modeName(cfg.mode) + " · " + DIFF_LABEL[cfg.diff]; }
+  function modeLabel() { return cfg.mode === "daily" ? t("mode.daily") : modeName(cfg.mode) + " · " + diffLabel(cfg.diff); }
   // m modunda (geçerli zorlukta) ulaşılan en yüksek seviye, 1 tabanlı; 0 = hiç oynanmadı
   function bestOf(m) {
     if (m === "campaign" && Store.get(pkey(m, "done"), false)) return CAMPAIGN_LEVELS;
@@ -4207,18 +4738,27 @@
       segs[i].setAttribute("aria-checked", on ? "true" : "false");
     }
   }
+  // Ayarlar > Dil segmentli seçici: etkin dili işaretler
+  function syncLangSegs() {
+    var segs = document.querySelectorAll(".seg[data-lang]");
+    for (var i = 0; i < segs.length; i++) {
+      var on = segs[i].getAttribute("data-lang") === LANG;
+      segs[i].classList.toggle("on", on);
+      segs[i].setAttribute("aria-checked", on ? "true" : "false");
+    }
+  }
 
   function syncHome() {
     var d = dailyState(), i;
     byId("homeStars").textContent = Store.get(pkey("campaign", "totalStars"), 0) + Store.get(pkey("endless", "totalStars"), 0);
     var cDone = bestOf("campaign") >= CAMPAIGN_LEVELS && Store.get(pkey("campaign", "done"), false) ? CAMPAIGN_LEVELS : lastLevelFor("campaign");   // tamamlanan seviye sayısı
-    byId("tileCampaign").textContent = cDone > 0 ? cDone + " / " + CAMPAIGN_LEVELS : "Yeni";
+    byId("tileCampaign").textContent = cDone > 0 ? cDone + " / " + CAMPAIGN_LEVELS : t("tiles.new");
     var eb = bestOf("endless"), eOpen = endlessUnlocked(), eBtn = byId("tileEndlessBtn");
-    byId("tileEndless").textContent = !eOpen ? "Kilitli" : (eb > 0 ? "En iyi " + eb : "Yeni");
+    byId("tileEndless").textContent = !eOpen ? t("tiles.locked") : (eb > 0 ? t("tiles.best", { n: eb }) : t("tiles.new"));
     eBtn.classList.toggle("locked", !eOpen);
     eBtn.setAttribute("aria-disabled", eOpen ? "false" : "true");
     eBtn.querySelector("use").setAttribute("href", eOpen ? "#i-infinity" : "#i-lock");
-    byId("tileDaily").textContent = d.done ? "Tamam ✓" : d.idx + " / " + DAILY_COUNT;
+    byId("tileDaily").textContent = d.done ? t("tiles.dailyDone") : d.idx + " / " + DAILY_COUNT;
     byId("tileDailyBtn").classList.toggle("attn", !d.done);
     var tiles = screens.home.querySelectorAll("[data-play]");
     for (i = 0; i < tiles.length; i++) tiles[i].classList.toggle("on", tiles[i].getAttribute("data-play") === cfg.mode);
@@ -4227,12 +4767,12 @@
     // Büyük düğme geçerli modu sürdürür (günlük bittiyse Sonsuz'a geçirir)
     var m = cfg.mode, label, sub;
     if (m === "daily") {
-      if (d.done) { label = endlessUnlocked() ? "Sonsuz Mod" : "Seviyeler"; sub = "Bugünkü günlük tamam ✓"; }
-      else { label = d.idx > 0 ? "Devam Et" : "Oyna"; sub = "Günlük · " + (d.idx + 1) + " / " + DAILY_COUNT; }
+      if (d.done) { label = endlessUnlocked() ? t("toast.endlessMode") : t("tiles.campaign"); sub = t("home.dailyDoneSub"); }
+      else { label = d.idx > 0 ? t("common.continue") : t("common.play"); sub = t("home.dailySub", { n: d.idx + 1, total: DAILY_COUNT }); }
     } else {
       var li = lastLevelFor(m);
-      label = (li === 0 && !Store.get(pkey(m, "totalStars"), 0)) ? "Oyna" : "Devam Et";
-      sub = modeName(m) + " · Seviye " + (li + 1) + " · " + DIFF_LABEL[cfg.diff];
+      label = (li === 0 && !Store.get(pkey(m, "totalStars"), 0)) ? t("common.play") : t("common.continue");
+      sub = t("home.modeSub", { mode: modeName(m), n: li + 1, diff: diffLabel(cfg.diff) });
     }
     byId("homePlayLabel").textContent = label;
     byId("homePlaySub").textContent = sub;
@@ -4248,7 +4788,7 @@
     var vr = byId("volRange");
     if (document.activeElement !== vr) vr.value = pct;   // sürüklerken üzerine yazma
     vr.style.setProperty("--fill", pct + "%");
-    byId("volVal").textContent = "%" + pct;
+    byId("volVal").textContent = t("settings.volumeValue", { n: pct });
     byId("setVolRow").classList.toggle("soft", !!Sound.muted);
   }
   function syncSettings() {
@@ -4259,14 +4799,15 @@
     setSwitch(byId("setNotify"), Notify.enabled);
     byId("setNotify").classList.toggle("soft", !Notify.available());   // yalnızca uygulamada çalışır
     syncVol();
+    syncLangSegs();
     byId("setResetVal").textContent = modeLabel();
   }
 
   function syncPause() {
     var silent = Sound.muted || Sound.vol <= 0;
     byId("pauseSub").textContent = cfg.mode === "daily"
-      ? "Günlük · " + Math.min(game.dailyIdx + 1, DAILY_COUNT) + " / " + DAILY_COUNT
-      : modeLabel() + " · Seviye " + (game.li + 1);
+      ? t("hud.daily", { n: Math.min(game.dailyIdx + 1, DAILY_COUNT), total: DAILY_COUNT })
+      : t("pause.modeSub", { mode: modeLabel(), n: game.li + 1 });
     byId("pauseSound").setAttribute("aria-pressed", silent ? "false" : "true");
     byId("pauseSound").querySelector("use").setAttribute("href", silent ? "#i-sound-off" : "#i-sound");
     byId("pauseMusic").setAttribute("aria-pressed", Sound.musicOn && !silent ? "true" : "false");
@@ -4310,7 +4851,7 @@
     else {
       game.li = savedLi();
       buildLevel();
-      showToast(mo === "campaign" ? "Seviyeler • " + CAMPAIGN_LEVELS + " seviye" : "Sonsuz mod");
+      showToast(mo === "campaign" ? t("toast.campaignStarted", { n: CAMPAIGN_LEVELS }) : t("toast.endlessMode"));
     }
   }
   function applyDiff(d) {
@@ -4323,15 +4864,15 @@
     }
     syncMenu();
     if (screenNow === "levels") renderLevels();
-    showToast("Zorluk: " + DIFF_LABEL[d]);
+    showToast(t("toast.diffChanged", { label: diffLabel(d) }));
   }
   function startDaily(quiet) {
     var done = !!Store.get(dkey("done"), false);
     game.dailyDone = done;
     game.dailyIdx = done ? DAILY_COUNT - 1 : clampI(Store.get(dkey("idx"), 0), 0, DAILY_COUNT - 1);
     buildLevel();
-    if (done) { game.phase = "done"; game.phaseAt = performance.now(); if (!quiet) showToast("Bugünkü günlük bitti — yarın yenisi!"); }
-    else if (!quiet) showToast("Günlük bulmaca • " + prettyDate());
+    if (done) { game.phase = "done"; game.phaseAt = performance.now(); if (!quiet) showToast(t("toast.dailySetDone")); }
+    else if (!quiet) showToast(t("toast.dailyStarted", { date: prettyDate() }));
   }
 
   // Bir moddaki tüm ilerlemeyi sil
@@ -4353,7 +4894,7 @@
       game.li = 0; buildLevel();
     }
     syncMenu();
-    showToast("İlerleme sıfırlandı");
+    showToast(t("toast.progressReset"));
   }
 
   /* --- onay penceresi (window.confirm yerine; tema ile uyumlu, klavye/geri tuşu destekli) ---
@@ -4387,7 +4928,6 @@
      25'lik bölümler; 5 sütun = her satır bir tema bandı (alt şerit o bandın rengi). Açılmış
      seviyeler yeniden oynanabilir (yıldız/rekor yükseltmek için); ilerleme (lastLevel) geri gitmez. */
   var PACK_SIZE = 25;
-  var PACK_NAMES = ["Kıvılcım", "Devre", "Röle", "Şalter", "Trafo", "Dinamo", "Santral", "Şebeke"];
   var _lvCur = 0, _lvReach = 0;     // haritadaki sıradaki / ulaşılan seviye (kilit iletisi için)
 
   function miniStars(n) {
@@ -4400,7 +4940,7 @@
     var cur = done ? 0 : lastLevelFor("campaign") + 1;                   // sıradaki seviye (1 tabanlı)
     var reach = done ? CAMPAIGN_LEVELS : Math.min(CAMPAIGN_LEVELS, Math.max(bestOf("campaign"), cur));
     _lvCur = cur; _lvReach = reach;
-    var seed = persistentThemeSeed(), bandCache = {};
+    var seed = persistentThemeSeed(), bandCache = {}, packNames = tArr("packNames");
     var packs = Math.ceil(CAMPAIGN_LEVELS / PACK_SIZE), html = "", totalGot = 0, p, i, n;
     for (p = 0; p < packs; p++) {
       var grid = "", got = 0, max = 0;
@@ -4413,13 +4953,15 @@
         var band = Math.floor((n - 1) / THEME_BAND);
         if (!bandCache[band]) bandCache[band] = themeForLevelWith(n, seed).accentA;
         var cls = "lv" + (locked ? " locked" : "") + (st ? " done" : "") + (n === cur ? " current" : "");
-        var lbl = "Seviye " + n + (locked ? ", kilitli" : (st ? ", " + st + " yıldız" : (n === cur ? ", sıradaki" : "")));
+        var suffix = locked ? t("levels.suffixLocked") : (st ? t("levels.suffixStars", { n: st }) : (n === cur ? t("levels.suffixNext") : ""));
+        var lbl = t("hud.levelSimple", { n: n }) + suffix;
         grid += '<button type="button" class="' + cls + '" data-n="' + n + '" style="--lv-a:' + bandCache[band] + '" aria-label="' + lbl + '">' +
           (locked ? '<svg class="i" aria-hidden="true"><use href="#i-lock"/></svg>' : "<b>" + n + "</b>" + (st ? miniStars(st) : "")) + "</button>";
       }
       var last = Math.min(CAMPAIGN_LEVELS, (p + 1) * PACK_SIZE);
-      html += '<section class="pack" aria-label="Bölüm ' + (p + 1) + '"><div class="pack-head"><span class="pack-num">' + (p + 1) +
-        '</span><span class="pack-name">' + (PACK_NAMES[p] || "Bölüm " + (p + 1)) + "<small>Seviye " + (p * PACK_SIZE + 1) + "–" + last +
+      var packName = packNames[p] || t("levels.packAria", { n: p + 1 });
+      html += '<section class="pack" aria-label="' + t("levels.packAria", { n: p + 1 }) + '"><div class="pack-head"><span class="pack-num">' + (p + 1) +
+        '</span><span class="pack-name">' + packName + "<small>" + t("levels.packRange", { a: p * PACK_SIZE + 1, b: last }) +
         '</small></span><span class="pack-stars"><svg class="i f" aria-hidden="true"><use href="#i-star"/></svg>' + got + "/" + max +
         '</span></div><div class="pack-grid">' + grid + "</div></section>";
       totalGot += got;
@@ -4455,7 +4997,7 @@
       var m = b.getAttribute("data-play");
       if (m === "endless" && !endlessUnlocked()) {
         Sound.locked(); Haptic.error();
-        showToast("Sonsuz Mod kilitli — önce " + CAMPAIGN_LEVELS + " seviyeyi bitir", 1800);
+        showToast(t("toast.endlessLocked", { n: CAMPAIGN_LEVELS }), 1800);
         return;
       }
       if (m === "campaign") showScreen("levels"); else playMode(m);
@@ -4463,6 +5005,9 @@
   });
   Array.prototype.forEach.call(document.querySelectorAll(".seg[data-diff]"), function (b) {
     b.addEventListener("click", function () { applyDiff(b.getAttribute("data-diff")); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".seg[data-lang]"), function (b) {
+    b.addEventListener("click", function () { setLang(b.getAttribute("data-lang")); });
   });
   Array.prototype.forEach.call(document.querySelectorAll("[data-back]"), function (b) {
     b.addEventListener("click", function () { showScreen("home"); });
@@ -4472,7 +5017,7 @@
     if (!b) return;
     if (b.classList.contains("locked")) {
       Sound.locked(); Haptic.error();
-      showToast("Kilitli — sıradaki: Seviye " + Math.min(_lvReach, CAMPAIGN_LEVELS), 1500);
+      showToast(t("toast.levelLocked", { n: Math.min(_lvReach, CAMPAIGN_LEVELS) }), 1500);
       return;
     }
     playMode("campaign", +b.getAttribute("data-n") - 1);
@@ -4485,7 +5030,7 @@
   byId("setMusic").addEventListener("click", function () {
     Sound.ensure();
     Sound.toggleMusic();
-    if (Sound.musicOn && Sound.muted) showToast("Müzik için önce sesi aç 🔊", 1400);
+    if (Sound.musicOn && Sound.muted) showToast(t("toast.musicNeedsSound"), 1400);
     syncMenu();
   });
   byId("setNotify").addEventListener("click", function () { Notify.set(!Notify.enabled); });
@@ -4497,11 +5042,12 @@
     refreshSoundBtn();
     syncVol();
   });
+  byId("setRate").addEventListener("click", function () { Rate.open(); });
   byId("setReset").addEventListener("click", function () {
     askConfirm({
-      title: "İlerleme sıfırlansın mı?",
-      text: "Sıfırlanacak: " + modeLabel() + ". Kazandığın tüm seviye ve yıldızlar silinir; bu işlem geri alınamaz.",
-      yes: "Sıfırla"
+      title: t("confirm.resetTitle"),
+      text: t("confirm.resetText", { mode: modeLabel() }),
+      yes: t("common.reset")
     }, wipeProgress);
   });
   byId("confirmYes").addEventListener("click", function () { closeConfirm(true); });
@@ -4519,7 +5065,7 @@
   byId("pauseSound").addEventListener("click", function () { Sound.ensure(); Sound.toggle(); refreshSoundBtn(); syncMenu(); });
   byId("pauseMusic").addEventListener("click", function () {
     Sound.ensure(); Sound.toggleMusic();
-    if (Sound.musicOn && Sound.muted) showToast("Müzik için önce sesi aç 🔊", 1400);
+    if (Sound.musicOn && Sound.muted) showToast(t("toast.musicNeedsSound"), 1400);
     syncMenu();
   });
   screens.pause.addEventListener("click", function (e) { if (e.target === screens.pause) showScreen("game"); });
@@ -4597,7 +5143,7 @@
     Sound.ensure();
     Sound.toggle();
     refreshSoundBtn();
-    showToast(Sound.muted ? "Ses kapalı" : "Ses açık", 900);
+    showToast(Sound.muted ? t("toast.soundOff") : t("toast.soundOn"), 900);
   });
   // ☰: oyunda Duraklat kartını açar / kapatır (bkz. openPause, ekran olayları 11b)
   document.getElementById("menuBtn").addEventListener("click", function () {
@@ -4609,11 +5155,11 @@
     Ads.rewarded(function () {
       if (game.phase !== "dead") return;
       setLives(game.lives + 1);
-      resumeAfterLifeGain("1 can kazandın • süre yenilendi");
+      resumeAfterLifeGain(t("toast.lifeGainedWatch"));
     }, {
-      title: "+1 can kazan",
-      text: "Kısa bir reklam izlenir. Karşılığında 1 can kazanır, tahta olduğu gibi kalır ve süren yenilenir.",
-      yes: "Reklam izle"
+      title: t("confirm.lifeAdTitle"),
+      text: t("confirm.lifeAdText"),
+      yes: t("common.watchAd")
     });
   });
 
@@ -4632,7 +5178,7 @@
     hideLifeOverlay();
     game.phase = "play";              // resetLevel()'in "dead" korumasını aşmak için
     resetLevel();
-    showToast("Baştan dene", 1400);
+    showToast(t("toast.retryFromStart"), 1400);
   });
 
   // 100 seviye kutlama katmanı: "Devam Et" -> bir sonraki seviyeye geç
@@ -4696,6 +5242,7 @@
   /* ----------------------------------------------------------------------
      13) BAŞLAT
      ---------------------------------------------------------------------- */
+  applyI18n();   // statik arayüz metinlerini (data-i18n / data-i18n-attr) o anki dile göre uygula
   refreshSoundBtn();
   loadLives();   // kalıcı can + kapalıyken dolanlar (bkz. setLives); updateLives'ı da çağırır
   if (cfg.mode === "daily") {

@@ -86,10 +86,12 @@ Kullanılan eklentiler ([capacitor-app/package.json](capacitor-app/package.json)
   "Canlar bitti" katmanı (`#lifeOverlay`): reklam → +1 can, tahta korunur, süre yenilenir; "Tekrar dene"
   ücretsiz ama **can vermez** (can 0'da kalır, sonraki her süre aşımında katman yine çıkar — oyuncu
   kilitlenmez). Katman açıkken can zamanla dolarsa oyun kaldığı yerden sürer (`resumeAfterLifeGain`).
-- **İpucu** — reklam karşılığı en çok 2 yanlış yol kablosunu düzeltir. Seviye başına `HINTS_PER_LEVEL = 2`
-  hak (`game.hintsLeft`; `buildLevel` ve `winRetry` doldurur, **can kaybı / `resetLevel` doldurmaz** —
-  yoksa can kaybederek ipucu biriktirilir). İpucu kullanılan seviye en çok `HINT_MAX_STARS = 2` yıldız
-  alır (`game.hinted`, `onWin`; 3 yıldız = yardımsız). Hak reklam **teslim edilince** düşer.
+- **İpucu** — en çok 2 yanlış yol kablosunu düzeltir. Günde `HINT_FREE_DAILY = 3` hak tamamen
+  **ücretsiz** (`freeHintsLeft` / `useFreeHint`; `Store`: `hints.date` / `hints.left`, `todayKey()`
+  ile gece yarısı sıfırlanır — tüm modlarda **ortak**, seviye/deneme değişince sıfırlanmaz). Bu hak
+  biterse ipucu reklam karşılığı **sınırsız** devam eder (`Ads.rewarded`, izlenebilecek reklam sayısına
+  üst sınır yok). İpucu kullanılan seviye en çok `HINT_MAX_STARS = 2` yıldız alır (`game.hinted`,
+  `onWin`; 3 yıldız = yardımsız) — bedava ya da reklamlı fark etmez.
   **Aday = `hintWrong`**, yani kopuk kablo: `rot ≠ 0` tek başına "yanlış" değildir (düz kablo 180°'de, çıkmaz
   sapmalı T iki yönde çalışır; eski `rot ≠ 0` testi 4800 tahtanın %78'inde çalışan parçayı seçebiliyordu).
   İpucuyla düzelen kablolar `game.hintFixed`'te tutulur, `resetLevel` (can kaybı / Yeniden başla) bunları
