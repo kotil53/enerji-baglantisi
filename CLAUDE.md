@@ -56,6 +56,13 @@ Kullanılan eklentiler ([capacitor-app/package.json](capacitor-app/package.json)
 - **`RNG`** — sonsuz modda `Math.random`; günlük modda `mulberry32(hash(todayKey()))`,
   seviyeler modunda `mulberry32(hash("seviye."+zorluk) ^ seviyeNo)` ile deterministik
   (herkeste aynı bulmaca). `buildLevel` geçici olarak değiştirir.
+- **Dil (`I18N`, `t()`, `setLang`)** — `LANGS` = tr/en/ar/es (Arapça yalnız metin, düzen LTR). Varsayılan dil
+  **cihaz dilidir** (`detectLang`, `navigator.languages`; desteklenen çıkmazsa `en`) — mağaza ülkesi
+  uygulamadan okunamaz. Kayıtlı `lang` **yalnız elle seçimde** yazılır; yoksa her açılışta yeniden tespit
+  edilir. **Tuzak:** yeni dil eklerken `LANGS` + `LOCALE_TAGS` + `I18N` paketi + Ayarlar'daki `data-lang`
+  düğmesinin yanı sıra [apply-native-config.mjs](capacitor-app/scripts/apply-native-config.mjs) içindeki
+  `APP_LANGS` (iOS `CFBundleLocalizations`) da güncellenmeli — yoksa iOS WebView cihaz dilini bildirmeyebilir.
+  Mağaza sayfası metinleri (Play/App Store) oyundan bağımsız, dil başına ayrı girilir.
 
 ### Üç mod
 

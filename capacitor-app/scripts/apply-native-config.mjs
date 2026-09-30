@@ -131,6 +131,21 @@ patch(plist, (p) => {
   return p.slice(0, idx) + `\t<key>ITSAppUsesNonExemptEncryption</key>\n\t<false/>\n` + p.slice(idx);
 });
 
+// Oyun dilleri JS tarafında çevriliyor (bundle'da .lproj yok). iOS, uygulamanın
+// hangi dilleri desteklediğini CFBundleLocalizations'tan öğrenir; bildirilmezse
+// WebView cihaz dilini değil geliştirme bölgesini (en) bildirebilir ve oyun her
+// ülkede İngilizce açılır. Aynı liste App Store sayfasında "Diller" olarak görünür.
+// Liste, enerji-bulmaca.html > LANGS ile aynı tutulmalı.
+const APP_LANGS = ["tr", "en", "ar", "es"];
+patch(plist, (p) => {
+  if (p.includes("CFBundleLocalizations")) return p;
+  const idx = p.lastIndexOf("</dict>");
+  if (idx < 0) { console.warn("  ! Info.plist: </dict> bulunamadı"); return p; }
+  log(`Info.plist            +CFBundleLocalizations (${APP_LANGS.join(", ")})`);
+  const items = APP_LANGS.map((l) => `\t\t<string>${l}</string>\n`).join("");
+  return p.slice(0, idx) + `\t<key>CFBundleLocalizations</key>\n\t<array>\n${items}\t</array>\n` + p.slice(idx);
+});
+
 // Minimum iOS sürümü: Capacitor 6 varsayılanı 13.0 -> Apple ITMS-90068 uyarısı veriyor
 // ("2027 baharından itibaren MinimumOSVersion 15.0+ olmalı"). Şimdiden 15.0'a çek.
 // App hedefinin IPHONEOS_DEPLOYMENT_TARGET'ı MinimumOSVersion'ı belirler; Podfile
