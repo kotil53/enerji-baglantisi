@@ -202,9 +202,10 @@ imzasız çıktı yine üretilir. Gerekli GitHub secret'ların tam listesi + iOS
 kurulumu: [capacitor-app/README.md](capacitor-app/README.md) ("Gerekli GitHub Secrets").
 Keystore ve API anahtarları repoda **yoktur** ([.gitignore](.gitignore)).
 
-**Yayına çıkmadan önce:** [enerji-bulmaca.html](enerji-bulmaca.html) içinde
-`ADS_CFG.TEST_MODE = false` yapılmalı (şu an `true`; canlı reklama kendi tıklaman hesabı
-kapatır). Native App ID'ler CI secret'larından gelir (`ADMOB_APP_ID_ANDROID` / `_IOS`).
+**Yayın ayarı:** [enerji-bulmaca.html](enerji-bulmaca.html) içinde
+`ADS_CFG.TEST_MODE = false` olmalı (şu an öyle, canlı reklam; yerelde denerken `true` yap,
+canlı reklama kendi tıklaman hesabı kapatır). Native App ID'ler CI secret'larından gelir
+(`ADMOB_APP_ID_ANDROID` / `_IOS`).
 
 ## Yapılandırma nerede
 
