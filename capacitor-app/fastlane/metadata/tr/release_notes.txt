@@ -1,4 +1,5 @@
 Yenilikler:
-• Çoklu dil: Türkçe, İngilizce, İspanyolca ve Arapça. Oyun cihazının diliyle açılır, Ayarlar'dan değiştirebilirsin.
-• Günde 3 ücretsiz ipucu hakkı.
-• Ayarlar'a "Bizi puanlayın" satırı eklendi.
+• Dört renkli enerji: 10. seviyeden itibaren her enerji kendi rengindeki ampule gider. Renkler birbirine değerse kısa devre olur!
+• Pervaneli ampul: bütün enerjileri ortadaki haznelere ulaştır, pervane dönsün.
+• Zorluk seçimi kalktı, ilerlemen korunarak tek düzeyde devam ediyorsun.
+• Seviye süreleri uzatıldı.

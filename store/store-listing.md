@@ -36,7 +36,8 @@ hamle yapma — yıldızların hamle sayına bağlı.
 ▸ ÖZELLİKLER
 • Sonsuz mod — tükenmeyen, gitgide büyüyen bulmacalar
 • Günlük bulmaca — herkese aynı bölümler, her gün yenilenir
-• Üç zorluk: Rahat, Normal, Zor
+• Dört renkli enerji: her rengi kendi ampulüne götür, renkleri birbirine değdirme
+• Pervaneli ampul: bütün enerjileri ortadaki haznelere ulaştır, pervane dönsün
 • Her seviyede 3 yıldız — en az hamleyle çöz
 • Takıldığında ipucu: kısa bir reklam karşılığında bir kabloyu düzeltir
 • Çevrimdışı çalışır — internet gerekmez
@@ -69,7 +70,7 @@ Kablo döndürme bulmacası
 ### Tanıtım metni / Promotional text (≤170)
 ```
 Enerjiyi kaynaktan ampule taşı: kabloları döndür, devreyi tamamla. Her gün yeni
-bir günlük bulmaca, bitmeyen sonsuz mod ve üç zorluk seviyesi. Çevrimdışı oynanır.
+bir günlük bulmaca, bitmeyen sonsuz mod ve dört renkli enerji. Çevrimdışı oynanır.
 ```
 
 ### Anahtar kelimeler / Keywords (≤100, virgülle, boşluksuz)

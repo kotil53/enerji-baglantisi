@@ -13,7 +13,8 @@ Basit bir kuralı var, bırakması zor: her dokunuşta bir parça döner. Fazlad
 ▸ ÖZELLİKLER
 • Sonsuz mod — tükenmeyen, gitgide büyüyen bulmacalar
 • Günlük bulmaca — herkese aynı bölümler, her gün yenilenir
-• Üç zorluk: Rahat, Normal, Zor
+• Dört renkli enerji: her rengi kendi ampulüne götür, renkleri birbirine değdirme
+• Pervaneli ampul: bütün enerjileri ortadaki haznelere ulaştır, pervane dönsün
 • Her seviyede 3 yıldız — en az hamleyle çöz
 • Takıldığında ipucu: kısa bir reklam karşılığında bir kabloyu düzeltir
 • Çevrimdışı çalışır — internet gerekmez

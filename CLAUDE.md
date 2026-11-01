@@ -54,7 +54,7 @@ Kullanılan eklentiler ([capacitor-app/package.json](capacitor-app/package.json)
   ekrandayken `window.confirm` gibi WebView'i bloke eden bir şey açılırsa ✕ çalışmaz. Reklam
   sonrası onaylar `askConfirm` ile (bkz. `useHint`).
 - **`RNG`** — sonsuz modda `Math.random`; günlük modda `mulberry32(hash(todayKey()))`,
-  seviyeler modunda `mulberry32(hash("seviye."+zorluk) ^ seviyeNo)` ile deterministik
+  seviyeler modunda `mulberry32(hash("seviye.normal") ^ seviyeNo)` ile deterministik
   (herkeste aynı bulmaca). `buildLevel` geçici olarak değiştirir.
 - **Dil (`I18N`, `t()`, `setLang`)** — `LANGS` = tr/en/ar/es (Arapça yalnız metin, düzen LTR). Varsayılan dil
   **cihaz dilidir** (`detectLang`, `navigator.languages`; desteklenen çıkmazsa `en`) — mağaza ülkesi
@@ -66,25 +66,40 @@ Kullanılan eklentiler ([capacitor-app/package.json](capacitor-app/package.json)
 
 ### Üç mod
 
-- **`campaign`** ("Seviyeler") — `CAMPAIGN_LEVELS = 200` sabit seviye: n. seviye zorluk +
+- **`campaign`** ("Seviyeler") — `CAMPAIGN_LEVELS = 200` sabit seviye: n. seviye
   seviye no'ya göre tohumlanır, herkeste ve her denemede aynıdır. Yeni oyuncunun varsayılan
   modu; `mode` kaydı olmayıp sonsuzda ilerlemiş eski oyuncu `endless`'te kalır. 200. seviye
-  bitince kutlama katmanı "Sonsuz Moda Geç" der (`finishCampaign`): `campaign.<zorluk>.done`
-  işaretlenir, sonsuz mod aynı zorlukta **Seviye 201**'den açılır (`endless.<zorluk>.lastLevel`
+  bitince kutlama katmanı "Sonsuz Moda Geç" der (`finishCampaign`): `campaign.normal.done`
+  işaretlenir, sonsuz mod **Seviye 201**'den açılır (`endless.normal.lastLevel`
   en az 200'e çekilir, daha ilerisi korunur). Bitmiş "Seviyeler" yeniden açılınca baştan oynanır.
 - **`endless`** — seviyeler rastgele üretilir ve giderek zorlaşır; sabit sınır yok.
-  Zorluk `DIFFS` (rahat/normal/zor) hem "etkin seviye no"yu kaydırır hem ızgara/hat/kilit
-  parametrelerini ayarlar. `campaign` ile aynı üretici (`levelParams`) ve `game.li` akışını
+  `campaign` ile aynı üretici (`levelParams`) ve `game.li` akışını
   paylaşır; yalnız kayıt ön eki (`ekey`: `campaign.` / `endless.`) ve RNG farklıdır.
   "Seviye sayan mod" kontrolleri `cfg.mode !== "daily"` ile yapılır.
-  **Kilitli:** `endlessUnlocked()` — "Seviyeler" herhangi bir zorlukta bitene (`campaign.<zorluk>.done`)
+  **Kilitli:** `endlessUnlocked()` — "Seviyeler" bitene (`campaign.normal.done`)
   kadar Sonsuz kutucuğu kilitlidir, kayıtlı `mode = "endless"` başlangıçta `campaign`'e döner, günlük
   set bitince `afterDailyMode()` Seviyeler'e yönlendirir. Sonsuzun kayıtlı ilerlemesi silinmez, açılınca sürer.
 - **`daily`** — `DAILY_COUNT = 7` deterministik günlük bulmaca.
 
+### Zorluk, enerjiler, pervane
+
+Rahat/Zor 1.4.0'da kalktı, tek zorluk var; kayıt anahtarları `.normal.` kalır ve `cfg.diff` sabit `"normal"`dır.
+`mergeOldDiffs` eski Rahat/Zor ilerlemesini bir kez Normal'e katar (`diffMerged`), en iyisini alır, eski anahtarları silmez.
+
+- **Enerji sayısı** (`levelParams`) — 1-9: 1, 10+: 2, 30+: 3, 60+: 4. Günlük 7 seviye olduğu için hep tek enerjidir.
+  1-9 arası tahtalar eski sürümle birebir aynıdır: `k=1` yolu RNG'yi aynı sırayla tüketmeli, bozma.
+- **Üretici** — `layoutPaths` her renge birbirine değmeyen yol çizer; sığmazsa yeniden dener, olmazsa renk azaltır.
+  Çözülmüş halde kollar yalnız kendi yoluna baktığından renkler değmez, çözülebilirlik garantisi korunur.
+- **Pervane** — 40+ her 5 seviyede (`role: "fan"`, ortadaki hücre, `sockets[yön]` = hazne rengi, en az 3 renk). Her yol
+  haznenin yanından başlar, kaynak yolun ucundadır. Hazne iletmez; yalnız kendi rengiyle dolar (`fill`).
+- **Kısa devre** — `computePower` iki rengin aynı kabloda buluşmasını `game.shorted`a yazar → `beginBoom` →
+  `game.phase = "boom"`, `BOOM_MS` sonra `resetLevel`. Can gitmez. Yanlış renk ampul/haznede patlamadan durur.
+  **Tuzak:** tahta kısa devreyle başlamamalı (`ensureUnsolved`), ipucu kısa devre yapmamalı (`hintSafe`).
+- **Renk körlüğü** — renk tek ipucu değil: kaynak/ampul/haznede enerji no kadar nokta (`drawPips`).
+
 ### Can ve ipucu
 
-- **Can** — tavan `MAX_LIVES = 3` (100 seviye ödülüyle `BONUS_MAX_LIVES = 5`'e kadar), süre bitince −1.
+- **Can** — tavan `MAX_LIVES = 2`, süre bitince −1 (seviye ödülü yok; `BONUS_MAX_LIVES` yalnız eski kayıtlı canları kesmemek için).
   Can kaldıysa oyun **durur** (`game.phase = "timeUp"`, `#timeUpOverlay` "SÜRE DOLDU"); seviye otomatik
   başlamaz, oyuncu "Yeniden başla"ya basınca `resetLevel` ile baştan başlar (katman açılır açılmaz gelen
   panik dokunuşu 500 ms yok sayılır). Can 0 ise aşağıdaki "Canlar bitti" katmanı. **Kalıcı** (`Store`: `lives.n`, `lives.t`) ve zamanla dolar (`LIFE_REGEN_MS` = 20 dk, yalnız
@@ -115,7 +130,7 @@ Oyun tuvali hep arkada durur; ekranlar üstüne biner. `screenNow`: `game` | `ho
 durur (`frame()`, `onPointerDown` bu bayrağa bakar). Geçişler yalnız `showScreen(name)` üzerinden.
 
 - **Ana menü** (`#home`) — açılış animasyonundan sonra görünür. Büyük Oyna/Devam Et geçerli modu
-  sürdürür; kutucuklar Seviyeler (haritayı açar) / Sonsuz / Günlük; zorluk seçimi; ⚙ Ayarlar.
+  sürdürür; kutucuklar Seviyeler (haritayı açar) / Sonsuz / Günlük; ⚙ Ayarlar.
 - **Seviye haritası** (`#levels`, `renderLevels`) — yalnız `campaign`; 25'lik bölümler
   (`PACK_NAMES`), 5 sütun = bir tema bandı (alt şerit rengi). Açılmış seviyeler **yeniden
   oynanabilir**; kilitli = `n > max(bestLevel, sıradaki)`.

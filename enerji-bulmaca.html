@@ -448,11 +448,13 @@
     padding: 8px 14px;
     background: var(--e-panel);
     border: 1px solid var(--e-border);
-    border-radius: 999px;
+    border-radius: 16px;
     color: var(--e-muted);
     font-size: 12.5px;
     font-weight: 500;
-    white-space: nowrap;
+    width: max-content;
+    max-width: calc(100% - 24px);
+    text-align: center;
     pointer-events: none;
     opacity: 0;
     transition: opacity .4s ease;
@@ -1145,14 +1147,6 @@
           <button class="tile" type="button" data-play="daily" id="tileDailyBtn"><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg><span data-i18n="tiles.daily">Günlük</span><small id="tileDaily"></small></button>
         </div>
 
-        <div class="grp rise" style="--i:3">
-          <span class="lbl" id="diffLbl" data-i18n="diff.label">Zorluk</span>
-          <div class="seg-row" role="radiogroup" aria-labelledby="diffLbl">
-            <button class="seg" type="button" role="radio" data-diff="rahat" data-i18n="diff.rahat">Rahat</button>
-            <button class="seg" type="button" role="radio" data-diff="normal" data-i18n="diff.normal">Normal</button>
-            <button class="seg" type="button" role="radio" data-diff="zor" data-i18n="diff.zor">Zor</button>
-          </div>
-        </div>
       </div>
     </div>
     <div class="credit">
@@ -1167,13 +1161,6 @@
       <button class="ibtn" type="button" data-back aria-label="Geri" title="Geri" data-i18n-attr="aria-label:common.back;title:common.back"><svg class="i"><use href="#i-back"/></svg></button>
       <h1 class="topbar-title" data-i18n="tiles.campaign">Seviyeler</h1>
       <span class="pill" title="Kazanılan yıldız" aria-label="Kazanılan yıldız" data-i18n-attr="title:levels.starsAria;aria-label:levels.starsAria"><svg class="i f"><use href="#i-star"/></svg><b id="levelsStars">0</b></span>
-    </div>
-    <div class="wrap">
-      <div class="seg-row" role="radiogroup" aria-label="Zorluk" data-i18n-attr="aria-label:diff.label">
-        <button class="seg" type="button" role="radio" data-diff="rahat" data-i18n="diff.rahat">Rahat</button>
-        <button class="seg" type="button" role="radio" data-diff="normal" data-i18n="diff.normal">Normal</button>
-        <button class="seg" type="button" role="radio" data-diff="zor" data-i18n="diff.zor">Zor</button>
-      </div>
     </div>
     <div class="scroll map" id="levelsScroll"></div>
   </section>
@@ -1491,9 +1478,10 @@
       "common.developedBy": "kotiliy tarafından geliştirildi", "common.mainMenu": "Ana menü",
       "common.continue": "Devam Et", "common.play": "Oyna", "common.restart": "Yeniden başla",
       "common.retry": "Tekrar dene", "common.retryShort": "Tekrar", "common.reset": "Sıfırla",
-      "diff.rahat": "Rahat", "diff.normal": "Normal", "diff.zor": "Zor", "diff.label": "Zorluk",
       "mode.campaign": "Seviyeler", "mode.endless": "Sonsuz", "mode.daily": "Günlük",
       "game.hint": "Kablolara dokunarak döndür • enerjiyi ampule ulaştır",
+      "game.hintColors": "Her enerjiyi kendi rengindeki ampule götür • farklı renkler birbirine değerse kısa devre olur",
+      "game.hintFan": "Her enerjiyi ortadaki kendi haznesine götür • hepsi dolunca pervane döner",
       "app.tagline": "Kabloları döndür, enerjiyi ampule ulaştır",
       "intro.skip": "dokun ▸ geç",
       "hud.soundToggleTitle": "Ses aç/kapat", "hud.soundAria": "Ses",
@@ -1508,7 +1496,7 @@
       "hint.ariaGone": "İpucu, ücretsiz hakkın bitti; reklam izleyerek devam edebilirsin",
       "home.ariaLabel": "Ana menü", "home.settingsAria": "Ayarlar", "home.starsAria": "Toplam yıldız",
       "home.dailyDoneSub": "Bugünkü günlük tamam ✓", "home.dailySub": "Günlük · {n} / {total}",
-      "home.modeSub": "{mode} · Seviye {n} · {diff}",
+      "home.modeSub": "{mode} · Seviye {n}",
       "tiles.campaign": "Seviyeler", "tiles.endless": "Sonsuz", "tiles.daily": "Günlük",
       "tiles.new": "Yeni", "tiles.locked": "Kilitli", "tiles.best": "En iyi {n}", "tiles.dailyDone": "Tamam ✓",
       "levels.starsAria": "Kazanılan yıldız", "levels.suffixLocked": ", kilitli",
@@ -1553,7 +1541,7 @@
       "toast.musicNeedsSound": "Müzik için önce sesi aç 🔊",
       "toast.progressReset": "İlerleme sıfırlandı",
       "toast.campaignStarted": "Seviyeler • {n} seviye", "toast.endlessMode": "Sonsuz mod",
-      "toast.diffChanged": "Zorluk: {label}",
+      "toast.shortCircuit": "Kısa devre! Bölüm yeniden başlıyor", "toast.hintBlocked": "Önce birbirine değen kabloları ayır",
       "toast.dailySetDone": "Bugünkü günlük bitti — yarın yenisi!",
       "toast.dailyStarted": "Günlük bulmaca • {date}",
       "toast.soundOff": "Ses kapalı", "toast.soundOn": "Ses açık", "toast.retryFromStart": "Baştan dene",
@@ -1577,8 +1565,8 @@
       "packNames": ["Kıvılcım", "Devre", "Röle", "Şalter", "Trafo", "Dinamo", "Santral", "Şebeke"],
       "bigPraiseTitles": ["BAŞARDIN!", "MUHTEŞEMSİN!", "EFSANESİN!", "DURDURULAMAZSIN!"],
       "bigPraiseSubs": [
-        "Harika gidiyorsun. +1 can kazandın!", "Müthiş bir ilerleme. +1 can daha senin oldu!",
-        "Bu bambaşka bir seviye. +1 can kazandın!", "İnanılmaz bir başarı. +1 can daha kazandın!"
+        "Harika gidiyorsun!", "Müthiş bir ilerleme!",
+        "Bu bambaşka bir seviye!", "İnanılmaz bir başarı!"
       ],
       "miniPraises": [
         "Güzel gidiyorsun!", "Enerjin yerinde, devam!", "Kabloları ustaca çözüyorsun!", "Bu tempo harika!",
@@ -1595,9 +1583,10 @@
       "common.developedBy": "developed by kotiliy", "common.mainMenu": "Main menu",
       "common.continue": "Continue", "common.play": "Play", "common.restart": "Restart",
       "common.retry": "Try again", "common.retryShort": "Retry", "common.reset": "Reset",
-      "diff.rahat": "Easy", "diff.normal": "Normal", "diff.zor": "Hard", "diff.label": "Difficulty",
       "mode.campaign": "Levels", "mode.endless": "Endless", "mode.daily": "Daily",
       "game.hint": "Tap wires to rotate • get the energy to the bulb",
+      "game.hintColors": "Send each energy to the bulb of its color • different colors touching cause a short circuit",
+      "game.hintFan": "Send each energy to its socket in the center • when all are full the fan spins",
       "app.tagline": "Rotate the wires, power up the bulb",
       "intro.skip": "tap ▸ skip",
       "hud.soundToggleTitle": "Toggle sound", "hud.soundAria": "Sound",
@@ -1612,7 +1601,7 @@
       "hint.ariaGone": "Hint, your free credits are used up; you can continue by watching an ad",
       "home.ariaLabel": "Main menu", "home.settingsAria": "Settings", "home.starsAria": "Total stars",
       "home.dailyDoneSub": "Today's daily complete ✓", "home.dailySub": "Daily · {n} / {total}",
-      "home.modeSub": "{mode} · Level {n} · {diff}",
+      "home.modeSub": "{mode} · Level {n}",
       "tiles.campaign": "Levels", "tiles.endless": "Endless", "tiles.daily": "Daily",
       "tiles.new": "New", "tiles.locked": "Locked", "tiles.best": "Best {n}", "tiles.dailyDone": "Done ✓",
       "levels.starsAria": "Stars earned", "levels.suffixLocked": ", locked",
@@ -1657,7 +1646,7 @@
       "toast.musicNeedsSound": "Turn on sound first for music 🔊",
       "toast.progressReset": "Progress reset",
       "toast.campaignStarted": "Levels • {n} levels", "toast.endlessMode": "Endless mode",
-      "toast.diffChanged": "Difficulty: {label}",
+      "toast.shortCircuit": "Short circuit! Restarting the level", "toast.hintBlocked": "Separate the touching wires first",
       "toast.dailySetDone": "Today's daily is done — a new one tomorrow!",
       "toast.dailyStarted": "Daily puzzle • {date}",
       "toast.soundOff": "Sound off", "toast.soundOn": "Sound on", "toast.retryFromStart": "Retrying from start",
@@ -1681,8 +1670,8 @@
       "packNames": ["Spark", "Circuit", "Relay", "Switch", "Transformer", "Dynamo", "Power Plant", "Grid"],
       "bigPraiseTitles": ["YOU DID IT!", "YOU'RE AMAZING!", "YOU'RE LEGENDARY!", "YOU'RE UNSTOPPABLE!"],
       "bigPraiseSubs": [
-        "You're doing great. You earned +1 life!", "Amazing progress. You got +1 more life!",
-        "This is a whole new level. You earned +1 life!", "Incredible achievement. You earned +1 more life!"
+        "You're doing great!", "Amazing progress!",
+        "This is a whole new level!", "Incredible achievement!"
       ],
       "miniPraises": [
         "You're doing great!", "Your energy is on point, keep going!", "You're solving wires like a pro!",
@@ -1700,9 +1689,10 @@
       "common.developedBy": "من تطوير kotiliy", "common.mainMenu": "القائمة الرئيسية",
       "common.continue": "متابعة", "common.play": "العب", "common.restart": "إعادة البدء",
       "common.retry": "أعد المحاولة", "common.retryShort": "إعادة", "common.reset": "إعادة الضبط",
-      "diff.rahat": "سهل", "diff.normal": "متوسط", "diff.zor": "صعب", "diff.label": "الصعوبة",
       "mode.campaign": "المستويات", "mode.endless": "بلا نهاية", "mode.daily": "يومي",
       "game.hint": "المس الأسلاك لتديرها • أوصل الطاقة للمصباح",
+      "game.hintColors": "أوصل كل طاقة إلى المصباح الذي يطابق لونها • تلامس الألوان المختلفة يسبب تماسًا كهربائيًا",
+      "game.hintFan": "أوصل كل طاقة إلى مقبسها في الوسط • عندما تمتلئ كلها تدور المروحة",
       "app.tagline": "أدر الأسلاك ووصّل الطاقة للمصباح",
       "intro.skip": "المس ▸ تخطّ",
       "hud.soundToggleTitle": "تبديل الصوت", "hud.soundAria": "الصوت",
@@ -1717,7 +1707,7 @@
       "hint.ariaGone": "تلميح، انتهت تلميحاتك المجانية، يمكنك المتابعة بمشاهدة إعلان",
       "home.ariaLabel": "القائمة الرئيسية", "home.settingsAria": "الإعدادات", "home.starsAria": "إجمالي النجوم",
       "home.dailyDoneSub": "اكتملت لعبة اليوم اليومية ✓", "home.dailySub": "يومي · {n} / {total}",
-      "home.modeSub": "{mode} · المستوى {n} · {diff}",
+      "home.modeSub": "{mode} · المستوى {n}",
       "tiles.campaign": "المستويات", "tiles.endless": "بلا نهاية", "tiles.daily": "يومي",
       "tiles.new": "جديد", "tiles.locked": "مقفل", "tiles.best": "الأفضل {n}", "tiles.dailyDone": "تم ✓",
       "levels.starsAria": "النجوم المكتسبة", "levels.suffixLocked": "، مقفل",
@@ -1762,7 +1752,7 @@
       "toast.musicNeedsSound": "فعّل الصوت أولاً لتشغيل الموسيقى 🔊",
       "toast.progressReset": "تمت إعادة ضبط التقدم",
       "toast.campaignStarted": "المستويات • {n} مستوى", "toast.endlessMode": "وضع اللانهاية",
-      "toast.diffChanged": "الصعوبة: {label}",
+      "toast.shortCircuit": "تماس كهربائي! يُعاد بدء المستوى", "toast.hintBlocked": "افصل الأسلاك المتلامسة أولًا",
       "toast.dailySetDone": "انتهت لعبة اليوم اليومية — واحدة جديدة غدًا!",
       "toast.dailyStarted": "اللغز اليومي • {date}",
       "toast.soundOff": "الصوت متوقف", "toast.soundOn": "الصوت مفعّل", "toast.retryFromStart": "إعادة المحاولة من البداية",
@@ -1786,8 +1776,8 @@
       "packNames": ["شرارة", "دائرة", "مُرحّل", "مفتاح", "محوّل", "دينامو", "محطة طاقة", "شبكة"],
       "bigPraiseTitles": ["لقد نجحت!", "أنت رائع!", "أنت أسطورة!", "لا يمكن إيقافك!"],
       "bigPraiseSubs": [
-        "أداؤك رائع. ربحت روحًا إضافية (+1)!", "تقدم مذهل. حصلت على روح إضافية أخرى (+1)!",
-        "هذا مستوى مختلف تمامًا. ربحت روحًا إضافية (+1)!", "إنجاز لا يصدق. ربحت روحًا إضافية أخرى (+1)!"
+        "أداؤك رائع!", "تقدم مذهل!",
+        "هذا مستوى مختلف تمامًا!", "إنجاز لا يصدق!"
       ],
       "miniPraises": [
         "أنت تبلي حسنًا!", "طاقتك في أوجها، واصل!", "تحل الأسلاك باحتراف!", "هذه الوتيرة رائعة!",
@@ -1804,9 +1794,10 @@
       "common.developedBy": "desarrollado por kotiliy", "common.mainMenu": "Menú principal",
       "common.continue": "Continuar", "common.play": "Jugar", "common.restart": "Reiniciar",
       "common.retry": "Reintentar", "common.retryShort": "Reintentar", "common.reset": "Restablecer",
-      "diff.rahat": "Fácil", "diff.normal": "Normal", "diff.zor": "Difícil", "diff.label": "Dificultad",
       "mode.campaign": "Niveles", "mode.endless": "Infinito", "mode.daily": "Diario",
       "game.hint": "Toca los cables para girarlos • lleva la energía a la bombilla",
+      "game.hintColors": "Lleva cada energía a la bombilla de su color • si se tocan colores distintos habrá un cortocircuito",
+      "game.hintFan": "Lleva cada energía a su depósito en el centro • cuando estén llenos, el ventilador gira",
       "app.tagline": "Gira los cables y lleva la energía a la bombilla",
       "intro.skip": "toca ▸ saltar",
       "hud.soundToggleTitle": "Activar/desactivar sonido", "hud.soundAria": "Sonido",
@@ -1821,7 +1812,7 @@
       "hint.ariaGone": "Pista, se acabaron tus pistas gratis; puedes continuar viendo un anuncio",
       "home.ariaLabel": "Menú principal", "home.settingsAria": "Ajustes", "home.starsAria": "Estrellas totales",
       "home.dailyDoneSub": "Diario de hoy completado ✓", "home.dailySub": "Diario · {n} / {total}",
-      "home.modeSub": "{mode} · Nivel {n} · {diff}",
+      "home.modeSub": "{mode} · Nivel {n}",
       "tiles.campaign": "Niveles", "tiles.endless": "Infinito", "tiles.daily": "Diario",
       "tiles.new": "Nuevo", "tiles.locked": "Bloqueado", "tiles.best": "Mejor {n}", "tiles.dailyDone": "Hecho ✓",
       "levels.starsAria": "Estrellas ganadas", "levels.suffixLocked": ", bloqueado",
@@ -1866,7 +1857,7 @@
       "toast.musicNeedsSound": "Activa el sonido primero para la música 🔊",
       "toast.progressReset": "Progreso restablecido",
       "toast.campaignStarted": "Niveles • {n} niveles", "toast.endlessMode": "Modo infinito",
-      "toast.diffChanged": "Dificultad: {label}",
+      "toast.shortCircuit": "¡Cortocircuito! El nivel se reinicia", "toast.hintBlocked": "Separa primero los cables que se tocan",
       "toast.dailySetDone": "El diario de hoy terminó — ¡uno nuevo mañana!",
       "toast.dailyStarted": "Puzle diario • {date}",
       "toast.soundOff": "Sonido desactivado", "toast.soundOn": "Sonido activado", "toast.retryFromStart": "Reintentando desde el inicio",
@@ -1890,8 +1881,8 @@
       "packNames": ["Chispa", "Circuito", "Relé", "Interruptor", "Transformador", "Dinamo", "Central", "Red"],
       "bigPraiseTitles": ["¡LO LOGRASTE!", "¡ERES INCREÍBLE!", "¡ERES LEGENDARIO!", "¡ERES IMPARABLE!"],
       "bigPraiseSubs": [
-        "Lo estás haciendo genial. ¡Ganaste +1 vida!", "Progreso increíble. ¡Conseguiste +1 vida más!",
-        "Este es un nivel totalmente distinto. ¡Ganaste +1 vida!", "Un logro increíble. ¡Ganaste +1 vida más!"
+        "¡Lo estás haciendo genial!", "¡Progreso increíble!",
+        "¡Este es un nivel totalmente distinto!", "¡Un logro increíble!"
       ],
       "miniPraises": [
         "¡Vas genial!", "¡Tu energía está al máximo, sigue así!", "¡Resuelves los cables como un profesional!",
@@ -1933,7 +1924,6 @@
     return s;
   }
   function tArr(key) { return (I18N[LANG] && I18N[LANG][key]) || I18N.tr[key] || []; }
-  function diffLabel(d) { return t("diff." + d); }
   function applyI18n() {
     document.documentElement.lang = LANG;
     var els = document.querySelectorAll("[data-i18n]"), i;
@@ -2025,6 +2015,7 @@
     rotate: function () { this.blip(300 + rndInt(50), 0.055, "square", 0.09); },
     locked: function () { this.blip(160, 0.13, "sawtooth", 0.11, 95); },
     undo:   function () { this.blip(260, 0.05, "square", 0.07); },
+    boom:   function () { this.blip(190, 0.45, "sawtooth", 0.2, 38); this.blip(90, 0.6, "square", 0.14, 30); },
     win:    function () {
       var s = this, notes = [523, 659, 784, 1047];
       notes.forEach(function (f, i) { setTimeout(function () { s.blip(f, 0.16, "triangle", 0.13); }, i * 70); });
@@ -2643,29 +2634,48 @@
 
   // --- Mod & zorluk yapılandırması ---
   var DAILY_COUNT = 7;                   // günlük bulmacadaki seviye sayısı
-  // Her zorluk seviye parametrelerini ölçekler (bkz. levelParams)
-  var DIFFS = {
-    rahat:  { nAdj: -1, grow: 3, sizeCap: 6, lenK: 0.62, brK: 0.5, lockK: 0.4, decoyK: 0.85 },
-    normal: { nAdj:  0, grow: 2, sizeCap: 8, lenK: 1.0,  brK: 1.0, lockK: 1.0, decoyK: 1.0  },
-    zor:    { nAdj:  2, grow: 2, sizeCap: 9, lenK: 1.35, brK: 1.5, lockK: 1.5, decoyK: 1.15 }
-  };
+  // Tek zorluk: Rahat/Zor 1.4.0'da kalktı, eski kayıtlar aşağıda Normal'e katılır (kayıt anahtarları ".normal." kalır).
+  var LEVEL_CFG = { grow: 2, sizeCap: 8 };
 
   var CAMPAIGN_LEVELS = 200;             // "Seviyeler" modundaki sabit seviye sayısı; bitince sonsuz moda geçilir
 
   // Sonsuz mod, "Seviyeler" herhangi bir zorlukta bitirilene (finishCampaign → "done") kadar kilitlidir.
   // Kilitliyken sonsuz modun kayıtlı ilerlemesi silinmez, açılınca kaldığı yerden sürer.
-  function endlessUnlocked() {
-    for (var d in DIFFS) if (Store.get("campaign." + d + ".done", false)) return true;
-    return false;
-  }
+  function endlessUnlocked() { return !!Store.get("campaign.normal.done", false); }
   // Günlük set bitince sürdürülecek mod: sonsuz kilitliyse "Seviyeler"
   function afterDailyMode() { return endlessUnlocked() ? "endless" : "campaign"; }
 
+  // Rahat/Zor'da kazanılan ilerleme bir kez Normal'e katılır (hangisi iyiyse o kalır, oyuncu seviye/yıldız
+  // kaybetmez). Eski anahtarlar silinmez; "diffMerged" işareti yeniden birleştirmeyi önler.
+  function mergeOldDiffs() {
+    if (Store.get("diffMerged", false)) return;
+    ["campaign", "endless"].forEach(function (m) {
+      var to = m + ".normal.";
+      ["rahat", "zor"].forEach(function (d) {
+        var from = m + "." + d + ".";
+        if (Store.get(from + "done", false)) Store.set(to + "done", true);
+        Store.set(to + "lastLevel", Math.max(Store.get(to + "lastLevel", 0), Store.get(from + "lastLevel", 0)));
+        var top = Store.get(from + "bestLevel", 0);
+        Store.set(to + "bestLevel", Math.max(Store.get(to + "bestLevel", 0), top));
+        for (var lv = 1; lv <= top; lv++) {
+          var st = Store.get(from + "stars." + lv, 0), cur = Store.get(to + "stars." + lv, 0);
+          if (st > cur) {
+            Store.set(to + "stars." + lv, st);
+            Store.set(to + "totalStars", Store.get(to + "totalStars", 0) + st - cur);
+          }
+          var mv = Store.get(from + "best." + lv, 0);
+          if (mv > 0 && mv < Store.get(to + "best." + lv, 1e9)) Store.set(to + "best." + lv, mv);
+        }
+      });
+    });
+    Store.set("diffMerged", true);
+  }
+  mergeOldDiffs();
+
   var cfg = {
     mode: Store.get("mode", ""),          // "campaign" | "endless" | "daily"
-    diff: Store.get("diff", "normal")     // "rahat" | "normal" | "zor"
+    diff: "normal"                        // kayıt anahtarlarının parçası; değişmez
   };
-  if (!DIFFS[cfg.diff]) cfg.diff = "normal";
   if (cfg.mode !== "daily" && cfg.mode !== "endless" && cfg.mode !== "campaign") {
     // Kayıtlı mod yok: sonsuz modda ilerlemiş (ve açmış) eski oyuncu orada kalsın (ilerlemesi
     // menünün arkasında kalmasın); yeni oyuncu 200 seviyelik "Seviyeler" ile başlar.
@@ -2753,27 +2763,23 @@
     return n;
   }
 
-  // Seviye numarasına (n = 1,2,3,...) VE seçili zorluğa göre parametreler.
-  // Zorluk (DIFFS) hem "etkin seviye no"yu kaydırır (nAdj) hem de büyüklük,
-  // hat uzunluğu, dallanma, kilit ve dekor yoğunluğunu çarpanla ölçekler.
+  // Seviye numarasına (n = 1,2,3,...) göre parametreler.
   function levelParams(n) {
-    var D = DIFFS[cfg.diff] || DIFFS.normal;
-    var nn = Math.max(1, n + D.nAdj);
-    var total, size = Math.min(3 + Math.floor((nn - 1) / D.grow), D.sizeCap);
+    var nn = Math.max(1, n);
+    var total, size = Math.min(3 + Math.floor((nn - 1) / LEVEL_CFG.grow), LEVEL_CFG.sizeCap);
     total = size * size;
     var minLen = Math.min(
-      Math.max(3, Math.round((size * 1.2 + (nn - 1) * 0.9) * D.lenK)),
+      Math.max(3, Math.round(size * 1.2 + (nn - 1) * 0.9)),
       Math.floor(total * 0.72)
     );
-    var branches    = Math.min(Math.round(Math.floor(nn / 3) * D.brK), Math.floor(total / 6));
-    var pathLocks   = clampI(Math.round(Math.floor((nn - 2) / 2) * D.lockK), 0, 14);
+    var branches    = Math.min(Math.floor(nn / 3), Math.floor(total / 6));
+    var pathLocks   = clampI(Math.floor((nn - 2) / 2), 0, 14);
     var branchLocks = nn < 6 ? 0 : Math.floor(branches / 2);
-    var decoyProb   = Math.min((0.14 + nn * 0.035) * D.decoyK, 0.6);
+    var decoyProb   = Math.min(0.14 + nn * 0.035, 0.6);
     var longBranch  = nn >= 5;   // 2 hücrelik uzun çıkmaz sokaklara izin ver
 
     // AMPUL SAYISI — seviye ilerledikçe 1 -> 2 -> 3, sonra 100. seviyeden itibaren
-    // 4 -> 5 -> 6'ya kadar (üst sınır). Etkin seviye no (nn) zorluğa göre kaydığından
-    // "zor"da erken, "rahat"da geç gelir. Küçük ızgarada az kalır.
+    // 4 -> 5 -> 6'ya kadar (üst sınır). Küçük ızgarada az kalır.
     var bulbs = 1;
     if (nn >= 7)   bulbs = 2;
     if (nn >= 14)  bulbs = 3;
@@ -2786,32 +2792,41 @@
     // Her ek ampul ana hattan çıkan bir sapma ile beslenir -> yeterli sapma ayır.
     if (bulbs > 1) branches = Math.max(branches, bulbs - 1);
 
+    // ENERJİ SAYISI — 1-9: tek, 10+: 2 renk, 30+: 3 renk, 60+: 4 renk.
+    // PERVANE — 40. seviyeden sonra her 5 seviyede: tüm renkler ortadaki haznelere gider (en az 3 renk).
+    var colors = nn >= 60 ? 4 : (nn >= 30 ? 3 : (nn >= 10 ? 2 : 1));
+    var fan = nn >= 40 && nn % 5 === 0;
+
     return {
-      size: size, minLen: minLen, branches: branches, bulbs: bulbs,
+      size: size, minLen: minLen, branches: branches, bulbs: bulbs, colors: colors, fan: fan,
       pathLocks: pathLocks, branchLocks: branchLocks,
       decoyProb: decoyProb, longBranch: longBranch
     };
   }
 
   // Rastgele, kendine değmeyen yol (rastgele DFS). En uzun denemeyi döndürür.
-  function randomPath(size, minLen) {
+  // used (dolu hücre matrisi) verilirse yol onlardan kaçınır, boyu sınırlanır (yer öteki renklere kalsın)
+  // ve 3 hücrelik yol çıkmazsa null döner; start verilirse yol oradan başlar.
+  function randomPath(size, minLen, used, start) {
     var best = null;
     for (var attempt = 0; attempt < 60; attempt++) {
       var vis = [];
       for (var i = 0; i < size; i++) {
         vis.push([]);
-        for (var j = 0; j < size; j++) vis[i].push(false);
+        for (var j = 0; j < size; j++) vis[i].push(used ? used[i][j] : false);
       }
 
       // rastgele bir kenar hücresinden başla
       var sr, sc;
-      if (rnd() < 0.5) { sr = (rnd() < 0.5) ? 0 : size - 1; sc = rndInt(size); }
+      if (start) { sr = start[0]; sc = start[1]; }
+      else if (rnd() < 0.5) { sr = (rnd() < 0.5) ? 0 : size - 1; sc = rndInt(size); }
       else             { sc = (rnd() < 0.5) ? 0 : size - 1; sr = rndInt(size); }
+      if (used && !start && vis[sr][sc]) continue;
 
       var path = [[sr, sc]];
       vis[sr][sc] = true;
       var cr = sr, cc = sc;
-      var hardCap = Math.floor(size * size * 0.78);
+      var hardCap = used ? Math.ceil(minLen * 1.5) : Math.floor(size * size * 0.78);
 
       while (path.length < hardCap) {
         var opts = [];
@@ -2838,18 +2853,52 @@
       if (!best || path.length > best.length) best = path;
       if (best.length >= minLen && best.length >= 3) break;
     }
+    if (used) return best && best.length >= 3 ? best : null;
     // güvenlik ağı: yol çok kısaysa elle 3 hücrelik yol
     if (!best || best.length < 3) best = [[0, 0], [0, 1], [0, 2]];
     return best;
+  }
+
+  // k enerjinin yollarını birbirine değmeden yerleştirir; sığmazsa null.
+  // Pervanede her yol ortadaki hücrenin bir yanından başlar, kaynak yolun öbür ucundadır.
+  function layoutPaths(P, k, fan) {
+    if (k === 1) return { paths: [randomPath(P.size, P.minLen)], hub: null };
+    var size = P.size, used = [], i, j;
+    for (i = 0; i < size; i++) { used.push([]); for (j = 0; j < size; j++) used[i].push(false); }
+    var hub = null, sides = [], starts = [];
+    if (fan) {
+      hub = [size >> 1, size >> 1];
+      used[hub[0]][hub[1]] = true;
+      sides = shuffle([N, E, S, W]).slice(0, k);
+      for (i = 0; i < k; i++) {
+        starts.push([hub[0] + DR[sides[i]], hub[1] + DC[sides[i]]]);
+        used[starts[i][0]][starts[i][1]] = true;   // yan hücreler başka rengin yoluna kapalı
+      }
+    }
+    var paths = [], each = Math.max(3, Math.floor(P.minLen / k));
+    for (i = 0; i < k; i++) {
+      if (fan) used[starts[i][0]][starts[i][1]] = false;
+      var p = randomPath(size, each, used, fan ? starts[i] : null);
+      if (!p) return null;
+      for (j = 0; j < p.length; j++) used[p[j][0]][p[j][1]] = true;
+      paths.push(p);
+    }
+    return { paths: paths, hub: hub, sides: sides };
   }
 
   // n. seviyenin ızgara tanımını üretir (buildLevel'in beklediği biçim)
   function generateLevel(n) {
     var P = levelParams(n);
     var size = P.size;
-    var path = randomPath(size, P.minLen);
-    var L = path.length;
-    var r, c, d, i;
+    // Yollar sığmazsa önce yeniden dene, olmazsa bir renk azalt (k=1 her zaman sığar).
+    var k = P.colors, plan = null;
+    while (!plan) {
+      var fan = P.fan && k >= 3;
+      for (var tr0 = 0; tr0 < 30 && !plan; tr0++) plan = layoutPaths(P, k, fan);
+      if (!plan) k--;
+    }
+    var paths = plan.paths, hub = plan.hub;
+    var r, c, d, i, pi2;
 
     // boş ızgara + "yol/dal" işaret matrisi
     var g = [], onPath = [];
@@ -2861,25 +2910,43 @@
 
     // 1) YOL: her hücreye önceki + sonraki hücreye bakan bağlantılar.
     //    matters=true  -> bu parçanın yönü kazanmak için ÖNEMLİ (yıldız/par hesabı)
-    for (i = 0; i < L; i++) {
-      var pr = path[i][0], pc = path[i][1];
-      onPath[pr][pc] = 1;
-      g[pr][pc].matters = true;
-      if (i > 0)     g[pr][pc].d.push(dirBetween(pr, pc, path[i - 1][0], path[i - 1][1]));
-      if (i < L - 1) g[pr][pc].d.push(dirBetween(pr, pc, path[i + 1][0], path[i + 1][1]));
+    //    Her yol bir enerji (color); çözülmüş halde kollar yalnız kendi yoluna baktığından renkler
+    //    birbirine bağlanmaz -> kısa devresiz çözüm her zaman vardır.
+    for (pi2 = 0; pi2 < paths.length; pi2++) {
+      var path = paths[pi2], L = path.length;
+      for (i = 0; i < L; i++) {
+        var pr = path[i][0], pc = path[i][1];
+        onPath[pr][pc] = 1;
+        g[pr][pc].matters = true;
+        g[pr][pc].color = pi2;
+        if (i > 0)     g[pr][pc].d.push(dirBetween(pr, pc, path[i - 1][0], path[i - 1][1]));
+        if (i < L - 1) g[pr][pc].d.push(dirBetween(pr, pc, path[i + 1][0], path[i + 1][1]));
+      }
+      if (hub) {
+        g[path[L - 1][0]][path[L - 1][1]].role = "src";
+        g[path[0][0]][path[0][1]].d.push(dirBetween(path[0][0], path[0][1], hub[0], hub[1]));
+      } else {
+        g[path[0][0]][path[0][1]].role = "src";
+        g[path[L - 1][0]][path[L - 1][1]].role = "bulb";
+      }
     }
-    g[path[0][0]][path[0][1]].role = "src";
-    g[path[L - 1][0]][path[L - 1][1]].role = "bulb";
+    if (hub) {   // sockets[yön] = o yandaki haznenin rengi (-1: hazne yok)
+      var h = g[hub[0]][hub[1]];
+      h.role = "fan"; h.matters = true; h.sockets = [-1, -1, -1, -1];
+      onPath[hub[0]][hub[1]] = 1;
+      for (i = 0; i < plan.sides.length; i++) { h.d.push(plan.sides[i]); h.sockets[plan.sides[i]] = i; }
+    }
 
     // 2) DALLAR (sapmalar): bazı yol hücrelerini T yapıp kısa bir sapma çıkar.
     //    Bir kısmı EK AMPUL ile biter (bkz. 2b), kalanı klasik çıkmaz sokaktır.
     //    Her sapma ana hattan ayrı beslendiği için her ampul bağımsız çözülür.
     var spurs = [], made = 0, mids = [];       // spurs: her eleman sapmanın hücre listesi (host hariç, uçtan uca)
-    for (i = 1; i < L - 1; i++) mids.push(i);
+    for (pi2 = 0; pi2 < paths.length; pi2++)
+      for (i = 1; i < paths[pi2].length - 1; i++) mids.push(paths[pi2][i]);
+    var midOrder = mids.slice();
     shuffle(mids);
     for (var mi = 0; mi < mids.length && made < P.branches; mi++) {
-      var hi = mids[mi];
-      var hr = path[hi][0], hc = path[hi][1];
+      var hr = mids[mi][0], hc = mids[mi][1];
       var host = g[hr][hc];
       if (host.d.length !== 2) continue;          // yalnız düz/köşe -> T'ye dönüşür
       var free = [];
@@ -2895,6 +2962,7 @@
       host.d.push(bd);                             // host artık T birleşim
       var br = hr + DR[bd], bc = hc + DC[bd];
       onPath[br][bc] = 2;
+      g[br][bc].color = host.color;
       g[br][bc].d.push(opp(bd));                   // sapmanın ilk hücresi (geri bakar)
       var spurCells = [[br, bc]];
 
@@ -2913,6 +2981,7 @@
           g[br][bc].d.push(ed);                    // ara parça (köşe/düz olur)
           var tr = br + DR[ed], tc = bc + DC[ed];
           onPath[tr][tc] = 2;
+          g[tr][tc].color = host.color;
           g[tr][tc].d.push(opp(ed));
           spurCells.push([tr, tc]);
         }
@@ -2925,7 +2994,7 @@
     //     Uç hücre "bulb" rolü alır; sapmanın TÜM hücreleri "matters" olur
     //     (par / yıldız / ipucu hesabı ana hatla aynı şekilde işlesin diye).
     //     Yeterli sapma üretilemediyse seviye daha az ampulle çözülebilir kalır.
-    var extraBulbs = Math.max(0, (P.bulbs || 1) - 1);
+    var extraBulbs = hub ? 0 : Math.max(0, (P.bulbs || 1) - paths.length);
     shuffle(spurs);
     var branchCells = [];
     for (var si = 0; si < spurs.length; si++) {
@@ -2952,9 +3021,8 @@
     }
 
     // 4) KİLİTLER: "çözülmüş" yönde kilitlenir -> çözülebilirlik bozulmaz
-    var lp = clampI(P.pathLocks, 0, Math.floor((L - 2) / 4));  // yolun en çok ~%25'i
-    var pool = [];
-    for (i = 1; i < L - 1; i++) pool.push(path[i]);
+    var lp = clampI(P.pathLocks, 0, Math.floor(midOrder.length / 4));  // yolun en çok ~%25'i
+    var pool = midOrder;
     shuffle(pool);
     for (i = 0; i < lp && i < pool.length; i++) g[pool[i][0]][pool[i][1]].lock = true;
 
@@ -3010,7 +3078,17 @@
   var IDLE_NUDGE_MS = 18000; // oynanışta bu kadar süre girdi yoksa 💡 düğmesi halka nabzıyla çağırır
   var PRAISE_STEP    = 25;  // her bu kadar seviyede bir, sonraki seviye BAŞLAMADAN önce animasyonlu övgü katmanı (sonsuz mod)
   var PRAISE_HOLD    = 1700; // ara övgü katmanının kendiliğinden kapanıp bir sonraki seviyeye geçmeden önce ekranda kalma süresi (ms)
-  var MILESTONE_STEP = 100; // her bu kadar seviyede bir kutlama katmanı + "devam et" butonu + can ödülü (sonsuz mod)
+  var MILESTONE_STEP = 100; // her bu kadar seviyede bir kutlama katmanı + "devam et" butonu
+  var BOOM_MS = 900;        // kısa devre patlaması: bu süre sonunda seviye baştan başlar (can gitmez)
+  var FAN_WIN_MS = 900;     // pervaneli seviyede kart açılmadan önce dönen pervaneyi görme payı (ms)
+
+  // Enerji renkleri: 0. enerji temanın kablo rengidir (T), öbürleri T ile aynı alan adlarını taşır.
+  var ENERGY = [null,
+    { wire: "#38c8ff", wireGlow: "#0a8dff", wireCore: "#d8f5ff", flow: "#f2fcff" },
+    { wire: "#ff5f9e", wireGlow: "#ff2b78", wireCore: "#ffe0ec", flow: "#fff4f8" },
+    { wire: "#5fe38f", wireGlow: "#1fc46a", wireCore: "#dcffe9", flow: "#f4fff8" }
+  ];
+  function energyPal(k) { return ENERGY[k] || T; }
 
   // Her övgü/kutlama seviyesi geçtikçe metin ve simge değişip güçlensin diye
   // sıralı havuzlar: dizinin sonuna gelince son (en güçlü) ifadede sabitlenir.
@@ -3341,7 +3419,11 @@
     undo: [],         // geri-al yığını: { c: hücre, from: eski dönüş }
     phase: "play",    // "play" | "winWait" (ampuller yanıyor) | "win" (kart açılmadan önce) | "card" (kazanma kartı açık,
                       // oyuncu bekleniyor) | "done" (günlük bitti) | "timeUp" (süre doldu, can var; oyuncu başlatana dek durur) |
-                      // "dead" (canlar bitti) | "milestone" | "praise"
+                      // "dead" (canlar bitti) | "milestone" | "praise" | "boom" (kısa devre patlaması)
+    colors: 1,        // bu seviyedeki enerji (renk) sayısı
+    fan: false,       // bu seviye pervaneli mi
+    shorted: null,    // son computePower'da iki rengin değdiği hücre { r, c } (yoksa null)
+    boom: null,       // patlamanın olduğu hücre
     phaseAt: 0,       // faz başlangıç zamanı
     winSpreadDist: 0, // kazanan hamlede kaynaktan en uzak yanan hücrenin mesafesi (winWait süresini belirler)
     introAt: 0,       // seviye açılış (fade-in) zamanı
@@ -3435,6 +3517,10 @@
           role: spec.role || null,
           lock: !!spec.lock,
           matters: !!spec.matters,   // yönü kazanmak için önemli mi (par/yıldız)
+          color: spec.color || 0,    // ait olduğu enerji (dekor parçada 0)
+          litCol: spec.color || 0,   // kablodan son geçen enerji (sönerken de rengi korunsun)
+          sockets: spec.sockets || null,                  // pervane: yön başına hazne rengi
+          fill: [false, false, false, false],             // pervane: yön başına hazne dolu mu
           rot: 0,
           ri: ri, ci: ci,
           animAt: -99999,     // son dönüş zamanı (animasyon için)
@@ -3460,11 +3546,17 @@
 
     RNG = prevRNG;                           // RNG'yi eski haline döndür
 
-    // Bu seviyedeki ampul sayısı (HUD göstergesi için)
+    // Bu seviyedeki ampul + enerji sayısı (HUD göstergesi, süre, çizim için)
     game.bulbCount = 0;
+    game.colors = 0;
+    game.fan = false;
     for (var brc = 0; brc < game.rows; brc++)
-      for (var bcc = 0; bcc < game.cols; bcc++)
-        if (game.cells[brc][bcc].role === "bulb") game.bulbCount++;
+      for (var bcc = 0; bcc < game.cols; bcc++) {
+        var bcl = game.cells[brc][bcc];
+        if (bcl.role === "bulb" || bcl.role === "fan") game.bulbCount++;
+        if (bcl.role === "src") game.colors++;
+        if (bcl.role === "fan") game.fan = true;
+      }
 
     game.par = computePar();
     game.moves = 0;
@@ -3495,9 +3587,16 @@
     updateHud();
     layout();
 
-    // İpucu yalnızca en baştaki seviyede (seviyeler + sonsuz mod)
-    if (cfg.mode !== "daily" && game.li === 0) hintEl.classList.add("show");
-    else hintEl.classList.remove("show");
+    // İpucu en baştaki seviyede (seviyeler + sonsuz mod) ve ilk renkli / ilk pervaneli tahtada
+    var teach = "";
+    if (game.fan && !Store.get("seen.fan", false)) { teach = "game.hintFan"; Store.set("seen.fan", true); }
+    else if (game.colors > 1 && !game.fan && !Store.get("seen.colors", false)) { teach = "game.hintColors"; Store.set("seen.colors", true); }
+    else if (cfg.mode !== "daily" && game.li === 0) teach = "game.hint";
+    if (teach) {
+      hintEl.setAttribute("data-i18n", teach);
+      hintEl.textContent = t(teach);
+      hintEl.classList.add("show");
+    } else hintEl.classList.remove("show");
   }
 
   // "Par" = kilitsiz, ÖNEMLİ (yol) parçaları çözmek için gereken en az dokunuş.
@@ -3520,14 +3619,13 @@
   // Seviyenin süre hakkı (saniye) — tek kısıt (hamle hakkı kaldırıldı). Önce bu
   // seviyenin TAHMİNİ ortalama çözüm süresi bulunur: ~10 sn tarama + par'ın
   // kabaca 1.7 katı dokunuş, dokunuş başına ~1.6 sn (ampul başına biraz ek iz
-  // sürme). Süre hakkı = tahmin * 1.15 + 5 sn tampon -> ortalama oyuncu yetişir
-  // ama tereddüt edemez. (Telemetri yok; model yalnız par ve ampul sayısına
-  // dayanır. Önceki *1.4 + 8 formülünden ~%20 kısa.) Standart can sayısı 3'ten
-  // 2'ye düşürüldüğünde süre baskısını da artırmak için sonuç ayrıca %20 kısaltılır.
+  // sürme, enerji başına ayırma payı). Süre hakkı = tahmin * 1.15 + 5 sn tampon ->
+  // ortalama oyuncu yetişir. (Telemetri yok; model yalnız par, ampul ve enerji
+  // sayısına dayanır.)
   function computeTimeLimit() {
-    var avgSolve = 10 + game.par * 2.7 + (game.bulbCount - 1) * 2.5;
-    var t = (avgSolve * 1.15 + 5) * 0.8;
-    return clampI(Math.round(t), 12, 80);
+    var avgSolve = 10 + game.par * 2.7 + (game.bulbCount - 1) * 2.5 + (game.colors - 1) * 6;
+    var t = avgSolve * 1.15 + 5;
+    return clampI(Math.round(t), 15, 120);
   }
 
   // Hamle sayısına göre yıldız (3/2/1). Par'a yakınlık ödüllendirilir.
@@ -3543,15 +3641,23 @@
   // ana hat (matters) üzerindeki tek bir kilitsiz parçayı rotayı bozan bir
   // yöne çevirmek yeterli ve KESİNDİR (parça 4 yönün en çok 2'sinde çalışır).
   function ensureUnsolved(now) {
-    var r, c;
-    if (!computePower(now, true)) { saveScramble(); return; }   // zaten çözülü değil
-
-    var pool = [];
+    var r, c, free = [], pool = [];
     for (r = 0; r < game.rows; r++)
       for (c = 0; c < game.cols; c++) {
         var cl = game.cells[r][c];
-        if (cl.matters && !cl.role && !cl.lock && cl.d.length > 0) pool.push(cl);
+        if (cl.lock || cl.d.length === 0) continue;
+        free.push(cl);
+        if (cl.matters) pool.push(cl);
       }
+    computePower(now, true);
+    // Tahta kısa devreyle başlamasın: değen renkler ayrılana dek rastgele parça çevir.
+    for (var guard = 0; game.shorted && guard < 400; guard++) {
+      var fp = free[rndInt(free.length)];
+      fp.rot = (fp.rot + 1) & 3;
+      computePower(now, true);
+    }
+    if (!computePower(now, true) && !game.shorted) { saveScramble(); return; }   // zaten çözülü değil
+
     shuffle(pool);   // hangi parçanın bozulacağı seviyeden seviyeye değişsin
 
     var broke = false;
@@ -3559,7 +3665,7 @@
       var p = pool[pi], r0 = p.rot;
       for (var add = 1; add <= 3 && !broke; add++) {
         p.rot = (r0 + add) & 3;
-        if (!computePower(now, true)) broke = true;   // rota bozuldu -> tamam
+        if (!computePower(now, true) && !game.shorted) broke = true;   // rota bozuldu -> tamam
       }
       if (!broke) p.rot = r0;
     }
@@ -3599,7 +3705,7 @@
     // (tazeyken çözülü başlamamalı, bkz. ensureUnsolved) -> çözülü kalmayana dek sondan başlayarak geri al.
     var hf = game.hintFixed.length;
     for (var hi = 0; hi < hf; hi++) game.hintFixed[hi].rot = 0;
-    while (computePower(performance.now(), true) && hf > 0) {
+    while ((computePower(performance.now(), true) || game.shorted) && hf > 0) {
       var hc = game.hintFixed[--hf];
       hc.rot = game.savedRots[hc.ri][hc.ci];
     }
@@ -3609,8 +3715,11 @@
 
   /* ----------------------------------------------------------------------
      6) ENERJİ HESABI (BFS ile yayılma)
-     Kaynaktan başlar; iki komşu ancak birbirine bakan bağlantıları
-     varsa akım geçirir. Ampule ulaşılırsa true döner.
+     Tüm kaynaklardan aynı anda başlar; iki komşu ancak birbirine bakan
+     bağlantıları varsa akım geçirir. Ampul yalnız kendi rengiyle yanar,
+     pervanenin her haznesi yalnız kendi rengiyle dolar; yanlış renk orada
+     durur. Farklı iki renk aynı kabloda buluşursa game.shorted dolar (patlama,
+     bkz. beginBoom). Bütün hedefler yanarsa true döner.
      instant=true -> parlaklık anında ayarlanır (seviye açılışı/sıfırlama)
      ---------------------------------------------------------------------- */
   function computePower(now, instant) {
@@ -3618,18 +3727,24 @@
     var r, c;
 
     for (r = 0; r < rows; r++)
-      for (c = 0; c < cols; c++) { cells[r][c]._pw = false; cells[r][c]._dist = 0; }
+      for (c = 0; c < cols; c++) {
+        cells[r][c]._pw = false; cells[r][c]._dist = 0;
+        if (cells[r][c].role === "fan") cells[r][c].fill = [false, false, false, false];
+      }
 
-    // Kaynağı bul
-    var sr = -1, sc = -1;
+    // Kaynakları bul
+    var queue = [];
     for (r = 0; r < rows; r++)
       for (c = 0; c < cols; c++)
-        if (cells[r][c].role === "src") { sr = r; sc = c; }
-    if (sr < 0) return false;
+        if (cells[r][c].role === "src") {
+          queue.push([r, c]);
+          cells[r][c]._pw = true;
+          cells[r][c]._col = cells[r][c].color;
+        }
+    if (!queue.length) return false;
+    game.shorted = null;
 
     // Genişlik öncelikli arama
-    var queue = [[sr, sc]];
-    cells[sr][sc]._pw = true;
     while (queue.length) {
       var item = queue.shift();
       var cr = item[0], cc = item[1];
@@ -3640,10 +3755,23 @@
         var nr = cr + DR[d], nc = cc + DC[d];
         if (nr < 0 || nc < 0 || nr >= rows || nc >= cols) continue;
         var nb = cells[nr][nc];
-        if (nb._pw || nb.d.length === 0) continue;
+        if (nb.d.length === 0) continue;
         // komşuda geri bakan (karşı yön) bir bağlantı olmalı
         if (rotDirs(nb).indexOf(opp(d)) === -1) continue;
+        if (nb.role === "fan") {                  // hazne iletmez: yalnız kendi rengiyle dolar
+          if (nb.sockets[opp(d)] === cur._col) {
+            nb.fill[opp(d)] = true;
+            nb._dist = Math.max(nb._dist, cur._dist + 1);
+          }
+          continue;
+        }
+        if (nb.role === "bulb" && nb.color !== cur._col) continue;   // yanlış renk ampulde durur
+        if (nb._pw) {
+          if (nb._col !== cur._col && !game.shorted) game.shorted = { r: nr, c: nc };
+          continue;
+        }
         nb._pw = true;
+        nb._col = cur._col;
         nb._dist = cur._dist + 1;
         queue.push([nr, nc]);
       }
@@ -3654,6 +3782,10 @@
     for (r = 0; r < rows; r++) {
       for (c = 0; c < cols; c++) {
         var cell2 = cells[r][c];
+        if (cell2.role === "fan") {               // pervane tüm hazneler dolunca yanar
+          cell2._pw = true;
+          for (var fi = 0; fi < cell2.d.length; fi++) if (!cell2.fill[cell2.d[fi]]) cell2._pw = false;
+        } else if (cell2._pw) cell2.litCol = cell2._col;
         if (cell2._pw !== cell2.lit) {
           cell2.lit = cell2._pw;
           if (cell2.lit) {
@@ -3665,7 +3797,7 @@
           }
         }
         if (cell2._pw && cell2._dist > maxLitDist) maxLitDist = cell2._dist;
-        if (cell2.role === "bulb") { bulbTotal++; if (cell2._pw) bulbLit++; }
+        if (cell2.role === "bulb" || cell2.role === "fan") { bulbTotal++; if (cell2._pw) bulbLit++; }
       }
     }
     game.winSpreadDist = maxLitDist;
@@ -3674,7 +3806,7 @@
         for (c = 0; c < cols; c++)
           game.cells[r][c].glow = game.cells[r][c].lit ? 1 : 0;
     }
-    return bulbTotal > 0 && bulbLit === bulbTotal;
+    return !game.shorted && bulbTotal > 0 && bulbLit === bulbTotal;
   }
 
   /* ----------------------------------------------------------------------
@@ -3732,7 +3864,7 @@
   }
 
   // Tek bir kol (merkezden kenara kablo)
-  function drawArm(d, half, lw, glow, now) {
+  function drawArm(d, half, lw, glow, now, pal) {
     var ex = [0, half, 0, -half][d];
     var ey = [-half, 0, half, 0][d];
 
@@ -3750,22 +3882,22 @@
     if (glow > 0.02) {
       ctx.globalAlpha = glow;
 
-      ctx.shadowColor = T.wireGlow;
+      ctx.shadowColor = pal.wireGlow;
       // gölge bulanıklığı en pahalı canvas işlemi -> büyük ızgarada üst sınır koy
       ctx.shadowBlur = Math.min(cell * 0.32, 13);
       ctx.lineWidth = lw;
-      ctx.strokeStyle = T.wire;
+      ctx.strokeStyle = pal.wire;
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
       ctx.shadowBlur = 0;
 
       ctx.lineWidth = lw * 0.44;
-      ctx.strokeStyle = T.wireCore;
+      ctx.strokeStyle = pal.wireCore;
       ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
 
       // akan enerji noktaları (kesikli çizgi kaydırma) -> minik hücrelerde / hareket azaltta atla
       if (cell >= 26 && !reduceMotion) {
         ctx.lineWidth = lw * 0.28;
-        ctx.strokeStyle = T.flow;
+        ctx.strokeStyle = pal.flow;
         ctx.setLineDash([cell * 0.03, cell * 0.14]);
         ctx.lineDashOffset = -(now * 0.05) % 1000;
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(ex, ey); ctx.stroke();
@@ -3777,13 +3909,13 @@
   }
 
   // Kaynak düğümü (⚡ enerji ünitesi)
-  function drawSource() {
-    var s = cell * 0.30;
+  function drawSource(pal) {
+    var s = cell * 0.30, mc = game.colors > 1;
     var g = ctx.createRadialGradient(0, 0, 2, 0, 0, s);
-    g.addColorStop(0, T.srcA);
-    g.addColorStop(1, T.srcB);
+    g.addColorStop(0, mc ? pal.wireCore : T.srcA);
+    g.addColorStop(1, mc ? pal.wire : T.srcB);
     ctx.fillStyle = g;
-    ctx.strokeStyle = T.srcStroke;
+    ctx.strokeStyle = mc ? pal.wireGlow : T.srcStroke;
     ctx.lineWidth = cell * 0.05;
     rr(-s, -s, s * 2, s * 2, s * 0.42);
     ctx.fill();
@@ -3803,23 +3935,23 @@
   }
 
   // Ampul düğümü (💡 hedef)
-  function drawBulb(glow, now) {
-    var R = cell * 0.20;
+  function drawBulb(glow, now, pal) {
+    var R = cell * 0.20, mc = game.colors > 1;
     if (glow > 0.35) {
       var pulse = reduceMotion ? 1 : 1 + 0.06 * Math.sin(now / 170);
       ctx.save();
       ctx.scale(pulse, pulse);
-      ctx.shadowColor = T.bulbGlow;
+      ctx.shadowColor = mc ? pal.wireGlow : T.bulbGlow;
       ctx.shadowBlur = Math.min(cell * 0.55 * glow, 22);
       var g = ctx.createRadialGradient(0, 0, 1, 0, 0, R);
-      g.addColorStop(0, T.bulbA);
-      g.addColorStop(1, T.bulbB);
+      g.addColorStop(0, mc ? pal.wireCore : T.bulbA);
+      g.addColorStop(1, mc ? pal.wire : T.bulbB);
       ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
       ctx.shadowBlur = 0;
 
       // ışınlar
-      ctx.strokeStyle = "rgba(" + T.bulbRayRGB + "," + glow.toFixed(2) + ")";
+      ctx.strokeStyle = mc ? pal.wire : "rgba(" + T.bulbRayRGB + "," + glow.toFixed(2) + ")";
       ctx.lineWidth = cell * 0.03;
       ctx.lineCap = "round";
       for (var i = 0; i < 8; i++) {
@@ -3832,8 +3964,8 @@
       ctx.restore();
     } else {
       ctx.fillStyle = T.bulbOff;
-      ctx.strokeStyle = T.bulbOffLn;
-      ctx.lineWidth = cell * 0.035;
+      ctx.strokeStyle = mc ? pal.wire : T.bulbOffLn;       // sönükken de hangi enerjiyi beklediği görünsün
+      ctx.lineWidth = cell * (mc ? 0.06 : 0.035);
       ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     }
     // flaman
@@ -3847,6 +3979,85 @@
     ctx.fillStyle = glow > 0.35 ? T.baseLit : T.baseOff;
     rr(-R * 0.5, R * 0.75, R, R * 0.5, 2);
     ctx.fill();
+  }
+
+  // Pervaneli ampul: her enerjinin haznesi halkada bir yay, tüm hazneler dolunca pervane yanıp döner.
+  function drawFan(c, now) {
+    var R = cell * 0.38, on = c.glow > 0.35, i, p;
+    ctx.fillStyle = T.bulbOff;
+    ctx.strokeStyle = T.bulbOffLn;
+    ctx.lineWidth = cell * 0.03;
+    ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+    ctx.lineCap = "round";
+    for (i = 0; i < c.d.length; i++) {
+      var sd = c.d[i], k = c.sockets[sd], a = (sd - 1) * Math.PI / 2, pal = energyPal(k);
+      ctx.globalAlpha = c.fill[sd] ? 1 : 0.5;
+      ctx.strokeStyle = pal.wire;
+      ctx.lineWidth = cell * 0.07;
+      ctx.beginPath(); ctx.arc(0, 0, R, a - 0.6, a + 0.6); ctx.stroke();
+      ctx.globalAlpha = 1;
+      // renk körlüğü için noktalar: kaynak/ampuldeki sayıyla aynı
+      ctx.fillStyle = pal.wire;
+      for (p = 0; p <= k; p++) {
+        var pa = a + (p - k / 2) * 0.32;
+        ctx.beginPath();
+        ctx.arc(Math.cos(pa) * R * 0.72, Math.sin(pa) * R * 0.72, Math.max(1.4, cell * 0.024), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    ctx.save();
+    if (on && !reduceMotion) ctx.rotate((now - c.litSince) * 0.012);
+    if (on) { ctx.shadowColor = T.bulbGlow; ctx.shadowBlur = Math.min(cell * 0.5, 20); }
+    ctx.fillStyle = on ? T.bulbA : T.filaOff;
+    for (i = 0; i < 3; i++) {
+      ctx.rotate(Math.PI * 2 / 3);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(cell * 0.11, -cell * 0.1, 0, -cell * 0.21);
+      ctx.quadraticCurveTo(-cell * 0.07, -cell * 0.1, 0, 0);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    ctx.fillStyle = on ? T.bulbB : T.baseOff;
+    ctx.beginPath(); ctx.arc(0, 0, cell * 0.06, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Renk körlüğü için kaynak/ampul köşesinde enerji no kadar nokta
+  function drawPips(k, half) {
+    ctx.fillStyle = energyPal(k).wire;
+    for (var i = 0; i <= k; i++) {
+      ctx.beginPath();
+      ctx.arc(-half * 0.68 + i * cell * 0.1, -half * 0.68, Math.max(1.6, cell * 0.035), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  // Kısa devre patlaması: değen hücreden yayılan parlama + kıvılcımlar (hareket azaltta yalnız parlama)
+  function drawBoom(now) {
+    var k = clamp01((now - game.phaseAt) / BOOM_MS);
+    var x = game.boom.c * cell + cell / 2, y = game.boom.r * cell + cell / 2;
+    var rad = reduceMotion ? cell * 1.6 : cell * (0.8 + easeOutCubic(k) * 2.6);
+    var g = ctx.createRadialGradient(x, y, 0, x, y, rad);
+    g.addColorStop(0, "rgba(255,255,255,0.95)");
+    g.addColorStop(0.35, "rgba(255,170,60,0.8)");
+    g.addColorStop(1, "rgba(255,60,40,0)");
+    ctx.globalAlpha = 1 - k;
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill();
+    if (!reduceMotion) {
+      ctx.fillStyle = "#ffd27a";
+      for (var i = 0; i < 18; i++) {
+        var a = i * 2.399, d = cell * (0.4 + easeOutCubic(k) * (1.6 + (i % 5) * 0.4));
+        ctx.beginPath();
+        ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, Math.max(1.5, cell * 0.05 * (1 - k)), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.globalAlpha = 1;
   }
 
   // Kilit rozeti (döndürülemeyen parça)
@@ -3897,20 +4108,26 @@
       ctx.save();
       ctx.rotate(currentAngle(c, now));
 
-      var g = c.glow;
-      for (var i = 0; i < c.d.length; i++) drawArm(c.d[i], half, lw, g, now);
+      var g = c.glow, pal = energyPal(c.role ? c.color : c.litCol);
+      for (var i = 0; i < c.d.length; i++) {
+        var ad = c.d[i];
+        if (c.role === "fan") drawArm(ad, half, lw, c.fill[ad] ? 1 : 0, now, energyPal(c.sockets[ad]));
+        else drawArm(ad, half, lw, g, now, pal);
+      }
 
       if (c.role === "src") {
-        drawSource();
+        drawSource(pal);
       } else if (c.role === "bulb") {
-        drawBulb(g, now);
+        drawBulb(g, now, pal);
+      } else if (c.role === "fan") {
+        drawFan(c, now);
       } else {
         // merkez düğüm
         ctx.fillStyle = T.node;
         ctx.beginPath(); ctx.arc(0, 0, lw * 0.62, 0, Math.PI * 2); ctx.fill();
         if (g > 0.02) {
           ctx.globalAlpha = g;
-          ctx.fillStyle = T.nodeLit;
+          ctx.fillStyle = game.colors > 1 ? pal.wire : T.nodeLit;
           ctx.beginPath(); ctx.arc(0, 0, lw * 0.62, 0, Math.PI * 2); ctx.fill();
           ctx.globalAlpha = 1;
         }
@@ -3919,7 +4136,7 @@
           var d = c.d[0];
           var ex = [0, half, 0, -half][d];
           var ey = [-half, 0, half, 0][d];
-          ctx.fillStyle = g > 0.5 ? T.wireCore : T.baseOff;
+          ctx.fillStyle = g > 0.5 ? pal.wireCore : T.baseOff;
           ctx.beginPath();
           ctx.arc(ex * 0.82, ey * 0.82, lw * 0.6, 0, Math.PI * 2);
           ctx.fill();
@@ -3930,6 +4147,7 @@
 
     // kilit rozeti (ekran hizasında, dönmez)
     if (c.lock && !c.role) drawLockBadge(sdt < 240);
+    if (game.colors > 1 && (c.role === "src" || c.role === "bulb")) drawPips(c.color, half);
 
     // ipucu halkası (kısa süreli, ekran hizasında) — ödüllü reklamla düzeltilen parça
     var hdt = now - c.hintAt;
@@ -4012,7 +4230,10 @@
 
     // Kazanma: ampuller yanıp kısa bir süre görünür kaldıktan sonra "SEVİYE TAMAM" kartı açılır.
     // Sonraki seviyeye OYUNCU düğmeyle geçer (bkz. showWinCard / advanceAfterWin); menü açıkken bekler.
-    if (game.phase === "win" && !menuOpen && now - game.phaseAt > WIN_CARD_DELAY) showWinCard();
+    if (game.phase === "win" && !menuOpen && now - game.phaseAt > WIN_CARD_DELAY + (game.fan ? FAN_WIN_MS : 0)) showWinCard();
+
+    // Kısa devre: patlama bitince seviye baştan başlar (can gitmez, ipucuyla düzelenler korunur).
+    if (game.phase === "boom" && !menuOpen && now - game.phaseAt >= BOOM_MS) resetLevel();
 
     // Ara övgü katmanı: PRAISE_HOLD kadar gösterildikten sonra kendiliğinden
     // kapanır ve bir sonraki seviyeye geçer (buton gerekmez, akışı kısa keser).
@@ -4029,6 +4250,12 @@
     var intro = reduceMotion ? 1 : clamp01((now - game.introAt) / 350);   // seviye açılış fade-in
     ctx.globalAlpha = intro;
 
+    ctx.save();
+    if (game.phase === "boom" && !reduceMotion) {   // patlamada tahta sarsılır, sönerek durulur
+      var shake = cell * 0.09 * (1 - clamp01((now - game.phaseAt) / BOOM_MS));
+      ctx.translate(Math.sin(now / 21) * shake, Math.cos(now / 17) * shake);
+    }
+
     // dış çerçeve
     rr(1, 1, game.cols * cell - 2, game.rows * cell - 2, cell * 0.14);
     ctx.strokeStyle = T.frame;
@@ -4039,8 +4266,10 @@
       for (var cc2 = 0; cc2 < game.cols; cc2++)
         drawCell(game.cells[rr2][cc2], now);
 
+    ctx.restore();
     ctx.globalAlpha = 1;
 
+    if (game.phase === "boom") drawBoom(now);
     if (game.phase === "done") drawDoneOverlay(now);
   }
 
@@ -4131,8 +4360,19 @@
     }
     updateHud();
 
-    // Enerjiyi yeniden hesapla; ampul yandıysa kazanma fazına geç.
+    // Enerjiyi yeniden hesapla; ampul yandıysa kazanma fazına geç, renkler değdiyse patla.
     if (computePower(performance.now(), false)) beginWinWait();
+    else if (game.shorted) beginBoom();
+  }
+
+  // İki farklı enerji değdi: girdi kilitlenir, patlama oynar, BOOM_MS sonra seviye baştan başlar (bkz. frame).
+  function beginBoom() {
+    game.phase = "boom";
+    game.phaseAt = performance.now();
+    game.boom = game.shorted;
+    Haptic.error();
+    Sound.boom();
+    showToast(t("toast.shortCircuit"), 1300);
   }
 
   // Son dönüşü geri al
@@ -4181,6 +4421,8 @@
       }
     }
     if (!cands.length) { showToast(t("toast.closeToSolve"), 1100); return; }
+    cands = cands.filter(hintSafe);
+    if (!cands.length) { showToast(t("toast.hintBlocked"), 1400); return; }   // hak harcanmaz
     var n = Math.min(2, cands.length);
     var targets = [];
     for (var k = 0; k < n; k++) targets.push(cands.splice(rndInt(cands.length), 1)[0]);
@@ -4212,6 +4454,18 @@
     });
   }
 
+  // Bu parçayı çözülmüş yönüne çevirmek kısa devre yapar mı? İpucu oyuncuyu patlatmasın.
+  function hintSafe(cl) {
+    if (game.colors === 1) return true;
+    var r0 = cl.rot;
+    cl.rot = 0;
+    computePower(performance.now(), false);
+    var ok = !game.shorted;
+    cl.rot = r0;
+    computePower(performance.now(), false);
+    return ok;
+  }
+
   // Parça şu anki yönüyle kazanmak için gereken bağlantıyı taşımıyor mu? "Gereken" = çözülmüş yöndeki
   // (rot 0) açıklıklardan, karşısındaki komşusu da yolun / ampullü sapmanın (matters) parçası olanlar.
   // rot 0'dan farklı olmak tek başına "yanlış" değildir: düz kablo 180°'de, çıkmaz sapmalı T ise
@@ -4241,8 +4495,9 @@
 
   // Aday kabloları sırayla (kısa gecikmeyle) doğru yöne çevirir; seviye biterse durur.
   function applyHintChain(targets, idx) {
-    if (idx >= targets.length) return;
+    if (idx >= targets.length || game.phase !== "play") return;
     var target = targets[idx];
+    if (!hintSafe(target)) { applyHintChain(targets, idx + 1); return; }   // ilk düzeltme durumu değiştirmiş olabilir
     game.undo.push({ c: target, from: target.rot });   // düzeltme geri-al yığınına yazılır (sayaç tutarlı kalır)
     if (game.undo.length > 300) game.undo.shift();
     target.rot = 0;                       // üreticinin "çözülmüş" yönü
@@ -4363,8 +4618,7 @@
      övüp "Devam Et" ile bir sonraki seviyeye kendi geçmesini sağlar —
      otomatik ilerlemenin aksine kısa bir mola/başarı anı. Övgü başlığı/simgesi
      her 100'lük dilimde bir sonraki (daha güçlü) ifadeye geçer (BIG_PRAISE_*
-     havuzları, sonunda son ifadede sabitlenir). Can ödülü vermez (standart
-     tavan MAX_LIVES'ta sabit kalır). */
+     havuzları, sonunda son ifadede sabitlenir). Can ödülü vermez. */
   function showMilestoneOverlay(completedLevel) {
     var iconEl  = milestoneOverlay.querySelector(".hearts");
     var titleEl = milestoneOverlay.querySelector("h2");
@@ -4406,8 +4660,8 @@
   var winStarEls = winEl.querySelectorAll(".st");
   var _winTmrs = [];
 
-  // Kilometre taşı seviyesi mi (100'ün katı ya da "Seviyeler"in son seviyesi): kutlama katmanı + can ödülü gelir.
-  // Bu seviyelerde karttaki [Menü] düğmesi gizlenir (kutlama/ödül atlanmasın).
+  // Kilometre taşı seviyesi mi (100'ün katı ya da "Seviyeler"in son seviyesi): kutlama katmanı gelir.
+  // Bu seviyelerde karttaki [Menü] düğmesi gizlenir (kutlama atlanmasın).
   function isMilestoneWin(lv) {
     return cfg.mode !== "daily" && (isCampaignEnd(lv) || lv % MILESTONE_STEP === 0);
   }
@@ -4499,7 +4753,7 @@
     }
     var completedLevel = game.li + 1;
     if (isMilestoneWin(completedLevel)) {
-      // Her 100 seviyede bir (ve "Seviyeler"in son seviyesinde): kutlama katmanı aç, can ödülü ver,
+      // Her 100 seviyede bir (ve "Seviyeler"in son seviyesinde): kutlama katmanı aç,
       // oyuncu "Devam Et" ile bir sonraki seviyeye (son seviyede sonsuz moda) kendi geçsin.
       game.phase = "milestone";
       game.phaseAt = performance.now();
@@ -4721,9 +4975,8 @@
 
   /* --- ilerleme özetleri (ana menü + ayarlar + duraklat) --- */
   function modeName(m) { return m === "campaign" ? t("mode.campaign") : (m === "endless" ? t("mode.endless") : t("mode.daily")); }
-  // Geçerli modun kısa adı (zorluk dahil)
-  function modeLabel() { return cfg.mode === "daily" ? t("mode.daily") : modeName(cfg.mode) + " · " + diffLabel(cfg.diff); }
-  // m modunda (geçerli zorlukta) ulaşılan en yüksek seviye, 1 tabanlı; 0 = hiç oynanmadı
+  function modeLabel() { return modeName(cfg.mode); }
+  // m modunda ulaşılan en yüksek seviye, 1 tabanlı; 0 = hiç oynanmadı
   function bestOf(m) {
     if (m === "campaign" && Store.get(pkey(m, "done"), false)) return CAMPAIGN_LEVELS;
     return Store.get(pkey(m, "bestLevel"), 0);
@@ -4740,14 +4993,6 @@
     else if (screenNow === "pause") syncPause();
   }
 
-  function syncDiffSegs() {
-    var segs = document.querySelectorAll(".seg[data-diff]");
-    for (var i = 0; i < segs.length; i++) {
-      var on = segs[i].getAttribute("data-diff") === cfg.diff;
-      segs[i].classList.toggle("on", on);
-      segs[i].setAttribute("aria-checked", on ? "true" : "false");
-    }
-  }
   // Ayarlar > Dil segmentli seçici: etkin dili işaretler
   function syncLangSegs() {
     var segs = document.querySelectorAll(".seg[data-lang]");
@@ -4772,7 +5017,6 @@
     byId("tileDailyBtn").classList.toggle("attn", !d.done);
     var tiles = screens.home.querySelectorAll("[data-play]");
     for (i = 0; i < tiles.length; i++) tiles[i].classList.toggle("on", tiles[i].getAttribute("data-play") === cfg.mode);
-    syncDiffSegs();
 
     // Büyük düğme geçerli modu sürdürür (günlük bittiyse Sonsuz'a geçirir)
     var m = cfg.mode, label, sub;
@@ -4782,7 +5026,7 @@
     } else {
       var li = lastLevelFor(m);
       label = (li === 0 && !Store.get(pkey(m, "totalStars"), 0)) ? t("common.play") : t("common.continue");
-      sub = t("home.modeSub", { mode: modeName(m), n: li + 1, diff: diffLabel(cfg.diff) });
+      sub = t("home.modeSub", { mode: modeName(m), n: li + 1 });
     }
     byId("homePlayLabel").textContent = label;
     byId("homePlaySub").textContent = sub;
@@ -4863,18 +5107,6 @@
       buildLevel();
       showToast(mo === "campaign" ? t("toast.campaignStarted", { n: CAMPAIGN_LEVELS }) : t("toast.endlessMode"));
     }
-  }
-  function applyDiff(d) {
-    if (!DIFFS[d] || d === cfg.diff) return;
-    cfg.diff = d; Store.set("diff", d);
-    if (cfg.mode !== "daily") {          // günlükte zorluk etkisiz: yalnız tercih kaydedilir
-      Store.set("mode", cfg.mode);
-      game.li = savedLi();
-      buildLevel();
-    }
-    syncMenu();
-    if (screenNow === "levels") renderLevels();
-    showToast(t("toast.diffChanged", { label: diffLabel(d) }));
   }
   function startDaily(quiet) {
     var done = !!Store.get(dkey("done"), false);
@@ -4979,7 +5211,6 @@
     var sc = byId("levelsScroll");
     sc.innerHTML = html;
     byId("levelsStars").textContent = totalGot + " / " + (CAMPAIGN_LEVELS * 3);
-    syncDiffSegs();
     // sıradaki seviye görünür alanın ortasına gelsin
     var curEl = sc.querySelector(".lv.current") || sc.querySelector('.lv[data-n="' + reach + '"]');
     sc.scrollTop = curEl ? Math.max(0, curEl.offsetTop - sc.clientHeight / 2 + curEl.offsetHeight / 2) : 0;
@@ -5012,9 +5243,6 @@
       }
       if (m === "campaign") showScreen("levels"); else playMode(m);
     });
-  });
-  Array.prototype.forEach.call(document.querySelectorAll(".seg[data-diff]"), function (b) {
-    b.addEventListener("click", function () { applyDiff(b.getAttribute("data-diff")); });
   });
   Array.prototype.forEach.call(document.querySelectorAll(".seg[data-lang]"), function (b) {
     b.addEventListener("click", function () { setLang(b.getAttribute("data-lang")); });
