@@ -31,5 +31,9 @@
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.2.3"
+  },
+  "overrides": {
+    "sharp": "^0.35.5",
+    "brace-expansion@2": "^2.1.7"
   }
 }
