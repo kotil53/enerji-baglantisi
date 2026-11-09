@@ -3838,7 +3838,8 @@
         body: JSON.stringify(body)
       }).then(function (r) {
         clearTimeout(tm);
-        if (!r.ok) throw new Error("http " + r.status);
+        // 404 = sunucu fonksiyonları kurulmamış (server/supabase.sql çalıştırılmamış): internet sorunu değil
+        if (!r.ok) { var er = new Error("http " + r.status); er.status = r.status; throw er; }
         return r.json();
       }, function (e) { clearTimeout(tm); throw e; });
     },
@@ -5828,7 +5829,11 @@
         byId("rankMe").hidden = false;
         byId("rankMeTxt").textContent = me.score > 0 ? t("rank.me", { name: me.name, n: me.rank }) : t("rank.meNone", { name: me.name });
       }
-    }, function () { if (req === _worldReq) worldState("rank.offline", true); });
+    }, function (e) {
+      if (req !== _worldReq) return;
+      if (e && e.status === 404) { byId("nameCard").hidden = true; worldState("rank.soon"); }
+      else worldState("rank.offline", true);
+    });
   }
   // Sunucudan gelen ad güvenilmez: yalnız textContent ile yazılır
   function worldRow(e, isMe) {
@@ -5976,7 +5981,7 @@
       var err = r && r.err;
       if (r && r.ok) { byId("nameInput").blur(); Haptic.success(); renderWorld(); }
       else nameMsg(err === "taken" ? "rank.nameTaken" : err === "name" ? "rank.nameBad" : err === "rate" ? "rank.rate" : "rank.error", true);
-    }, function () { btn.disabled = false; nameMsg("rank.offline", true); });
+    }, function (e) { btn.disabled = false; nameMsg(e && e.status === 404 ? "rank.soon" : "rank.offline", true); });
   });
   Array.prototype.forEach.call(screens.home.querySelectorAll("[data-play]"), function (b) {
     b.addEventListener("click", function () {
