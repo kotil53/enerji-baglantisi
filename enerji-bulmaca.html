@@ -461,6 +461,90 @@
   }
   #hint.show { opacity: 1; }
 
+  /* ---------- İLK OYUN REHBERİ (#tut) ----------
+     Tahtanın altında duran balon; parmak/halka işaretleri tuvale çizilir (bkz. drawTut).
+     Kapsayıcı dokunuşu geçirmez değil: yalnız düğmeler tıklanır, tahta dokunuşu tuvale gider. */
+  #tut {
+    position: absolute; left: 50%; bottom: 10px; z-index: 5;
+    transform: translateX(-50%) translateY(8px);
+    width: min(420px, calc(100% - 24px));
+    padding: 12px 14px 10px;
+    background: linear-gradient(180deg, var(--e-panel), var(--e-panel-2));
+    border: 1px solid var(--e-hint-border); border-radius: 18px;
+    box-shadow: 0 14px 40px -14px rgba(0, 0, 0, 0.8);
+    color: var(--e-ink-hi); text-align: center;
+    pointer-events: none; opacity: 0; visibility: hidden;
+    transition: opacity .3s ease, transform .3s ease, visibility 0s linear .3s;
+  }
+  #tut.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); transition: opacity .3s ease, transform .3s ease, visibility 0s; }
+  #tut.nudge { animation: tutNudge .36s ease; }
+  @keyframes tutNudge { 0%, 100% { transform: translateX(-50%); } 25% { transform: translateX(calc(-50% - 6px)); } 75% { transform: translateX(calc(-50% + 6px)); } }
+  .tut-step { display: block; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--e-hint); }
+  #tutText { margin: 4px 0 8px; font-size: 14.5px; font-weight: 600; line-height: 1.35; }
+  .tut-actions { display: flex; justify-content: center; gap: 8px; }
+  .tut-actions button {
+    -webkit-appearance: none; appearance: none; pointer-events: auto;
+    min-height: 40px; padding: 8px 16px; border-radius: 12px;
+    font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; touch-action: manipulation;
+  }
+  .tut-skip { border: 1px solid var(--e-border); background: transparent; color: var(--e-muted); }
+  .tut-ok { border: 1px solid var(--e-hint-border); background: var(--e-hint-bg); color: var(--e-hint); }
+  .tut-ok[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) { #tut, #tut.show { transition: none; } #tut.nudge { animation: none; } }
+
+  /* ---------- SIRALAMA ---------- */
+  .top-pills { display: inline-flex; gap: 8px; }
+  .pill-btn { -webkit-appearance: none; appearance: none; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; touch-action: manipulation; transition: transform .08s ease, background .15s ease; }
+  .pill-btn:active { transform: scale(0.95); background: var(--e-panel-hi); }
+  .rank-wrap { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; padding: 4px 4px 16px; }
+  .rank-hero {
+    position: relative; overflow: hidden;
+    padding: 20px 16px 16px; border-radius: 22px; text-align: center;
+    border: 1px solid var(--e-hint-border);
+    background: radial-gradient(420px 220px at 50% -40%, var(--e-hint-bg-hi), rgba(0,0,0,0) 70%), linear-gradient(180deg, var(--e-panel), var(--e-panel-2));
+  }
+  .rank-badge { font-size: 44px; line-height: 1; }
+  .rank-name { margin: 8px 0 2px; font-size: 20px; font-weight: 800; letter-spacing: .4px; color: var(--e-hint); }
+  .rank-total { font-size: 34px; font-weight: 800; color: var(--e-ink-hi); font-variant-numeric: tabular-nums; }
+  .rank-total small { margin-left: 6px; font-size: 13px; font-weight: 700; color: var(--e-muted); letter-spacing: 1px; text-transform: uppercase; }
+  .rank-bar { height: 10px; margin: 12px 0 6px; border-radius: 999px; background: var(--e-seg-bg); border: 1px solid var(--e-border); overflow: hidden; }
+  .rank-bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--e-hint), var(--e-wire)); transition: width .8s cubic-bezier(.2, .9, .3, 1); }
+  .rank-next { font-size: 12px; font-weight: 600; color: var(--e-muted); }
+  .rank-h { margin: 0 4px; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--e-faint); }
+  .ladder { display: flex; flex-direction: column; gap: 6px; }
+  .ladder .step {
+    display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 14px;
+    border: 1px solid var(--e-border); border-radius: 14px; background: var(--e-panel);
+    font-size: 14px; font-weight: 700; color: var(--e-ink);
+  }
+  .ladder .step .ic { width: 28px; text-align: center; font-size: 20px; }
+  .ladder .step .nm { flex: 1; min-width: 0; }
+  .ladder .step .pt { font-size: 12px; font-weight: 700; color: var(--e-muted); font-variant-numeric: tabular-nums; }
+  .ladder .step.lock { opacity: .45; }
+  .ladder .step.me { border-color: var(--e-hint); background: var(--e-hint-bg); color: var(--e-ink-hi); }
+  .ladder .step.me .pt { color: var(--e-hint); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { padding: 12px; border: 1px solid var(--e-border); border-radius: 16px; background: var(--e-panel); text-align: left; }
+  .stat small { display: block; font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--e-faint); }
+  .stat b { display: block; margin-top: 4px; font-size: 20px; font-weight: 800; color: var(--e-ink-hi); font-variant-numeric: tabular-nums; }
+  .stat span { display: block; margin-top: 2px; font-size: 12px; font-weight: 600; color: var(--e-muted); }
+  .board { display: flex; flex-direction: column; gap: 6px; }
+  .board .bl { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 6px 14px; border: 1px solid var(--e-border); border-radius: 14px; background: var(--e-panel); font-size: 14px; font-weight: 700; }
+  .board .bl .no { width: 24px; font-weight: 800; color: var(--e-muted); font-variant-numeric: tabular-nums; }
+  .board .bl .dt { flex: 1; min-width: 0; color: var(--e-ink); }
+  .board .bl .sc { font-weight: 800; color: var(--e-ink-hi); font-variant-numeric: tabular-nums; }
+  .board .bl.top .no { color: var(--e-hint); }
+  .board .bl.today { border-color: var(--e-hint-border); }
+  .board .empty { padding: 14px; border: 1px dashed var(--e-border); border-radius: 14px; font-size: 13px; color: var(--e-muted); text-align: center; }
+  .rank-note { margin: 0 4px; font-size: 12px; line-height: 1.45; color: var(--e-faint); text-align: center; }
+
+  /* Kazanma kartı: seviye puanı (sayarak artar) + rehber sonrası kısa ipucu */
+  .win-score { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin: 2px 0 10px; }
+  .win-score b { font-size: 30px; font-weight: 800; color: var(--e-ink-hi); font-variant-numeric: tabular-nums; }
+  .win-score span { font-size: 12px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--e-muted); }
+  .win-tip { margin: 0 0 12px; padding: 8px 12px; border-radius: 12px; background: var(--e-hint-bg); color: var(--e-ink-hi); font-size: 13px; line-height: 1.4; }
+  .win-tip:empty { display: none; }
+
   /* ---------- ALT BİLDİRİM (toast) ---------- */
   #toast {
     position: fixed;
@@ -1042,6 +1126,8 @@
     <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M9.5 7V4.5h5V7M7 7l1 12.5h8L17 7"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
     <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4.5h8v5a4 4 0 01-8 0z"/><path d="M8 6.5H5v1.5a3 3 0 003 3M16 6.5h3v1.5a3 3 0 01-3 3"/><path d="M12 13.5v3M8.5 19.5h7M9.5 19.5l.6-3h3.8l.6 3"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.7"/><path d="M12 16.9v.2"/></symbol>
     <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.5 2.3 4 5.3 4 8.5s-1.5 6.2-4 8.5c-2.5-2.3-4-5.3-4-8.5s1.5-6.2 4-8.5z"/></symbol>
   </defs>
 </svg>
@@ -1076,6 +1162,15 @@
   <div id="stage">
     <canvas id="game"></canvas>
     <div id="hint" data-i18n="game.hint">Kablolara dokunarak döndür &bull; enerjiyi ampule ulaştır</div>
+    <!-- İLK OYUN REHBERİ: adım metni + (ilk adımda) Tamam, her adımda Atla (bkz. Tut) -->
+    <div id="tut" role="status" aria-live="polite">
+      <span class="tut-step" id="tutStep"></span>
+      <p id="tutText"></p>
+      <div class="tut-actions">
+        <button class="tut-skip" id="tutSkip" type="button" data-i18n="tut.skip">Atla</button>
+        <button class="tut-ok" id="tutOk" type="button" data-i18n="tut.ok">Anladım</button>
+      </div>
+    </div>
   </div>
 
   <!-- ALT ÇUBUK: ipucu (günde birkaçı ücretsiz, sonra reklamla) / geri al / yeniden başla -->
@@ -1105,7 +1200,10 @@
     <div class="topbar">
       <button class="ibtn" id="homeSettingsBtn" type="button" aria-label="Ayarlar" title="Ayarlar" data-i18n-attr="aria-label:home.settingsAria;title:home.settingsAria"><svg class="i"><use href="#i-sliders"/></svg></button>
       <span></span>
-      <span class="pill" title="Toplam yıldız" aria-label="Toplam yıldız" data-i18n-attr="title:home.starsAria;aria-label:home.starsAria"><svg class="i f"><use href="#i-star"/></svg><b id="homeStars">0</b></span>
+      <span class="top-pills">
+        <span class="pill" title="Toplam yıldız" aria-label="Toplam yıldız" data-i18n-attr="title:home.starsAria;aria-label:home.starsAria"><svg class="i f"><use href="#i-star"/></svg><b id="homeStars">0</b></span>
+        <button class="pill pill-btn" id="homeRankBtn" type="button" title="Sıralama" aria-label="Sıralama" data-i18n-attr="title:rank.title;aria-label:rank.title"><svg class="i"><use href="#i-trophy"/></svg><b id="homeScore">0</b></button>
+      </span>
     </div>
     <div class="scroll">
       <div class="home-inner">
@@ -1165,6 +1263,16 @@
     <div class="scroll map" id="levelsScroll"></div>
   </section>
 
+  <!-- SIRALAMA: toplam puan, rütbe basamakları, mod rekorları, en iyi günlük puanlar (bkz. renderRank) -->
+  <section id="rank" class="screen" aria-label="Sıralama" data-i18n-attr="aria-label:rank.title">
+    <div class="topbar">
+      <button class="ibtn" type="button" data-back aria-label="Geri" title="Geri" data-i18n-attr="aria-label:common.back;title:common.back"><svg class="i"><use href="#i-back"/></svg></button>
+      <h1 class="topbar-title" data-i18n="rank.title">Sıralama</h1>
+      <span></span>
+    </div>
+    <div class="scroll page" id="rankScroll"></div>
+  </section>
+
   <!-- AYARLAR -->
   <section id="settings" class="screen" aria-label="Ayarlar" data-i18n-attr="aria-label:home.settingsAria">
     <div class="topbar">
@@ -1205,6 +1313,10 @@
             <button class="seg" type="button" role="radio" data-lang="es">Español</button>
           </div>
         </div>
+        <button class="row" id="setTutorial" type="button">
+          <svg class="i ri" aria-hidden="true"><use href="#i-help"/></svg>
+          <span class="rl"><span data-i18n="settings.tutorial">Nasıl oynanır</span><small data-i18n="settings.tutorialDesc">Adım adım rehberi yeniden oyna</small></span>
+        </button>
         <button class="row" id="setRate" type="button">
           <svg class="i ri" aria-hidden="true"><use href="#i-star"/></svg>
           <span class="rl"><span data-i18n="settings.rate">Bizi puanlayın</span><small data-i18n="settings.rateDesc">Mağazada puan ver, yorum yaz</small></span>
@@ -1261,7 +1373,9 @@
       </div>
       <h2 id="winTitle">SEVİYE TAMAM</h2>
       <p class="sub" id="winSub"></p>
+      <div class="win-score" id="winScore"><b id="winScoreVal">0</b><span data-i18n="win.points">puan</span></div>
       <div class="chips" id="winChips"></div>
+      <p class="win-tip" id="winTip"></p>
       <div class="dlg-actions">
         <button class="cta gold" id="winNext" type="button" data-autofocus><span class="t"><b id="winNextLabel">Sonraki seviye</b></span><svg class="i" aria-hidden="true"><use href="#i-next"/></svg></button>
         <div class="btn-row">
@@ -1479,6 +1593,25 @@
       "common.continue": "Devam Et", "common.play": "Oyna", "common.restart": "Yeniden başla",
       "common.retry": "Tekrar dene", "common.retryShort": "Tekrar", "common.reset": "Sıfırla",
       "mode.campaign": "Seviyeler", "mode.endless": "Sonsuz", "mode.daily": "Günlük",
+      "rank.title": "Sıralama", "rank.points": "puan", "rank.ladder": "Rütbeler", "rank.records": "Rekorların",
+      "rank.toNext": "Sonraki rütbe {name}: {n} puan kaldı", "rank.maxed": "En yüksek rütbedesin!",
+      "rank.statCampaign": "Seviyeler", "rank.statCampaignSub": "{s} / {max} yıldız",
+      "rank.statEndless": "Sonsuz", "rank.statEndlessSub": "En iyi seviye {n}", "rank.none": "Henüz yok",
+      "rank.statDaily": "Bugünkü günlük", "rank.statDailySub": "{n} / {total} bulmaca",
+      "rank.statBestDay": "En iyi gün", "rank.days": "En iyi günlerin", "rank.today": "Bugün",
+      "rank.daysEmpty": "Günlük bulmaca setini bitirdikçe en iyi günlerin burada sıralanır.",
+      "rank.note": "Puan = yıldız × 100 + kalan her saniye için 5. Bir seviyeyi daha iyi bitirirsen yalnız aradaki fark eklenir; günlük bulmacalar her gün yeniden puan getirir.",
+      "rankNames": ["Çırak", "Kalfa", "Usta", "Şef Elektrikçi", "Mühendis", "Baş Mühendis", "Enerji Ustası", "Şimşek Efsanesi"],
+      "win.points": "puan", "chip.scoreBest": "Puan rekoru +{n}", "chip.scorePrev": "En iyi {n}", "chip.rankUp": "Yeni rütbe: {name}",
+      "win.tutTip": "Az hamle = daha çok yıldız, kalan her saniye ek puan. Süre biterse bir can gider; takılırsan 💡 ipucu, yanlışta ↶ geri al var.",
+      "settings.tutorial": "Nasıl oynanır", "settings.tutorialDesc": "Adım adım rehberi yeniden oyna",
+      "tut.skip": "Atla", "tut.ok": "Anladım", "tut.label": "Rehber", "tut.left": "Rehber · {n} kablo kaldı",
+      "tut.intro": "⚡ Enerji kaynaktan çıkar. Amacın kabloları döndürüp enerjiyi 💡 ampule ulaştırmak. Rehber sürerken süre işlemez.",
+      "tut.tap": "Parlayan kabloya dokun: her dokunuş onu 90° döndürür.",
+      "tut.again": "Güzel! Bu kablo henüz doğru yönde değil, bir kez daha dokun.",
+      "tut.next": "Harika, oturdu! Şimdi işaretli sıradaki kabloya dokun.",
+      "tut.wrongCell": "Önce işaretli kabloya dokun 👆",
+      "tut.noHint": "Rehber sürerken ipucuna gerek yok, işaretli kabloyu takip et",
       "game.hint": "Kablolara dokunarak döndür • enerjiyi ampule ulaştır",
       "game.hintColors": "Her enerjiyi kendi rengindeki ampule götür • farklı renkler birbirine değerse kısa devre olur",
       "game.hintFan": "Her enerjiyi ortadaki kendi haznesine götür • hepsi dolunca pervane döner",
@@ -1584,6 +1717,25 @@
       "common.continue": "Continue", "common.play": "Play", "common.restart": "Restart",
       "common.retry": "Try again", "common.retryShort": "Retry", "common.reset": "Reset",
       "mode.campaign": "Levels", "mode.endless": "Endless", "mode.daily": "Daily",
+      "rank.title": "Ranking", "rank.points": "points", "rank.ladder": "Ranks", "rank.records": "Your records",
+      "rank.toNext": "Next rank {name}: {n} points to go", "rank.maxed": "You've reached the top rank!",
+      "rank.statCampaign": "Levels", "rank.statCampaignSub": "{s} / {max} stars",
+      "rank.statEndless": "Endless", "rank.statEndlessSub": "Best level {n}", "rank.none": "Not yet",
+      "rank.statDaily": "Today's daily", "rank.statDailySub": "{n} / {total} puzzles",
+      "rank.statBestDay": "Best day", "rank.days": "Your best days", "rank.today": "Today",
+      "rank.daysEmpty": "Finish the daily puzzle set and your best days will be ranked here.",
+      "rank.note": "Points = stars × 100 + 5 for every second left. Beat a level with a better result and only the difference is added; daily puzzles award points again every day.",
+      "rankNames": ["Apprentice", "Journeyman", "Craftsman", "Chief Electrician", "Engineer", "Lead Engineer", "Energy Master", "Lightning Legend"],
+      "win.points": "points", "chip.scoreBest": "Score record +{n}", "chip.scorePrev": "Best {n}", "chip.rankUp": "New rank: {name}",
+      "win.tutTip": "Fewer moves = more stars, and every second left adds points. If time runs out you lose a life; stuck? use 💡 hint, made a mistake? ↶ undo.",
+      "settings.tutorial": "How to play", "settings.tutorialDesc": "Replay the step-by-step guide",
+      "tut.skip": "Skip", "tut.ok": "Got it", "tut.label": "Guide", "tut.left": "Guide · {n} wires left",
+      "tut.intro": "⚡ Energy comes out of the source. Rotate the wires to get it to the 💡 bulb. The timer is paused during the guide.",
+      "tut.tap": "Tap the glowing wire: each tap rotates it 90°.",
+      "tut.again": "Nice! It's not facing the right way yet, tap it once more.",
+      "tut.next": "Great, it fits! Now tap the next marked wire.",
+      "tut.wrongCell": "Tap the marked wire first 👆",
+      "tut.noHint": "No hint needed during the guide, just follow the marked wire",
       "game.hint": "Tap wires to rotate • get the energy to the bulb",
       "game.hintColors": "Send each energy to the bulb of its color • different colors touching cause a short circuit",
       "game.hintFan": "Send each energy to its socket in the center • when all are full the fan spins",
@@ -1690,6 +1842,25 @@
       "common.continue": "متابعة", "common.play": "العب", "common.restart": "إعادة البدء",
       "common.retry": "أعد المحاولة", "common.retryShort": "إعادة", "common.reset": "إعادة الضبط",
       "mode.campaign": "المستويات", "mode.endless": "بلا نهاية", "mode.daily": "يومي",
+      "rank.title": "الترتيب", "rank.points": "نقطة", "rank.ladder": "الرتب", "rank.records": "أرقامك القياسية",
+      "rank.toNext": "الرتبة التالية {name}: بقي {n} نقطة", "rank.maxed": "وصلت إلى أعلى رتبة!",
+      "rank.statCampaign": "المستويات", "rank.statCampaignSub": "{s} / {max} نجمة",
+      "rank.statEndless": "اللانهائي", "rank.statEndlessSub": "أفضل مستوى {n}", "rank.none": "ليس بعد",
+      "rank.statDaily": "تحدي اليوم", "rank.statDailySub": "{n} / {total} ألغاز",
+      "rank.statBestDay": "أفضل يوم", "rank.days": "أفضل أيامك", "rank.today": "اليوم",
+      "rank.daysEmpty": "أكمل مجموعة الألغاز اليومية وسيتم ترتيب أفضل أيامك هنا.",
+      "rank.note": "النقاط = النجوم × 100 + 5 لكل ثانية متبقية. إذا أنهيت مستوى بنتيجة أفضل تُضاف الفرق فقط؛ الألغاز اليومية تمنح نقاطًا من جديد كل يوم.",
+      "rankNames": ["متدرّب", "مساعد", "حِرَفي", "كبير الكهربائيين", "مهندس", "كبير المهندسين", "سيّد الطاقة", "أسطورة البرق"],
+      "win.points": "نقطة", "chip.scoreBest": "رقم قياسي +{n}", "chip.scorePrev": "الأفضل {n}", "chip.rankUp": "رتبة جديدة: {name}",
+      "win.tutTip": "حركات أقل = نجوم أكثر، وكل ثانية متبقية تضيف نقاطًا. إذا انتهى الوقت تخسر حياة؛ إن علقت استخدم 💡 التلميح، وإن أخطأت ↶ تراجع.",
+      "settings.tutorial": "طريقة اللعب", "settings.tutorialDesc": "أعد تشغيل الدليل خطوة بخطوة",
+      "tut.skip": "تخطٍّ", "tut.ok": "فهمت", "tut.label": "الدليل", "tut.left": "الدليل · بقي {n} أسلاك",
+      "tut.intro": "⚡ تخرج الطاقة من المصدر. أدر الأسلاك لتوصلها إلى 💡 المصباح. المؤقت متوقف أثناء الدليل.",
+      "tut.tap": "المس السلك المضيء: كل لمسة تديره 90°.",
+      "tut.again": "جميل! لم يصل إلى الاتجاه الصحيح بعد، المسه مرة أخرى.",
+      "tut.next": "رائع، استقر! الآن المس السلك التالي المحدد.",
+      "tut.wrongCell": "المس السلك المحدد أولًا 👆",
+      "tut.noHint": "لا حاجة لتلميح أثناء الدليل، اتبع السلك المحدد",
       "game.hint": "المس الأسلاك لتديرها • أوصل الطاقة للمصباح",
       "game.hintColors": "أوصل كل طاقة إلى المصباح الذي يطابق لونها • تلامس الألوان المختلفة يسبب تماسًا كهربائيًا",
       "game.hintFan": "أوصل كل طاقة إلى مقبسها في الوسط • عندما تمتلئ كلها تدور المروحة",
@@ -1795,6 +1966,25 @@
       "common.continue": "Continuar", "common.play": "Jugar", "common.restart": "Reiniciar",
       "common.retry": "Reintentar", "common.retryShort": "Reintentar", "common.reset": "Restablecer",
       "mode.campaign": "Niveles", "mode.endless": "Infinito", "mode.daily": "Diario",
+      "rank.title": "Clasificación", "rank.points": "puntos", "rank.ladder": "Rangos", "rank.records": "Tus récords",
+      "rank.toNext": "Próximo rango {name}: faltan {n} puntos", "rank.maxed": "¡Has llegado al rango más alto!",
+      "rank.statCampaign": "Niveles", "rank.statCampaignSub": "{s} / {max} estrellas",
+      "rank.statEndless": "Infinito", "rank.statEndlessSub": "Mejor nivel {n}", "rank.none": "Aún no",
+      "rank.statDaily": "Diario de hoy", "rank.statDailySub": "{n} / {total} puzles",
+      "rank.statBestDay": "Mejor día", "rank.days": "Tus mejores días", "rank.today": "Hoy",
+      "rank.daysEmpty": "Completa el set de puzles diarios y tus mejores días aparecerán aquí.",
+      "rank.note": "Puntos = estrellas × 100 + 5 por cada segundo restante. Si superas un nivel con mejor resultado solo se suma la diferencia; los puzles diarios dan puntos de nuevo cada día.",
+      "rankNames": ["Aprendiz", "Oficial", "Maestro", "Jefe electricista", "Ingeniero", "Ingeniero jefe", "Maestro de la energía", "Leyenda del rayo"],
+      "win.points": "puntos", "chip.scoreBest": "Récord de puntos +{n}", "chip.scorePrev": "Mejor {n}", "chip.rankUp": "Nuevo rango: {name}",
+      "win.tutTip": "Menos movimientos = más estrellas, y cada segundo restante suma puntos. Si se acaba el tiempo pierdes una vida; ¿atascado? usa 💡 pista; ¿error? ↶ deshacer.",
+      "settings.tutorial": "Cómo jugar", "settings.tutorialDesc": "Repite la guía paso a paso",
+      "tut.skip": "Saltar", "tut.ok": "Entendido", "tut.label": "Guía", "tut.left": "Guía · faltan {n} cables",
+      "tut.intro": "⚡ La energía sale de la fuente. Gira los cables para llevarla a la 💡 bombilla. El tiempo está pausado durante la guía.",
+      "tut.tap": "Toca el cable que brilla: cada toque lo gira 90°.",
+      "tut.again": "¡Bien! Aún no está en la dirección correcta, tócalo otra vez.",
+      "tut.next": "¡Genial, encaja! Ahora toca el siguiente cable marcado.",
+      "tut.wrongCell": "Toca primero el cable marcado 👆",
+      "tut.noHint": "No necesitas pista durante la guía, sigue el cable marcado",
       "game.hint": "Toca los cables para girarlos • lleva la energía a la bombilla",
       "game.hintColors": "Lleva cada energía a la bombilla de su color • si se tocan colores distintos habrá un cortocircuito",
       "game.hintFan": "Lleva cada energía a su depósito en el centro • cuando estén llenos, el ventilador gira",
@@ -1948,6 +2138,8 @@
     updateHintBtn();
     updateLives();
     if (screenNow === "levels") renderLevels();
+    if (screenNow === "rank") renderRank();
+    Tut.render();
     syncMenu();
   }
 
@@ -3415,6 +3607,11 @@
     stars: 0,         // son seviyede kazanılan yıldız
     newBest: false,   // son seviyede kişisel rekor kırıldı mı (ilk çözüm rekor sayılmaz)
     starGain: 0,      // son seviyede toplama eklenen yıldız (daha önce alınanın üstü)
+    score: 0,         // son seviyenin puanı (bkz. levelScore)
+    scorePrev: 0,     // bu seviyenin önceki en iyi puanı (günlükte 0)
+    scoreGain: 0,     // toplama eklenen puan (rekor farkı / günlükte tamamı)
+    rankUp: -1,       // bu kazanımla yeni rütbeye çıkıldıysa rütbe dizini
+    tutWin: false,    // bu kazanım ilk oyun rehberini bitirdi mi (kartta kısa ipucu)
     key: "",          // yüklü seviyenin kimliği (bkz. levelKey) — ana menüden dönünce ilerleme korunsun
     undo: [],         // geri-al yığını: { c: hücre, from: eski dönüş }
     phase: "play",    // "play" | "winWait" (ampuller yanıyor) | "win" (kart açılmadan önce) | "card" (kazanma kartı açık,
@@ -3444,6 +3641,213 @@
   }
 
   var lastNow = performance.now();
+
+  /* ----------------------------------------------------------------------
+     4a) PUAN + SIRALAMA
+     Sunucu yok: puanlar yalnız bu cihazda tutulur (Store). "Sıralama" ekranı oyuncunun
+     rütbe basamağını, mod rekorlarını ve en iyi günlerini sıralar (bkz. renderRank).
+     Seviye puanı = yıldız * PTS_STAR + kalan her tam saniye * PTS_SEC (bkz. levelScore).
+       - Seviyeler / Sonsuz: seviye başına en iyi puan (ekey "score.<n>"); toplam ("totalScore")
+         yalnız rekor farkı kadar artar -> aynı seviyeyi tekrar oynayıp puan şişirilemez.
+       - Günlük: her bulmaca puanı o günün toplamına ("daily.<gün>.score") ve kalıcı
+         günlük toplamına ("daily.total") eklenir; set bitince gün "daily.hist"e yazılır
+         (en iyi DAILY_HIST_MAX gün). Önek "daily." -> Günlük ilerlemeyi sıfırla bunları da siler.
+     Rütbe = toplam puanın geçtiği en yüksek RANKS eşiği. Küresel (sunucu tarafı) sıralama
+     için Play Games / Game Center gerekir; puanlar tek noktadan (onWin) değiştiğinden
+     o bağlantı buraya eklenir.
+     ---------------------------------------------------------------------- */
+  var PTS_STAR = 100, PTS_SEC = 5, DAILY_HIST_MAX = 10;
+  var RANKS = [
+    { min: 0,      ic: "🔌" }, { min: 1000,  ic: "🔧" }, { min: 3000,   ic: "🛠️" }, { min: 7500,  ic: "💡" },
+    { min: 15000,  ic: "⚙️" }, { min: 30000, ic: "🔋" }, { min: 60000,  ic: "⚡" }, { min: 100000, ic: "👑" }
+  ];
+  function levelScore() { return game.stars * PTS_STAR + Math.ceil(Math.max(0, game.timeLeft)) * PTS_SEC; }
+  function totalScore() {
+    return Store.get(pkey("campaign", "totalScore"), 0) + Store.get(pkey("endless", "totalScore"), 0) + Store.get("daily.total", 0);
+  }
+  function rankOf(sc) {
+    for (var i = RANKS.length - 1; i > 0; i--) if (sc >= RANKS[i].min) return i;
+    return 0;
+  }
+  function rankName(i) { var n = tArr("rankNames"); return n[i] || n[n.length - 1] || ""; }
+  function fmtNum(n) {
+    try { return Number(n).toLocaleString(LOCALE_TAGS[LANG] || "en-US"); } catch (e) { return String(n); }
+  }
+  // Günlük set bitti: o günün puanını en iyi günler listesine yaz (azalan sıralı, en çok DAILY_HIST_MAX)
+  function recordDailyDay(score) {
+    var h = Store.get("daily.hist", []), d = todayKey(), i;
+    if (!(h instanceof Array)) h = [];
+    for (i = 0; i < h.length; i++) if (h[i].d === d) { h[i].s = Math.max(h[i].s, score); break; }
+    if (i === h.length) h.push({ d: d, s: score });
+    h.sort(function (a, b) { return b.s - a.s; });
+    Store.set("daily.hist", h.slice(0, DAILY_HIST_MAX));
+  }
+  // Puan sistemi gelmeden önce oynanmış seviyeler: kazanılmış yıldızlar puana bir kez çevrilir
+  // (süre bilinmediği için yalnız yıldız * PTS_STAR) -> eski oyuncunun rütbesi sıfırdan başlamasın.
+  function initScores() {
+    if (Store.get("scoreInit", false)) return;
+    ["campaign", "endless"].forEach(function (m) {
+      var top = Math.max(Store.get(pkey(m, "bestLevel"), 0), m === "campaign" && Store.get(pkey(m, "done"), false) ? CAMPAIGN_LEVELS : 0);
+      var add = 0;
+      for (var lv = 1; lv <= top; lv++) {
+        var st = Store.get(pkey(m, "stars." + lv), 0);
+        if (st > 0 && !Store.get(pkey(m, "score." + lv), 0)) { Store.set(pkey(m, "score." + lv), st * PTS_STAR); add += st * PTS_STAR; }
+      }
+      if (add) Store.set(pkey(m, "totalScore"), Store.get(pkey(m, "totalScore"), 0) + add);
+    });
+    // İlk oyun rehberi yalnız yeni oyuncuya: bu sürüme gelen eski oyuncuda (kayıtlı ilerleme var) atlanır.
+    // Açılıştaki buildLevel bestLevel'i 1 yapacağı için bu kontrol ondan ÖNCE ve bir kez yapılır.
+    if (Store.get("tut.done", null) == null) {
+      var played = Store.get("mode", null) != null || Store.get(pkey("campaign", "bestLevel"), 0) > 0 || Store.get(pkey("endless", "bestLevel"), 0) > 0;
+      Store.set("tut.done", played);
+    }
+    Store.set("scoreInit", true);
+  }
+
+  /* ----------------------------------------------------------------------
+     4b) İLK OYUN REHBERİ (Tut)
+     Yeni oyuncunun ilk tahtasında (tek renk, pervanesiz, ilk seviye) adım adım rehber:
+       1) "intro": kaynak ve ampul halkayla işaretlenir, balon amacı anlatır -> [Anladım]
+       2) "tap"  : sıradaki kopuk kablo (hintWrong, kaynağa en yakını) spot ışığı + parmakla
+                   gösterilir; yalnız ona dokunulabilir. Doğru yöne gelince sıradakine geçer.
+     Rehber sürerken süre akmaz (bkz. frame), ipucu düğmesi hak harcamaz, boşta nabız çıkmaz.
+     Bitince (onWin) "tut.done" yazılır; [Atla] da aynısını yapar. Ayarlar > Nasıl oynanır yeniden açar.
+     Hedef her karede yeniden hesaplanır (pick) -> geri al / yeniden başla sonrası da doğru kabloyu gösterir.
+     ---------------------------------------------------------------------- */
+  var Tut = {
+    on: false,
+    step: "",
+    msg: "",
+    el: document.getElementById("tut"),
+    shouldRun: function () {
+      if (Store.get("tut.done", false)) return false;
+      if (game.colors !== 1 || game.fan) return false;
+      return cfg.mode === "daily" ? game.dailyIdx === 0 : game.li === 0;
+    },
+    start: function () {
+      this.on = true; this.step = "intro"; this.msg = "tut.intro";
+      this.render();
+    },
+    stop: function () {
+      this.on = false; this.step = "";
+      this.el.classList.remove("show");
+    },
+    skip: function () {
+      Store.set("tut.done", true);
+      this.stop();
+      game.idleMs = 0;
+    },
+    finish: function () {          // tahta çözüldü (onWin)
+      if (!this.on) return false;
+      Store.set("tut.done", true);
+      this.stop();
+      return true;
+    },
+    // Sıradaki düzeltilecek kablo: kopuk (hintWrong) yol parçalarından kaynağa en yakını
+    pick: function () {
+      var src = null, best = null, bd = 1e9, r, c, cl;
+      for (r = 0; r < game.rows; r++) for (c = 0; c < game.cols; c++) if (game.cells[r][c].role === "src") src = game.cells[r][c];
+      if (!src) return null;
+      for (r = 0; r < game.rows; r++)
+        for (c = 0; c < game.cols; c++) {
+          cl = game.cells[r][c];
+          if (!cl.matters || cl.role || cl.lock || cl.d.length === 0 || !hintWrong(cl)) continue;
+          var d = Math.abs(r - src.ri) + Math.abs(c - src.ci);
+          if (d < bd) { bd = d; best = cl; }
+        }
+      return best;
+    },
+    countLeft: function () {
+      var n = 0;
+      for (var r = 0; r < game.rows; r++)
+        for (var c = 0; c < game.cols; c++) {
+          var cl = game.cells[r][c];
+          if (cl.matters && !cl.role && !cl.lock && cl.d.length && hintWrong(cl)) n++;
+        }
+      return n;
+    },
+    ok: function () {
+      if (!this.on || this.step !== "intro") return;
+      this.step = "tap"; this.msg = "tut.tap";
+      game.idleMs = 0;
+      this.render();
+    },
+    // Dokunuş izni: rehberde yalnız işaretli kablo döner
+    allows: function (c) {
+      if (!this.on) return true;
+      if (this.step !== "tap") { this.nudge(); return false; }
+      var tg = this.pick();
+      if (tg && c !== tg) { this.nudge(t("tut.wrongCell")); return false; }
+      return true;
+    },
+    afterMove: function (c) {
+      if (!this.on) return;
+      this.msg = c && this.pick() === c ? "tut.again" : "tut.next";
+      this.render();
+    },
+    nudge: function (msg) {
+      var el = this.el;
+      el.classList.remove("nudge"); void el.offsetWidth; el.classList.add("nudge");
+      if (msg) showToast(msg, 1200);
+      Haptic.error();
+    },
+    render: function () {
+      if (!this.on) return;
+      byId("tutStep").textContent = this.step === "tap" ? t("tut.left", { n: Math.max(1, this.countLeft()) }) : t("tut.label");
+      byId("tutText").textContent = t(this.msg);
+      byId("tutOk").hidden = this.step !== "intro";
+      this.el.classList.add("show");
+    }
+  };
+  byId("tutOk").addEventListener("click", function () { Tut.ok(); });
+  byId("tutSkip").addEventListener("click", function () {
+    Tut.skip();
+    if (game.moves === 0 && game.phase === "play") { hintEl.setAttribute("data-i18n", "game.hint"); hintEl.textContent = t("game.hint"); hintEl.classList.add("show"); }
+  });
+
+  // Rehber işaretleri (tuvale): intro'da kaynak + ampul halkası; tap'te hedef dışını karartan spot + parmak
+  function drawTut(now) {
+    if (!Tut.on || menuOpen || game.phase !== "play") return;
+    var pulse = reduceMotion ? 0.5 : 0.5 + 0.5 * Math.sin(now / 260);
+    var W = game.cols * cell, H = game.rows * cell, r, c, cl, x, y;
+    ctx.save();
+    if (Tut.step === "intro") {
+      for (r = 0; r < game.rows; r++)
+        for (c = 0; c < game.cols; c++) {
+          cl = game.cells[r][c];
+          if (cl.role !== "src" && cl.role !== "bulb") continue;
+          x = c * cell + cell / 2; y = r * cell + cell / 2;
+          ctx.strokeStyle = T.hint;
+          ctx.globalAlpha = 0.55 + 0.45 * pulse;
+          ctx.lineWidth = Math.max(2, cell * 0.05);
+          ctx.beginPath(); ctx.arc(x, y, cell * (0.44 + 0.04 * pulse), 0, Math.PI * 2); ctx.stroke();
+        }
+    } else {
+      var tg = Tut.pick();
+      if (tg) {
+        x = tg.ci * cell + cell / 2; y = tg.ri * cell + cell / 2;
+        var rad = cell * 0.5;
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = "rgba(" + T.dimRGB + ",1)";
+        ctx.beginPath();
+        ctx.rect(0, 0, W, H);
+        ctx.moveTo(x + rad, y);
+        ctx.arc(x, y, rad, 0, Math.PI * 2, true);   // ters yön -> delik (spot)
+        ctx.fill();
+        ctx.globalAlpha = 0.6 + 0.4 * pulse;
+        ctx.strokeStyle = T.hint;
+        ctx.lineWidth = Math.max(2, cell * 0.05);
+        ctx.beginPath(); ctx.arc(x, y, rad - cell * 0.02, 0, Math.PI * 2); ctx.stroke();
+        // dokunma parmağı: hücrenin sağ altında hafifçe zıplar (emoji -> renk/tema bağımsız)
+        ctx.globalAlpha = 1;
+        var bob = reduceMotion ? 0 : Math.sin(now / 220) * cell * 0.05;
+        ctx.font = Math.round(cell * 0.42) + "px system-ui, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif";
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.fillText("👆", x + cell * 0.22, y + cell * 0.3 + bob);
+      }
+    }
+    ctx.restore();
+  }
 
   /* ----------------------------------------------------------------------
      4) YARDIMCI FONKSİYONLAR
@@ -3592,6 +3996,9 @@
     if (game.fan && !Store.get("seen.fan", false)) { teach = "game.hintFan"; Store.set("seen.fan", true); }
     else if (game.colors > 1 && !game.fan && !Store.get("seen.colors", false)) { teach = "game.hintColors"; Store.set("seen.colors", true); }
     else if (cfg.mode !== "daily" && game.li === 0) teach = "game.hint";
+    game.tutWin = false;
+    if (Tut.shouldRun()) { Tut.start(); teach = ""; }
+    else Tut.stop();
     if (teach) {
       hintEl.setAttribute("data-i18n", teach);
       hintEl.textContent = t(teach);
@@ -3711,6 +4118,7 @@
     }
     updateHud();
     Sound.undo();
+    Tut.render();   // rehber açıksa kalan kablo sayısını tazele
   }
 
   /* ----------------------------------------------------------------------
@@ -4209,7 +4617,7 @@
 
     // Süre sayacı: yalnızca oynanışta ve menü kapalıyken azalır.
     // Ödüllü reklam sürerken de akmaz (izlenen reklam yüzünden can kaybedilmesin, bkz. Ads.isShowing).
-    if (game.phase === "play" && !menuOpen && !Ads.isShowing()) {
+    if (game.phase === "play" && !menuOpen && !Ads.isShowing() && !Tut.on) {
       game.timeLeft -= dt / 1000;
       if (game.timeLeft <= 0) {
         game.timeLeft = 0;
@@ -4269,6 +4677,7 @@
     ctx.restore();
     ctx.globalAlpha = 1;
 
+    drawTut(now);
     if (game.phase === "boom") drawBoom(now);
     if (game.phase === "done") drawDoneOverlay(now);
   }
@@ -4337,6 +4746,8 @@
     var c = game.cells[row][col];
     if (!c || c.d.length === 0) return;              // boş hücre
 
+    if (!Tut.allows(c)) return;                       // rehberde yalnız işaretli kablo döner
+
     if (c.lock) {                                     // kilitli -> titreme + geri bildirim
       c.shakeAt = performance.now();
       Haptic.error();
@@ -4363,6 +4774,7 @@
     // Enerjiyi yeniden hesapla; ampul yandıysa kazanma fazına geç, renkler değdiyse patla.
     if (computePower(performance.now(), false)) beginWinWait();
     else if (game.shorted) beginBoom();
+    else Tut.afterMove(c);
   }
 
   // İki farklı enerji değdi: girdi kilitlenir, patlama oynar, BOOM_MS sonra seviye baştan başlar (bkz. frame).
@@ -4387,6 +4799,7 @@
     Sound.undo();
     computePower(performance.now(), false);
     updateHud();
+    Tut.afterMove(null);
   }
 
   /* İPUCU — ÖNEMLİ (yol) kabloları doğru yönüne çevirir. Günde HINT_FREE_DAILY hak
@@ -4412,6 +4825,7 @@
   function useHint() {
     if (menuOpen || game.phase !== "play") return;
     game.idleMs = 0;
+    if (Tut.on) { Tut.nudge(t("tut.noHint")); return; }   // rehberde günlük bedava hak harcanmasın
     var cands = [];
     for (var r = 0; r < game.rows; r++) {
       for (var c = 0; c < game.cols; c++) {
@@ -4529,6 +4943,11 @@
     if (game.hinted && game.stars > HINT_MAX_STARS) game.stars = HINT_MAX_STARS;   // 3 yıldız = yardımsız
     Haptic.success();
     Sound.win();                            // yıldız sesleri kart açılınca sırayla çalar (bkz. showWinCard)
+    game.tutWin = Tut.finish();
+    game.score = levelScore();
+    game.scorePrev = 0;
+    game.scoreGain = 0;
+    var rankBefore = rankOf(totalScore());
 
     if (cfg.mode !== "daily") {
       var lv = game.li + 1;
@@ -4540,6 +4959,13 @@
         Store.set(ekey("totalStars"), Store.get(ekey("totalStars"), 0) + (game.stars - ps));
         game.starGain = game.stars - ps;
       }
+      var psc = Store.get(ekey("score." + lv), 0);
+      game.scorePrev = psc;
+      if (game.score > psc) {
+        Store.set(ekey("score." + lv), game.score);
+        Store.set(ekey("totalScore"), Store.get(ekey("totalScore"), 0) + (game.score - psc));
+        game.scoreGain = game.score - psc;
+      }
       // Kart açıkken uygulama kapansa da "Devam Et" tamamlanan seviyeyi tekrar açmasın
       // (en ileri gider; "Seviyeler"in son seviyesi lastLevelFor'da 199'a sınırlanır).
       if (lv > Store.get(ekey("lastLevel"), 0)) Store.set(ekey("lastLevel"), lv);
@@ -4547,9 +4973,14 @@
       // GÜNLÜK: birikimli hamle + yıldız
       Store.set(dkey("moves"), Store.get(dkey("moves"), 0) + game.moves);
       Store.set(dkey("stars"), Store.get(dkey("stars"), 0) + game.stars);
-      if (game.dailyIdx + 1 >= DAILY_COUNT) { Store.set(dkey("done"), true); game.dailyDone = true; }
+      Store.set(dkey("score"), Store.get(dkey("score"), 0) + game.score);
+      Store.set("daily.total", Store.get("daily.total", 0) + game.score);
+      game.scoreGain = game.score;
+      if (game.dailyIdx + 1 >= DAILY_COUNT) { Store.set(dkey("done"), true); game.dailyDone = true; recordDailyDay(Store.get(dkey("score"), 0)); }
       else { Store.set(dkey("idx"), game.dailyIdx + 1); }
     }
+    var rankAfter = rankOf(totalScore());
+    game.rankUp = rankAfter > rankBefore ? rankAfter : -1;
   }
 
   /* Süre dolduğunda çağrılır: bir can azalt.
@@ -4701,6 +5132,14 @@
     if (game.hinted) chips.appendChild(chipEl(t("chip.hintUsed", { n: HINT_MAX_STARS }), "", null));
     if (game.newBest) chips.appendChild(chipEl(t("chip.newBest"), "gold", null));
     if (game.starGain > 0) chips.appendChild(chipEl(t("chip.starGain", { n: game.starGain }), "gold", "star"));
+    if (!daily && game.scorePrev > 0) {
+      chips.appendChild(game.scoreGain > 0
+        ? chipEl(t("chip.scoreBest", { n: fmtNum(game.scoreGain) }), "gold", "trophy")
+        : chipEl(t("chip.scorePrev", { n: fmtNum(game.scorePrev) }), "", "trophy"));
+    }
+    if (game.rankUp >= 0) chips.appendChild(chipEl(RANKS[game.rankUp].ic + " " + t("chip.rankUp", { name: rankName(game.rankUp) }), "gold", null));
+    byId("winTip").textContent = game.tutWin ? t("win.tutTip") : "";
+    countUpScore(byId("winScoreVal"), game.score);
 
     var nextLabel, menuLabel, menuIco;
     if (daily) {
@@ -4734,6 +5173,19 @@
     setTimeout(function () { try { byId("winNext").focus({ preventScroll: true }); } catch (e) {} }, 80);
   }
   function clearWinTimers() { while (_winTmrs.length) clearTimeout(_winTmrs.pop()); }
+  // Kazanma kartındaki puan 0'dan sayarak yükselir (hareket azalt: anında)
+  var _countRAF = 0;
+  function countUpScore(el, to) {
+    if (_countRAF) cancelAnimationFrame(_countRAF);
+    if (reduceMotion || to <= 0) { el.textContent = fmtNum(to); return; }
+    var t0 = performance.now() + 220, dur = 700;
+    el.textContent = "0";
+    (function step() {
+      var k = clamp01((performance.now() - t0) / dur);
+      el.textContent = fmtNum(Math.round(to * easeOutCubic(k)));
+      _countRAF = k < 1 ? requestAnimationFrame(step) : 0;
+    })();
+  }
   function hideWinCard() { clearWinTimers(); winEl.classList.remove("show"); }
 
   // [Sonraki]: kartı kapat, sıradaki seviyeye (ya da kutlama / ara övgü katmanına) geç
@@ -4844,7 +5296,7 @@
   var _nudgeOn = false;
   function tickNudge(dt) {
     var on = false;
-    if (game.phase === "play") {
+    if (game.phase === "play" && !Tut.on) {
       if (!menuOpen) game.idleMs += dt;
       on = game.idleMs >= IDLE_NUDGE_MS;   // ipucu artık hep alınabilir (bedava hak ya da reklam) -> hak koşulu yok
     }
@@ -4959,7 +5411,7 @@
     soundBtn.textContent = (Sound.muted || Sound.vol <= 0) ? "🔇" : "🔊";  // 🔇 / 🔊
   }
 
-  var screens = { home: byId("home"), levels: byId("levels"), settings: byId("settings"), pause: byId("pause") };
+  var screens = { home: byId("home"), levels: byId("levels"), rank: byId("rank"), settings: byId("settings"), pause: byId("pause") };
   var confirmEl = byId("confirm");
   var screenNow = "home";
 
@@ -4968,6 +5420,7 @@
     menuOpen = name !== "game";
     for (var k in screens) screens[k].classList.toggle("show", k === name);
     if (name === "levels") renderLevels();
+    if (name === "rank") renderRank();
     if (menuOpen) syncMenu();
     var f = screens[name] && screens[name].querySelector("[data-autofocus]");
     if (f) setTimeout(function () { try { f.focus({ preventScroll: true }); } catch (e) {} }, 60);
@@ -5006,6 +5459,7 @@
   function syncHome() {
     var d = dailyState(), i;
     byId("homeStars").textContent = Store.get(pkey("campaign", "totalStars"), 0) + Store.get(pkey("endless", "totalStars"), 0);
+    byId("homeScore").textContent = fmtNum(totalScore());
     var cDone = bestOf("campaign") >= CAMPAIGN_LEVELS && Store.get(pkey("campaign", "done"), false) ? CAMPAIGN_LEVELS : lastLevelFor("campaign");   // tamamlanan seviye sayısı
     byId("tileCampaign").textContent = cDone > 0 ? cDone + " / " + CAMPAIGN_LEVELS : t("tiles.new");
     var eb = bestOf("endless"), eOpen = endlessUnlocked(), eBtn = byId("tileEndlessBtn");
@@ -5166,6 +5620,65 @@
     if ((ok || _confirmSolo) && cb) cb();
   }
 
+  /* --- SIRALAMA EKRANI (bkz. 4a PUAN + SIRALAMA) ---
+     Üstte rütbe kartı (toplam puan + sonraki rütbeye ilerleme), rütbe basamakları,
+     mod rekorları ve en iyi günlük puanlar (yerel liste; sunucu yok). */
+  function esc(x) { return String(x).replace(/[&<>"]/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]; }); }
+  function dayLabel(key) {
+    if (key === todayKey()) return t("rank.today");
+    var p = String(key).split("-");
+    try { return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(LOCALE_TAGS[LANG] || "en-US", { day: "numeric", month: "long", year: "numeric" }); }
+    catch (e) { return key; }
+  }
+  function renderRank() {
+    var sc = totalScore(), ri = rankOf(sc), nx = RANKS[ri + 1], i, h = "";
+    var pct = nx ? Math.round((sc - RANKS[ri].min) / (nx.min - RANKS[ri].min) * 100) : 100;
+    h += '<div class="rank-wrap">';
+    h += '<div class="rank-hero"><div class="rank-badge" aria-hidden="true">' + RANKS[ri].ic + '</div>' +
+      '<div class="rank-name">' + esc(rankName(ri)) + '</div>' +
+      '<div class="rank-total">' + fmtNum(sc) + '<small>' + esc(t("rank.points")) + '</small></div>' +
+      '<div class="rank-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i data-w="' + pct + '%"></i></div>' +
+      '<div class="rank-next">' + esc(nx ? t("rank.toNext", { name: rankName(ri + 1), n: fmtNum(nx.min - sc) }) : t("rank.maxed")) + '</div></div>';
+
+    // mod rekorları
+    var cStars = Store.get(pkey("campaign", "totalStars"), 0), eb = bestOf("endless"), d = dailyState();
+    var hist = Store.get("daily.hist", []);
+    if (!(hist instanceof Array)) hist = [];
+    h += '<h2 class="rank-h">' + esc(t("rank.records")) + '</h2><div class="stats">' +
+      statHtml(t("rank.statCampaign"), fmtNum(Store.get(pkey("campaign", "totalScore"), 0)), t("rank.statCampaignSub", { s: cStars, max: CAMPAIGN_LEVELS * 3 })) +
+      statHtml(t("rank.statEndless"), eb > 0 ? fmtNum(Store.get(pkey("endless", "totalScore"), 0)) : "–", eb > 0 ? t("rank.statEndlessSub", { n: eb }) : t("rank.none")) +
+      statHtml(t("rank.statDaily"), fmtNum(Store.get(dkey("score"), 0)), t("rank.statDailySub", { n: d.idx, total: DAILY_COUNT })) +
+      statHtml(t("rank.statBestDay"), hist.length ? fmtNum(hist[0].s) : "–", hist.length ? dayLabel(hist[0].d) : t("rank.none")) +
+      '</div>';
+
+    // en iyi günler (yerel sıralama tablosu)
+    h += '<h2 class="rank-h">' + esc(t("rank.days")) + '</h2><div class="board">';
+    if (!hist.length) h += '<div class="empty">' + esc(t("rank.daysEmpty")) + '</div>';
+    for (i = 0; i < hist.length; i++) {
+      h += '<div class="bl' + (i < 3 ? " top" : "") + (hist[i].d === todayKey() ? " today" : "") + '"><span class="no">' + (i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1) +
+        '</span><span class="dt">' + esc(dayLabel(hist[i].d)) + '</span><span class="sc">' + fmtNum(hist[i].s) + '</span></div>';
+    }
+    h += '</div>';
+
+    // rütbe basamakları (yukarıdan aşağı: hedef üstte)
+    h += '<h2 class="rank-h">' + esc(t("rank.ladder")) + '</h2><div class="ladder">';
+    for (i = RANKS.length - 1; i >= 0; i--) {
+      h += '<div class="step' + (i === ri ? " me" : (i > ri ? " lock" : "")) + '"><span class="ic" aria-hidden="true">' + RANKS[i].ic +
+        '</span><span class="nm">' + esc(rankName(i)) + '</span><span class="pt">' + fmtNum(RANKS[i].min) + '</span></div>';
+    }
+    h += '</div><p class="rank-note">' + esc(t("rank.note")) + '</p></div>';
+
+    var el = byId("rankScroll");
+    el.innerHTML = h;
+    el.scrollTop = 0;
+    var bar = el.querySelector(".rank-bar i");
+    // çubuk 0'dan dolarak açılsın (bir kare sonra genişlik verilir -> CSS geçişi çalışır)
+    requestAnimationFrame(function () { requestAnimationFrame(function () { if (bar) bar.style.width = bar.getAttribute("data-w"); }); });
+  }
+  function statHtml(label, val, sub) {
+    return '<div class="stat"><small>' + esc(label) + '</small><b>' + esc(val) + '</b><span>' + esc(sub) + '</span></div>';
+  }
+
   /* --- SEVİYE HARİTASI ("Seviyeler" modu) ---
      25'lik bölümler; 5 sütun = her satır bir tema bandı (alt şerit o bandın rengi). Açılmış
      seviyeler yeniden oynanabilir (yıldız/rekor yükseltmek için); ilerleme (lastLevel) geri gitmez. */
@@ -5220,7 +5733,7 @@
   function handleBack() {
     if (confirmEl.classList.contains("show")) { closeConfirm(false); return; }
     if (screenNow === "pause") { showScreen("game"); return; }
-    if (screenNow === "settings" || screenNow === "levels") { showScreen("home"); return; }
+    if (screenNow === "settings" || screenNow === "levels" || screenNow === "rank") { showScreen("home"); return; }
     if (screenNow === "home") {          // Android: uygulamadan çık; tarayıcıda/iOS'ta bir şey yapma
       try { var ap = capPlugin("App"); if (ap && ap.exitApp) ap.exitApp(); } catch (e) {}
       return;
@@ -5233,6 +5746,7 @@
   /* --- ekran olayları --- */
   byId("homePlay").addEventListener("click", playCurrent);
   byId("homeSettingsBtn").addEventListener("click", function () { showScreen("settings"); });
+  byId("homeRankBtn").addEventListener("click", function () { showScreen("rank"); });
   Array.prototype.forEach.call(screens.home.querySelectorAll("[data-play]"), function (b) {
     b.addEventListener("click", function () {
       var m = b.getAttribute("data-play");
@@ -5281,6 +5795,12 @@
     syncVol();
   });
   byId("setRate").addEventListener("click", function () { Rate.open(); });
+  // Nasıl oynanır: rehberi sıfırla ve "Seviyeler" 1. seviyeyi taze kur (aynı tahtada olsa bile yeniden kurulsun)
+  byId("setTutorial").addEventListener("click", function () {
+    Store.set("tut.done", false);
+    game.key = "";
+    playMode("campaign", 0);
+  });
   byId("setReset").addEventListener("click", function () {
     askConfirm({
       title: t("confirm.resetTitle"),
@@ -5483,6 +6003,7 @@
   applyI18n();   // statik arayüz metinlerini (data-i18n / data-i18n-attr) o anki dile göre uygula
   refreshSoundBtn();
   loadLives();   // kalıcı can + kapalıyken dolanlar (bkz. setLives); updateLives'ı da çağırır
+  initScores();  // eski yıldızları puana çevir + rehber kimde açılacak (buildLevel'den ÖNCE, bkz. 4a)
   if (cfg.mode === "daily") {
     startDaily(true);
   } else {

@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 İki katman var:
 
 1. **Oyun** — [enerji-bulmaca.html](enerji-bulmaca.html) (kök dizin). Tek dosyada HTML +
-   CSS + JS. Harici kütüphane yok, Canvas ile render, girdi Pointer Events. ~2400 satır,
+   CSS + JS. Harici kütüphane yok, Canvas ile render, girdi Pointer Events. ~5900 satır,
    tek bir IIFE (`"use strict"`), kaynak numaralı bölümlere ayrılmış (0–13; bkz. dosya içi
    yorum bloğu satır ~561). Tarayıcıda doğrudan açılınca da sorunsuz çalışır.
 
@@ -123,10 +123,25 @@ Rahat/Zor 1.4.0'da kalktı, tek zorluk var; kayıt anahtarları `.normal.` kalı
   ücretsiz "Tekrar dene" zaten var). Reklam sürerken oyun süresi akmaz (`Ads.isShowing()`). `ask`
   (`{title, text, yes}`) verilirse reklamdan önce `askConfirm` ile onay alınır.
 
+### Puan, sıralama ve ilk oyun rehberi (bölüm 4a / 4b)
+
+- **Puan** — `levelScore()` = yıldız × `PTS_STAR` (100) + kalan her tam saniye × `PTS_SEC` (5); `onWin` hesaplar.
+  Seviyeler/Sonsuz: seviye başına en iyi (`ekey("score.<n>")`), toplam (`totalScore`) **yalnız rekor farkı kadar**
+  artar. Günlük: `dkey("score")` + kalıcı `daily.total`; set bitince gün `daily.hist`e (en iyi 10). `initScores`
+  eski yıldızları bir kez puana çevirir (`scoreInit`).
+- **Sıralama** (`#rank`, `renderRank`) — **yerel**: rütbe (`RANKS` eşikleri, adlar `rankNames`), mod rekorları,
+  en iyi günler. **Sunucu yok → küresel sıralama yok.** Küresel için Play Games / Game Center eklentisi + konsolda
+  leaderboard kimlikleri gerekir; puanlar tek noktadan (`onWin`) değiştiği için gönderim oraya eklenir.
+- **Rehber** (`Tut`, `drawTut`) — yeni oyuncunun ilk tek renkli tahtasında: önce kaynak/ampul tanıtımı
+  ([Anladım]), sonra sıradaki kopuk kablo (`Tut.pick` = kaynağa en yakın `hintWrong`) spot + parmakla gösterilir,
+  yalnız ona dokunulur. Rehberde **süre akmaz**, ipucu hak harcamaz. Bitince/Atla'da `tut.done`. Eski oyuncu
+  (kayıtlı ilerleme) `initScores`'ta `tut.done = true` alır — bu kontrol açılıştaki `buildLevel`'den **önce** olmalı
+  (o, `bestLevel`'i 1 yapar). Ayarlar > Nasıl oynanır rehberi yeniden açar.
+
 ### Ekranlar ve gezinme (bölüm 11b)
 
 Oyun tuvali hep arkada durur; ekranlar üstüne biner. `screenNow`: `game` | `home` | `levels` |
-`settings` | `pause`. Herhangi bir ekran açıkken `menuOpen = true` → süre, ipucu nabzı ve girdi
+`rank` | `settings` | `pause`. Herhangi bir ekran açıkken `menuOpen = true` → süre, ipucu nabzı ve girdi
 durur (`frame()`, `onPointerDown` bu bayrağa bakar). Geçişler yalnız `showScreen(name)` üzerinden.
 
 - **Ana menü** (`#home`) — açılış animasyonundan sonra görünür. Büyük Oyna/Devam Et geçerli modu
