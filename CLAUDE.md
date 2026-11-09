@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 İki katman var:
 
 1. **Oyun** — [enerji-bulmaca.html](enerji-bulmaca.html) (kök dizin). Tek dosyada HTML +
-   CSS + JS. Harici kütüphane yok, Canvas ile render, girdi Pointer Events. ~5900 satır,
+   CSS + JS. Harici kütüphane yok, Canvas ile render, girdi Pointer Events. ~6000 satır,
    tek bir IIFE (`"use strict"`), kaynak numaralı bölümlere ayrılmış (0–13; bkz. dosya içi
    yorum bloğu satır ~561). Tarayıcıda doğrudan açılınca da sorunsuz çalışır.
 
