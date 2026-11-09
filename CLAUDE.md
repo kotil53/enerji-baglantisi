@@ -45,7 +45,7 @@ Kullanılan eklentiler ([capacitor-app/package.json](capacitor-app/package.json)
 - **`Store`** — `localStorage`, `enerji.v1.` önekli, gizli sekmede sessizce devre dışı.
 - **`Sound`** — WebAudio ile sentezlenir, ses dosyası yok.
 - **`Haptic`** — Capacitor Haptics varsa o, yoksa `navigator.vibrate`.
-- **`Notify`** — yerel "geri dön" hatırlatıcıları. **Sunucu yok.** Her açılışta/öne gelişte
+- **`Notify`** — yerel "geri dön" hatırlatıcıları. **Sunucu yok** (oyunun tek sunucu bağlantısı isteğe bağlı dünya sıralaması). Her açılışta/öne gelişte
   sıfırdan planlanır. Varsayılan açık, ilk açılışta izin bir kez istenir.
 - **`Ads`** — AdMob geçiş + ödüllü-geçiş (rewarded interstitial). `ADS_CFG` ayarları,
   `AD_UNITS.test` / `AD_UNITS.live` birim ID'leri. **Tuzak:** eklentinin
@@ -129,9 +129,17 @@ Rahat/Zor 1.4.0'da kalktı, tek zorluk var; kayıt anahtarları `.normal.` kalı
   Seviyeler/Sonsuz: seviye başına en iyi (`ekey("score.<n>")`), toplam (`totalScore`) **yalnız rekor farkı kadar**
   artar. Günlük: `dkey("score")` + kalıcı `daily.total`; set bitince gün `daily.hist`e (en iyi 10). `initScores`
   eski yıldızları bir kez puana çevirir (`scoreInit`).
-- **Sıralama** (`#rank`, `renderRank`) — **yerel**: rütbe (`RANKS` eşikleri, adlar `rankNames`), mod rekorları,
-  en iyi günler. **Sunucu yok → küresel sıralama yok.** Küresel için Play Games / Game Center eklentisi + konsolda
-  leaderboard kimlikleri gerekir; puanlar tek noktadan (`onWin`) değiştiği için gönderim oraya eklenir.
+- **Sıralama** (`#rank`, `renderRank`) — iki sekme (`rankTab`):
+  - **Dünya** (`Online`, `ONLINE_CFG`): Supabase RPC, Yörünge ile **aynı proje** (`yorunge`, ref
+    `iooqwrezjlxlksjwxklt`); tablolar/fonksiyonlar `enerji_` önekli, kaynak [server/supabase.sql](server/supabase.sql)
+    (SQL Editor'de çalıştırılır, tekrar güvenli). Tabloya doğrudan erişim kapalı, yalnız `enerji_submit_score` /
+    `enerji_top_scores` / `enerji_my_rank`. Her cihaz `online.id` + `online.secret` üretir. Katılım **isteğe bağlı**:
+    takma ad seçilmeden hiçbir şey gönderilmez. Gönderilen = `totalScore()` (birikimli, sunucuda yalnız artar,
+    ani sıçrama sınırı var) + `bestLevelAll()`. `onWin` sonunda ve sekme açılışında `Online.sync()`. Ad kuralı
+    istemcide `NAME_RE`, küfür listesi yalnız sunucuda (`enerji_name_ok`). Sunucudan gelen ad yalnız `textContent`.
+    `ONLINE_CFG`'de yalnız **anon** anahtar; service_role asla oyuna girmez. Puan istemcide hesaplandığı için hile
+    tamamen engellenemez; uygunsuz kayıt elle silinir.
+  - **Benim** (`renderLocalRank`): rütbe (`RANKS` eşikleri, adlar `rankNames`), mod rekorları, en iyi günler.
 - **Rehber** (`Tut`, `drawTut`) — yeni oyuncunun ilk tek renkli tahtasında: önce kaynak/ampul tanıtımı
   ([Anladım]), sonra sıradaki kopuk kablo (`Tut.pick` = kaynağa en yakın `hintWrong`) spot + parmakla gösterilir,
   yalnız ona dokunulur. Rehberde **süre akmaz**, ipucu hak harcamaz. Bitince/Atla'da `tut.done`. Eski oyuncu
@@ -245,6 +253,7 @@ canlı reklama kendi tıklaman hesabı kapatır). Native App ID'ler CI secret'la
 | Reklam ayarları (`ADS_CFG`), reklam birimleri (`AD_UNITS`) | [enerji-bulmaca.html](enerji-bulmaca.html) |
 | Bildirim ID'leri / zamanları / metinleri (`Notify`) | [enerji-bulmaca.html](enerji-bulmaca.html) |
 | Native son-rötuş (AdMob App ID, sürüm, UMP pod sabiti) | [capacitor-app/scripts/apply-native-config.mjs](capacitor-app/scripts/apply-native-config.mjs) |
+| Dünya sıralaması: sunucu SQL'i / istemci ayarı (`ONLINE_CFG`) | [server/supabase.sql](server/supabase.sql) / [enerji-bulmaca.html](enerji-bulmaca.html) |
 | Gizlilik politikası (GitHub Pages, `main` / `/docs`) | [docs/privacy-policy.html](docs/privacy-policy.html) |
 | Mağaza metinleri / içerik derecelendirme / veri güvenliği yanıtları | [store/store-listing.md](store/store-listing.md) |
 | App Store metin alanları + yaş derecesi (fastlane `deliver` kaynağı) | [capacitor-app/fastlane/metadata/](capacitor-app/fastlane/metadata/) (bkz. [fastlane/README.md](capacitor-app/fastlane/README.md)) |

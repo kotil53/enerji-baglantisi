@@ -536,6 +536,35 @@
   .board .bl.top .no { color: var(--e-hint); }
   .board .bl.today { border-color: var(--e-hint-border); }
   .board .empty { padding: 14px; border: 1px dashed var(--e-border); border-radius: 14px; font-size: 13px; color: var(--e-muted); text-align: center; }
+  .rank-pane { display: flex; flex-direction: column; gap: 16px; }
+  .rank-pane[hidden] { display: none; }
+  .name-card { display: flex; flex-direction: column; gap: 8px; padding: 16px; border: 1px solid var(--e-hint-border); border-radius: 18px; background: linear-gradient(180deg, var(--e-panel), var(--e-panel-2)); }
+  .name-card[hidden] { display: none; }
+  .name-card label { font-size: 15px; font-weight: 800; color: var(--e-ink-hi); }
+  .name-row { display: flex; gap: 8px; }
+  .name-row input {
+    flex: 1; min-width: 0; height: 48px; padding: 0 14px;
+    border: 1px solid var(--e-border-hi); border-radius: 14px; background: var(--e-seg-bg); color: var(--e-ink-hi);
+    font: inherit; font-size: 16px; font-weight: 700;          /* 16px: iOS odakta yakınlaştırmasın */
+    -webkit-user-select: text; user-select: text; touch-action: manipulation;
+  }
+  .name-row input:focus { outline: 2px solid var(--e-hint); outline-offset: 1px; }
+  .name-row .btn2 { flex: 0 0 auto; }
+  .name-row .btn2:disabled { opacity: .5; }
+  #nameMsg { margin: 0; font-size: 12.5px; color: var(--e-muted); }
+  #nameMsg.bad { color: var(--e-danger); }
+  .name-note { margin: 0; font-size: 11.5px; line-height: 1.4; color: var(--e-faint); }
+  .rank-me { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px; font-size: 13px; font-weight: 700; color: var(--e-ink); }
+  .rank-me[hidden] { display: none; }
+  .link-btn { -webkit-appearance: none; appearance: none; min-height: 40px; padding: 0 4px; border: 0; background: none; color: var(--e-hint); font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+  ol.board { margin: 0; padding: 0; list-style: none; }
+  .board .bl.me { border-color: var(--e-hint); background: var(--e-hint-bg); }
+  .board .bl .dt small { display: block; font-size: 11.5px; font-weight: 600; color: var(--e-muted); }
+  .board .bl .dt b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board .gap { text-align: center; color: var(--e-faint); font-weight: 800; letter-spacing: 3px; }
+  .board-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; border: 1px dashed var(--e-border); border-radius: 14px; text-align: center; }
+  .board-state[hidden] { display: none; }
+  .board-state p { margin: 0; font-size: 13px; color: var(--e-muted); }
   .rank-note { margin: 0 4px; font-size: 12px; line-height: 1.45; color: var(--e-faint); text-align: center; }
 
   /* Kazanma kartı: seviye puanı (sayarak artar) + rehber sonrası kısa ipucu */
@@ -1270,7 +1299,34 @@
       <h1 class="topbar-title" data-i18n="rank.title">Sıralama</h1>
       <span></span>
     </div>
-    <div class="scroll page" id="rankScroll"></div>
+    <div class="scroll page" id="rankScroll">
+      <div class="rank-wrap">
+        <div class="seg-row rank-tabs" role="tablist">
+          <button class="seg" type="button" role="tab" id="tabWorld" data-rtab="world" aria-controls="paneWorld" data-i18n="rank.world">Dünya</button>
+          <button class="seg" type="button" role="tab" id="tabLocal" data-rtab="local" aria-controls="paneLocal" data-i18n="rank.local">Benim</button>
+        </div>
+        <!-- DÜNYA: Supabase RPC (bkz. Online, server/supabase.sql). Katılım takma adla başlar. -->
+        <div id="paneWorld" class="rank-pane" role="tabpanel" aria-labelledby="tabWorld">
+          <form class="name-card" id="nameCard" hidden>
+            <label for="nameInput" data-i18n="rank.nameLabel">Takma adın</label>
+            <div class="name-row">
+              <input id="nameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+              <button class="btn2 hint" id="btnName" type="submit" data-i18n="rank.save">Katıl</button>
+            </div>
+            <p id="nameMsg" role="status"></p>
+            <p class="name-note" data-i18n="rank.joinNote"></p>
+          </form>
+          <div class="rank-me" id="rankMe" hidden><span id="rankMeTxt"></span><button class="link-btn" id="btnRename" type="button" data-i18n="rank.rename">Adı değiştir</button></div>
+          <ol class="board" id="worldList"></ol>
+          <div class="board-state" id="worldState" hidden>
+            <p id="worldMsg" role="status"></p>
+            <button class="btn2" id="btnWorldRetry" type="button" data-i18n="rank.retry" hidden>Tekrar dene</button>
+          </div>
+        </div>
+        <!-- BENİM: rütbe, rekorlar, en iyi günler (yerel; bkz. renderLocalRank) -->
+        <div id="paneLocal" class="rank-pane" role="tabpanel" aria-labelledby="tabLocal" hidden></div>
+      </div>
+    </div>
   </section>
 
   <!-- AYARLAR -->
@@ -1593,6 +1649,14 @@
       "common.continue": "Devam Et", "common.play": "Oyna", "common.restart": "Yeniden başla",
       "common.retry": "Tekrar dene", "common.retryShort": "Tekrar", "common.reset": "Sıfırla",
       "mode.campaign": "Seviyeler", "mode.endless": "Sonsuz", "mode.daily": "Günlük",
+      "rank.world": "Dünya", "rank.local": "Benim", "rank.nameLabel": "Dünya sıralamasına katıl: takma adını seç",
+      "rank.save": "Katıl", "rank.nameHint": "3–16 karakter: harf, rakam, boşluk, _ . -",
+      "rank.nameBad": "Bu ad kullanılamaz. 3–16 karakter, uygunsuz kelime içermemeli.", "rank.nameTaken": "Bu ad alınmış, başka bir ad dene.",
+      "rank.rate": "Çok sık denedin, biraz bekle.", "rank.error": "Bir sorun oldu, tekrar dene.", "rank.saving": "Kaydediliyor…",
+      "rank.offline": "Bağlanılamadı. İnternet bağlantını kontrol et.", "rank.retry": "Tekrar dene", "rank.loading": "Yükleniyor…",
+      "rank.worldEmpty": "Henüz kimse yok, ilk sen ol!", "rank.soon": "Dünya sıralaması yakında.",
+      "rank.me": "{name} · {n}. sıradasın", "rank.meNone": "{name} · henüz puanın yok", "rank.rename": "Adı değiştir",
+      "rank.joinNote": "İsteğe bağlı. Yalnız takma adın, toplam puanın ve en ileri seviyen gönderilir; listede herkes görür.",
       "rank.title": "Sıralama", "rank.points": "puan", "rank.ladder": "Rütbeler", "rank.records": "Rekorların",
       "rank.toNext": "Sonraki rütbe {name}: {n} puan kaldı", "rank.maxed": "En yüksek rütbedesin!",
       "rank.statCampaign": "Seviyeler", "rank.statCampaignSub": "{s} / {max} yıldız",
@@ -1717,6 +1781,14 @@
       "common.continue": "Continue", "common.play": "Play", "common.restart": "Restart",
       "common.retry": "Try again", "common.retryShort": "Retry", "common.reset": "Reset",
       "mode.campaign": "Levels", "mode.endless": "Endless", "mode.daily": "Daily",
+      "rank.world": "World", "rank.local": "Mine", "rank.nameLabel": "Join the world ranking: pick a nickname",
+      "rank.save": "Join", "rank.nameHint": "3–16 characters: letters, digits, space, _ . -",
+      "rank.nameBad": "This name can't be used. 3–16 characters, no inappropriate words.", "rank.nameTaken": "This name is taken, try another.",
+      "rank.rate": "Too many tries, wait a moment.", "rank.error": "Something went wrong, try again.", "rank.saving": "Saving…",
+      "rank.offline": "Couldn't connect. Check your internet connection.", "rank.retry": "Try again", "rank.loading": "Loading…",
+      "rank.worldEmpty": "Nobody here yet, be the first!", "rank.soon": "World ranking coming soon.",
+      "rank.me": "{name} · you're #{n}", "rank.meNone": "{name} · no points yet", "rank.rename": "Change name",
+      "rank.joinNote": "Optional. Only your nickname, total points and furthest level are sent; everyone can see them in the list.",
       "rank.title": "Ranking", "rank.points": "points", "rank.ladder": "Ranks", "rank.records": "Your records",
       "rank.toNext": "Next rank {name}: {n} points to go", "rank.maxed": "You've reached the top rank!",
       "rank.statCampaign": "Levels", "rank.statCampaignSub": "{s} / {max} stars",
@@ -1842,6 +1914,14 @@
       "common.continue": "متابعة", "common.play": "العب", "common.restart": "إعادة البدء",
       "common.retry": "أعد المحاولة", "common.retryShort": "إعادة", "common.reset": "إعادة الضبط",
       "mode.campaign": "المستويات", "mode.endless": "بلا نهاية", "mode.daily": "يومي",
+      "rank.world": "العالم", "rank.local": "خاصتي", "rank.nameLabel": "انضم إلى الترتيب العالمي: اختر اسمًا مستعارًا",
+      "rank.save": "انضم", "rank.nameHint": "من 3 إلى 16 حرفًا: حروف لاتينية، أرقام، مسافة، _ . -",
+      "rank.nameBad": "لا يمكن استخدام هذا الاسم. من 3 إلى 16 حرفًا دون كلمات غير لائقة.", "rank.nameTaken": "هذا الاسم مأخوذ، جرّب اسمًا آخر.",
+      "rank.rate": "محاولات كثيرة، انتظر قليلًا.", "rank.error": "حدث خطأ، حاول مجددًا.", "rank.saving": "جارٍ الحفظ…",
+      "rank.offline": "تعذّر الاتصال. تحقّق من اتصالك بالإنترنت.", "rank.retry": "أعد المحاولة", "rank.loading": "جارٍ التحميل…",
+      "rank.worldEmpty": "لا أحد هنا بعد، كن الأول!", "rank.soon": "الترتيب العالمي قريبًا.",
+      "rank.me": "{name} · ترتيبك {n}", "rank.meNone": "{name} · لا نقاط بعد", "rank.rename": "غيّر الاسم",
+      "rank.joinNote": "اختياري. يُرسل فقط اسمك المستعار ومجموع نقاطك وأبعد مستوى وصلت إليه؛ ويراها الجميع في القائمة.",
       "rank.title": "الترتيب", "rank.points": "نقطة", "rank.ladder": "الرتب", "rank.records": "أرقامك القياسية",
       "rank.toNext": "الرتبة التالية {name}: بقي {n} نقطة", "rank.maxed": "وصلت إلى أعلى رتبة!",
       "rank.statCampaign": "المستويات", "rank.statCampaignSub": "{s} / {max} نجمة",
@@ -1966,6 +2046,14 @@
       "common.continue": "Continuar", "common.play": "Jugar", "common.restart": "Reiniciar",
       "common.retry": "Reintentar", "common.retryShort": "Reintentar", "common.reset": "Restablecer",
       "mode.campaign": "Niveles", "mode.endless": "Infinito", "mode.daily": "Diario",
+      "rank.world": "Mundial", "rank.local": "Mío", "rank.nameLabel": "Únete a la clasificación mundial: elige un apodo",
+      "rank.save": "Unirme", "rank.nameHint": "3–16 caracteres: letras, números, espacio, _ . -",
+      "rank.nameBad": "Este nombre no se puede usar. 3–16 caracteres, sin palabras inapropiadas.", "rank.nameTaken": "Ese nombre ya existe, prueba otro.",
+      "rank.rate": "Demasiados intentos, espera un momento.", "rank.error": "Algo salió mal, inténtalo de nuevo.", "rank.saving": "Guardando…",
+      "rank.offline": "No se pudo conectar. Revisa tu conexión a internet.", "rank.retry": "Reintentar", "rank.loading": "Cargando…",
+      "rank.worldEmpty": "Aún no hay nadie, ¡sé el primero!", "rank.soon": "Clasificación mundial muy pronto.",
+      "rank.me": "{name} · puesto {n}", "rank.meNone": "{name} · aún sin puntos", "rank.rename": "Cambiar nombre",
+      "rank.joinNote": "Opcional. Solo se envían tu apodo, tus puntos totales y tu nivel más lejano; todos pueden verlos en la lista.",
       "rank.title": "Clasificación", "rank.points": "puntos", "rank.ladder": "Rangos", "rank.records": "Tus récords",
       "rank.toNext": "Próximo rango {name}: faltan {n} puntos", "rank.maxed": "¡Has llegado al rango más alto!",
       "rank.statCampaign": "Niveles", "rank.statCampaignSub": "{s} / {max} estrellas",
@@ -3704,6 +3792,78 @@
     Store.set("scoreInit", true);
   }
 
+  /* Dünya sıralaması: Supabase RPC (kurulum ve güvenlik modeli: server/supabase.sql). Yörünge ile AYNI Supabase
+     projesi; tablolar/fonksiyonlar "enerji_" önekli. Adres boşsa sekme "yakında" der. Katılım isteğe bağlı:
+     oyuncu takma ad seçmeden hiçbir şey gönderilmez. Gönderilen puan = totalScore() (birikimli, yalnız artar). */
+  var ONLINE_CFG = {   // Supabase "yorunge" projesi (Frankfurt); anon anahtar herkese açık olacak şekilde tasarlandı
+    URL: "https://iooqwrezjlxlksjwxklt.supabase.co",
+    KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlvb3F3cmV6amx4bGtzand4a2x0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxODgwNTIsImV4cCI6MjEwOTc2NDA1Mn0.tUeRNmViPUOtvkDJud9rcMkEgzug7xoTMXohzkPGMO8"
+  };
+  var NAME_RE = /^[A-Za-z0-9ÇĞİÖŞÜçğıöşü_. -]{3,16}$/;   // sunucudaki enerji_name_ok ile aynı (küfür listesi yalnız sunucuda)
+  function randHex(n) {
+    var a = new Uint8Array(n), s = "", i;
+    crypto.getRandomValues(a);
+    for (i = 0; i < n; i++) s += (a[i] < 16 ? "0" : "") + a[i].toString(16);
+    return s;
+  }
+  // Ulaşılan en ileri seviye (Seviyeler ya da Sonsuz) — listede adın altında görünür
+  function bestLevelAll() {
+    var c = Store.get(pkey("campaign", "done"), false) ? CAMPAIGN_LEVELS : Store.get(pkey("campaign", "bestLevel"), 0);
+    return Math.max(c, Store.get(pkey("endless", "bestLevel"), 0));
+  }
+  var Online = {
+    on: function () { return !!(ONLINE_CFG.URL && ONLINE_CFG.KEY && window.fetch && window.crypto && crypto.getRandomValues); },
+    // Cihaz kimliği (UUID v4) ve gizli anahtar ilk kullanımda üretilir; sunucu anahtarın yalnız özetini tutar
+    id: function () {
+      var v = Store.get("online.id", "");
+      if (!v) {
+        var h = randHex(16);
+        v = h.slice(0, 8) + "-" + h.slice(8, 12) + "-4" + h.slice(13, 16) + "-" + (8 | (parseInt(h.charAt(16), 16) & 3)).toString(16) + h.slice(17, 20) + "-" + h.slice(20);
+        Store.set("online.id", v);
+      }
+      return v;
+    },
+    secret: function () {
+      var v = Store.get("online.secret", "");
+      if (!v) { v = randHex(24); Store.set("online.secret", v); }
+      return v;
+    },
+    name: function () { return Store.get("online.name", ""); },
+    _busy: false,
+    _rpc: function (fn, body) {
+      var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 8000);
+      return fetch(ONLINE_CFG.URL.replace(/\/$/, "") + "/rest/v1/rpc/" + fn, {
+        method: "POST", signal: ctl ? ctl.signal : undefined,
+        headers: { "Content-Type": "application/json", apikey: ONLINE_CFG.KEY, Authorization: "Bearer " + ONLINE_CFG.KEY },
+        body: JSON.stringify(body)
+      }).then(function (r) {
+        clearTimeout(tm);
+        if (!r.ok) throw new Error("http " + r.status);
+        return r.json();
+      }, function (e) { clearTimeout(tm); throw e; });
+    },
+    // Adı ve toplam puanı gönderir; sunucu {ok, err?, rank?} döner
+    submit: function (name) {
+      var sent = totalScore(), self = this;
+      this._busy = true;
+      return this._rpc("enerji_submit_score", { p_id: this.id(), p_secret: this.secret(), p_name: name, p_score: sent, p_level: bestLevelAll() })
+        .then(function (r) {
+          self._busy = false;
+          if (r && r.ok) { Store.set("online.name", name); Store.set("online.sent", sent); }
+          return r;
+        }, function (e) { self._busy = false; throw e; });
+    },
+    // Seviye sonu / sıralama açılışı: gönderilmemiş puan varsa sessizce gönderir; çevrimdışıysa sonra yeniden dener.
+    // Sunucu 3 sn'den sık güncellemeyi reddeder -> art arda kazanımlarda kalan, bir sonrakinde gider.
+    sync: function () {
+      if (!this.on() || !this.name() || this._busy || totalScore() <= Store.get("online.sent", 0)) return;
+      this.submit(this.name()).catch(function () {});
+    },
+    load: function () {
+      return Promise.all([this._rpc("enerji_top_scores", { p_limit: 50 }), this.name() ? this._rpc("enerji_my_rank", { p_id: this.id() }) : []]);
+    }
+  };
+
   /* ----------------------------------------------------------------------
      4b) İLK OYUN REHBERİ (Tut)
      Yeni oyuncunun ilk tahtasında (tek renk, pervanesiz, ilk seviye) adım adım rehber:
@@ -4981,6 +5141,7 @@
     }
     var rankAfter = rankOf(totalScore());
     game.rankUp = rankAfter > rankBefore ? rankAfter : -1;
+    Online.sync();                          // dünya sıralamasına katıldıysa yeni toplamı gönder (sessiz)
   }
 
   /* Süre dolduğunda çağrılır: bir can azalt.
@@ -5630,10 +5791,64 @@
     try { return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString(LOCALE_TAGS[LANG] || "en-US", { day: "numeric", month: "long", year: "numeric" }); }
     catch (e) { return key; }
   }
+  var rankTab = "world", _worldReq = 0;
   function renderRank() {
+    byId("tabWorld").setAttribute("aria-selected", rankTab === "world" ? "true" : "false");
+    byId("tabLocal").setAttribute("aria-selected", rankTab === "local" ? "true" : "false");
+    byId("tabWorld").classList.toggle("on", rankTab === "world");
+    byId("tabLocal").classList.toggle("on", rankTab === "local");
+    byId("paneWorld").hidden = rankTab !== "world";
+    byId("paneLocal").hidden = rankTab !== "local";
+    byId("rankScroll").scrollTop = 0;
+    if (rankTab === "world") renderWorld(); else renderLocalRank();
+  }
+  function worldState(key, retry) {
+    byId("worldState").hidden = !key;
+    byId("worldMsg").textContent = key ? t(key) : "";
+    byId("btnWorldRetry").hidden = !retry;
+  }
+  function renderWorld() {
+    byId("worldList").innerHTML = "";
+    byId("rankMe").hidden = true;
+    if (!Online.on()) { byId("nameCard").hidden = true; worldState("rank.soon"); return; }
+    if (!Online.name()) showNameCard(""); else byId("nameCard").hidden = true;
+    Online.sync();
+    worldState("rank.loading");
+    var req = ++_worldReq;
+    Online.load().then(function (res) {
+      if (req !== _worldReq || screenNow !== "rank") return;
+      var top = res[0] || [], me = res[1] && res[1][0], ol = byId("worldList"), seen = false;
+      top.forEach(function (e) { var isMe = !!me && e.name === me.name; seen = seen || isMe; ol.appendChild(worldRow(e, isMe)); });
+      if (me && !seen && me.score > 0) {
+        var gap = document.createElement("li"); gap.className = "gap"; gap.textContent = "…"; gap.setAttribute("aria-hidden", "true");
+        ol.appendChild(gap); ol.appendChild(worldRow(me, true));
+      }
+      worldState(top.length ? "" : "rank.worldEmpty");
+      if (me) {
+        byId("rankMe").hidden = false;
+        byId("rankMeTxt").textContent = me.score > 0 ? t("rank.me", { name: me.name, n: me.rank }) : t("rank.meNone", { name: me.name });
+      }
+    }, function () { if (req === _worldReq) worldState("rank.offline", true); });
+  }
+  // Sunucudan gelen ad güvenilmez: yalnız textContent ile yazılır
+  function worldRow(e, isMe) {
+    var li = document.createElement("li"), no = document.createElement("span"), dt = document.createElement("span"),
+        b = document.createElement("b"), sm = document.createElement("small"), sc = document.createElement("span");
+    li.className = "bl" + (e.rank <= 3 ? " top" : "") + (isMe ? " me" : "");
+    no.className = "no"; no.textContent = e.rank <= 3 ? ["🥇", "🥈", "🥉"][e.rank - 1] : e.rank;
+    dt.className = "dt"; b.textContent = e.name;
+    sm.textContent = RANKS[rankOf(e.score)].ic + " " + rankName(rankOf(e.score)) + (e.level > 0 ? " · " + t("hud.levelSimple", { n: e.level }) : "");
+    sc.className = "sc"; sc.textContent = fmtNum(e.score);
+    dt.appendChild(b); dt.appendChild(sm);
+    li.appendChild(no); li.appendChild(dt); li.appendChild(sc);
+    return li;
+  }
+  function showNameCard(v) { byId("nameCard").hidden = false; byId("nameInput").value = v; nameMsg("rank.nameHint", false); }
+  function nameMsg(k, bad) { var m = byId("nameMsg"); m.textContent = t(k); m.classList.toggle("bad", !!bad); }
+
+  function renderLocalRank() {
     var sc = totalScore(), ri = rankOf(sc), nx = RANKS[ri + 1], i, h = "";
     var pct = nx ? Math.round((sc - RANKS[ri].min) / (nx.min - RANKS[ri].min) * 100) : 100;
-    h += '<div class="rank-wrap">';
     h += '<div class="rank-hero"><div class="rank-badge" aria-hidden="true">' + RANKS[ri].ic + '</div>' +
       '<div class="rank-name">' + esc(rankName(ri)) + '</div>' +
       '<div class="rank-total">' + fmtNum(sc) + '<small>' + esc(t("rank.points")) + '</small></div>' +
@@ -5666,11 +5881,10 @@
       h += '<div class="step' + (i === ri ? " me" : (i > ri ? " lock" : "")) + '"><span class="ic" aria-hidden="true">' + RANKS[i].ic +
         '</span><span class="nm">' + esc(rankName(i)) + '</span><span class="pt">' + fmtNum(RANKS[i].min) + '</span></div>';
     }
-    h += '</div><p class="rank-note">' + esc(t("rank.note")) + '</p></div>';
+    h += '</div><p class="rank-note">' + esc(t("rank.note")) + '</p>';
 
-    var el = byId("rankScroll");
+    var el = byId("paneLocal");
     el.innerHTML = h;
-    el.scrollTop = 0;
     var bar = el.querySelector(".rank-bar i");
     // çubuk 0'dan dolarak açılsın (bir kare sonra genişlik verilir -> CSS geçişi çalışır)
     requestAnimationFrame(function () { requestAnimationFrame(function () { if (bar) bar.style.width = bar.getAttribute("data-w"); }); });
@@ -5747,6 +5961,23 @@
   byId("homePlay").addEventListener("click", playCurrent);
   byId("homeSettingsBtn").addEventListener("click", function () { showScreen("settings"); });
   byId("homeRankBtn").addEventListener("click", function () { showScreen("rank"); });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-rtab]"), function (b) {
+    b.addEventListener("click", function () { rankTab = b.getAttribute("data-rtab"); renderRank(); });
+  });
+  byId("btnRename").addEventListener("click", function () { showNameCard(Online.name()); byId("nameInput").focus(); });
+  byId("btnWorldRetry").addEventListener("click", renderWorld);
+  byId("nameCard").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = byId("nameInput").value.replace(/\s+/g, " ").trim(), btn = byId("btnName");
+    if (!NAME_RE.test(v)) { nameMsg("rank.nameBad", true); return; }
+    btn.disabled = true; nameMsg("rank.saving", false);
+    Online.submit(v).then(function (r) {
+      btn.disabled = false;
+      var err = r && r.err;
+      if (r && r.ok) { byId("nameInput").blur(); Haptic.success(); renderWorld(); }
+      else nameMsg(err === "taken" ? "rank.nameTaken" : err === "name" ? "rank.nameBad" : err === "rate" ? "rank.rate" : "rank.error", true);
+    }, function () { btn.disabled = false; nameMsg("rank.offline", true); });
+  });
   Array.prototype.forEach.call(screens.home.querySelectorAll("[data-play]"), function (b) {
     b.addEventListener("click", function () {
       var m = b.getAttribute("data-play");

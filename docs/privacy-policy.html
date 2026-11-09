@@ -51,7 +51,7 @@
 <header>
   <div class="wrap">
     <h1>Gizlilik Politikası — Enerji Bağlantısı</h1>
-    <p>Son güncelleme: 29 Ağustos 2026</p>
+    <p>Son güncelleme: 9 Kasım 2026</p>
   </div>
 </header>
 
@@ -65,9 +65,10 @@
 
     <h2>1. Kısaca</h2>
     <ul>
-      <li>Uygulamanın <strong>kendi sunucusu yoktur</strong>. Hesap açmanız, giriş yapmanız veya
-      kişisel bilgi vermeniz gerekmez.</li>
-      <li>Oyun ilerlemeniz ve ayarlarınız <strong>yalnızca cihazınızda</strong> saklanır.</li>
+      <li>Hesap açmanız, giriş yapmanız veya e-posta, telefon gibi kişisel bilgi vermeniz gerekmez.</li>
+      <li>Oyun ilerlemeniz ve ayarlarınız <strong>cihazınızda</strong> saklanır.</li>
+      <li><strong>Dünya sıralamasına</strong> katılırsanız yalnızca seçtiğiniz <strong>takma ad</strong>,
+      toplam puanınız ve ulaştığınız en ileri seviye sunucumuza gönderilir ve herkese açık listede görünür.</li>
       <li>Uygulama <strong>Google AdMob</strong> aracılığıyla reklam gösterir. Reklam ağı,
       standart reklam verilerini (aşağıda açıklanmıştır) toplar.</li>
       <li>Başka hiçbir analiz, izleme veya üçüncü taraf SDK kullanılmaz.</li>
@@ -75,15 +76,32 @@
 
     <h2>2. Cihazınızda saklanan veriler</h2>
     <p>Aşağıdakiler tarayıcı benzeri yerel depolamada (<code>localStorage</code>,
-    <code>enerji.v1.*</code> anahtarları) tutulur ve <strong>cihazınızdan çıkmaz</strong>:</p>
+    <code>enerji.v1.*</code> anahtarları) tutulur ve dünya sıralaması dışında <strong>cihazınızdan çıkmaz</strong>:</p>
     <ul>
-      <li>Ulaşılan seviye, yıldız sayısı, günlük bulmaca durumu</li>
+      <li>Ulaşılan seviye, yıldız ve puan, rütbe, günlük bulmaca durumu ve en iyi günleriniz</li>
       <li>Mod ve hatırlatıcı tercihleri</li>
       <li>"Reklamsız" durumu (ileride bir satın alma eklenirse)</li>
     </ul>
     <p>Uygulamayı kaldırdığınızda bu veriler silinir. Bu verilere biz erişemeyiz.</p>
 
-    <h2>3. Bildirimler (yerel hatırlatıcılar)</h2>
+    <h2>3. Dünya sıralaması</h2>
+    <p>Sıralamaya katılmak isteğe bağlıdır; Sıralama ekranının "Dünya" sekmesinde bir takma ad seçtiğinizde
+    başlar. Ad seçmezseniz hiçbir şey gönderilmez. Katılırsanız sunucumuza (Supabase altyapısı, AB / Frankfurt)
+    şunlar gönderilir:</p>
+    <ul>
+      <li><strong>Takma ad</strong> — 3–16 karakter, sizin seçtiğiniz. Gerçek adınızı kullanmamanızı öneririz.</li>
+      <li><strong>Toplam puan</strong> ve ulaşılan <strong>en ileri seviye</strong></li>
+      <li>Cihazda rastgele üretilen bir <strong>oyuncu kimliği</strong> ve gizli anahtarın tek yönlü özeti
+      (kaydınızı yalnızca sizin güncelleyebilmeniz için). Bu kimlik reklam kimliğiniz veya cihaz
+      donanımıyla ilişkili değildir.</li>
+      <li>Son güncelleme zamanı</li>
+    </ul>
+    <p>Sahte kayıtları ve kötüye kullanımı önlemek için yeni bir oyuncu kaydında IP adresinizin
+    <strong>tek yönlü özeti</strong> (adresin kendisi değil) en fazla <strong>1 saat</strong> saklanır ve sonra silinir.</p>
+    <p>Takma ad, puan ve seviye, uygulamadaki herkese açık listede diğer oyunculara gösterilir.
+    Uygunsuz takma adlar reddedilir veya silinebilir.</p>
+
+    <h2>4. Bildirimler (yerel hatırlatıcılar)</h2>
     <p>Uygulama, "oyuna geri dön" türünde hatırlatıcılar planlayabilir. Bu bildirimler
     <strong>tamamen cihazınızda</strong> zamanlanır; sunucudan gönderilmez ve hiçbir veri
     dışarı aktarılmaz. Hatırlatıcıları uygulama menüsündeki
@@ -91,7 +109,7 @@
     istediğiniz an durdurabilirsiniz. Android 13+ ve iOS'ta ilk kullanımda sistem
     bildirim izni istenir; izni reddetmeniz oyunun çalışmasını etkilemez.</p>
 
-    <h2>4. Reklamlar — Google AdMob</h2>
+    <h2>5. Reklamlar — Google AdMob</h2>
     <p>Uygulama, seviyeler arasında <strong>geçiş reklamı</strong> ve isteğe bağlı olarak
     (ipucu / seviye atlama karşılığında) <strong>ödüllü reklam</strong> gösterir.
     Reklamlar Google'ın <strong>Google Mobile Ads (AdMob)</strong> SDK'sı tarafından sunulur.</p>
@@ -113,7 +131,7 @@
       <li><a href="https://support.google.com/admob/answer/6128543" target="_blank" rel="noopener">AdMob ve kullanıcı gizliliği</a></li>
     </ul>
 
-    <h2>5. Onay ve seçim hakkınız</h2>
+    <h2>6. Onay ve seçim hakkınız</h2>
     <ul>
       <li><strong>Avrupa Ekonomik Alanı, Birleşik Krallık ve İsviçre</strong> kullanıcılarına,
       ilk açılışta Google'ın onay formu (UMP) gösterilir; kişiselleştirilmiş reklamları
@@ -126,24 +144,26 @@
       <em>iOS → Ayarlar → Gizlilik ve Güvenlik → İzleme / Apple Reklamları</em>.</li>
     </ul>
 
-    <h2>6. Çocukların gizliliği</h2>
+    <h2>7. Çocukların gizliliği</h2>
     <p>Uygulama 13 yaşın altındaki çocuklara yönelik değildir ve bilerek çocuklardan
     kişisel veri toplamayız. 13 yaşından küçük bir çocuğun verisinin işlendiğini
     fark edersek bunu kaldırmak için gerekli adımları atarız.</p>
 
-    <h2>7. Veri saklama ve silme</h2>
+    <h2>8. Veri saklama ve silme</h2>
     <ul>
       <li>Cihazda saklanan oyun verileri, uygulamayı kaldırdığınızda silinir.</li>
+      <li>Sıralama kaydınız, silinmesini isteyene kadar saklanır. Silmek için takma adınızla birlikte
+      aşağıdaki adrese yazmanız yeterlidir.</li>
       <li>AdMob tarafından toplanan veriler Google'ın saklama politikalarına tabidir
       (yukarıdaki bağlantılara bakın).</li>
       <li>Talepleriniz için bizimle iletişime geçebilirsiniz (aşağıya bakın).</li>
     </ul>
 
-    <h2>8. Değişiklikler</h2>
+    <h2>9. Değişiklikler</h2>
     <p>Bu politikayı zaman zaman güncelleyebiliriz. Güncellemeler bu sayfada yayınlanır ve
     üstteki "Son güncelleme" tarihi değiştirilir.</p>
 
-    <h2>9. İletişim</h2>
+    <h2>10. İletişim</h2>
     <p>Sorularınız için: <a href="mailto:osmankotil@outlook.com">osmankotil@outlook.com</a></p>
   </div>
 
@@ -158,9 +178,10 @@
 
     <h2>1. In short</h2>
     <ul>
-      <li>The app has <strong>no server of its own</strong>. No account, sign-in or personal
-      information is required.</li>
-      <li>Your game progress and settings are stored <strong>only on your device</strong>.</li>
+      <li>No account, sign-in or personal information such as e-mail or phone number is required.</li>
+      <li>Your game progress and settings are stored <strong>on your device</strong>.</li>
+      <li>If you join the <strong>world ranking</strong>, only the <strong>nickname</strong> you choose,
+      your total points and the furthest level you reached are sent to our server and shown in a public list.</li>
       <li>The app shows ads through <strong>Google AdMob</strong>, which collects standard
       advertising data (described below).</li>
       <li>No other analytics, tracking or third-party SDKs are used.</li>
@@ -168,16 +189,32 @@
 
     <h2>2. Data stored on your device</h2>
     <p>The following is kept in local (browser-style) storage
-    (<code>localStorage</code>, <code>enerji.v1.*</code> keys) and <strong>never leaves your
-    device</strong>:</p>
+    (<code>localStorage</code>, <code>enerji.v1.*</code> keys) and, apart from the world ranking,
+    <strong>never leaves your device</strong>:</p>
     <ul>
-      <li>Level reached, star count, daily-puzzle state</li>
+      <li>Level reached, stars and points, rank, daily-puzzle state and your best days</li>
       <li>Mode and reminder preferences</li>
       <li>"Ads removed" state (in case an in-app purchase is added later)</li>
     </ul>
     <p>This data is deleted when you uninstall the app. We have no access to it.</p>
 
-    <h2>3. Notifications (local reminders)</h2>
+    <h2>3. World ranking</h2>
+    <p>Joining is optional and starts when you pick a nickname on the "World" tab of the Ranking screen.
+    If you don't pick one, nothing is sent. If you join, the following is sent to our server
+    (Supabase infrastructure, EU / Frankfurt):</p>
+    <ul>
+      <li><strong>Nickname</strong> — 3–16 characters, chosen by you. We recommend not using your real name.</li>
+      <li><strong>Total points</strong> and the <strong>furthest level</strong> reached</li>
+      <li>A <strong>player ID</strong> randomly generated on the device and a one-way hash of a secret key
+      (so only you can update your entry). This ID is not linked to your advertising ID or device hardware.</li>
+      <li>Time of the last update</li>
+    </ul>
+    <p>To prevent fake entries and abuse, a <strong>one-way hash</strong> of your IP address (not the address
+    itself) is kept for at most <strong>1 hour</strong> when a new player registers, then deleted.</p>
+    <p>Nickname, points and level are shown to other players in the public list in the app.
+    Inappropriate nicknames are rejected or may be removed.</p>
+
+    <h2>4. Notifications (local reminders)</h2>
     <p>The app can schedule "come back and play" reminders. These notifications are scheduled
     <strong>entirely on your device</strong>; they are not sent from a server and no data is
     transmitted. You can stop them at any time via
@@ -185,7 +222,7 @@
     a system notification permission is requested on first use; declining it does not affect
     gameplay.</p>
 
-    <h2>4. Advertising — Google AdMob</h2>
+    <h2>5. Advertising — Google AdMob</h2>
     <p>The app shows <strong>interstitial ads</strong> between levels and optional
     <strong>rewarded ads</strong> (in exchange for a hint or skipping a level). Ads are served by
     Google's <strong>Google Mobile Ads (AdMob)</strong> SDK.</p>
@@ -205,7 +242,7 @@
       <li><a href="https://support.google.com/admob/answer/6128543" target="_blank" rel="noopener">AdMob &amp; user privacy</a></li>
     </ul>
 
-    <h2>5. Consent and your choices</h2>
+    <h2>6. Consent and your choices</h2>
     <ul>
       <li>Users in the <strong>European Economic Area, the UK and Switzerland</strong> are shown
       Google's consent form (UMP) on first launch, where you can choose whether to allow
@@ -217,23 +254,25 @@
       <em>iOS → Settings → Privacy &amp; Security → Tracking / Apple Advertising</em>.</li>
     </ul>
 
-    <h2>6. Children's privacy</h2>
+    <h2>7. Children's privacy</h2>
     <p>The app is not directed to children under 13, and we do not knowingly collect personal
     data from children. If we learn that data from a child under 13 has been processed, we will
     take steps to remove it.</p>
 
-    <h2>7. Data retention and deletion</h2>
+    <h2>8. Data retention and deletion</h2>
     <ul>
       <li>Game data stored on the device is deleted when you uninstall the app.</li>
+      <li>Your ranking entry is kept until you ask us to delete it. Just write to the address below
+      with your nickname.</li>
       <li>Data collected by AdMob is subject to Google's retention policies (see links above).</li>
       <li>You may contact us with any requests (see below).</li>
     </ul>
 
-    <h2>8. Changes</h2>
+    <h2>9. Changes</h2>
     <p>We may update this policy from time to time. Updates are posted on this page and the
     "Last updated" date above is revised.</p>
 
-    <h2>9. Contact</h2>
+    <h2>10. Contact</h2>
     <p>Questions: <a href="mailto:osmankotil@outlook.com">osmankotil@outlook.com</a></p>
   </div>
 </main>

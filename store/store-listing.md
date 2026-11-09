@@ -130,7 +130,8 @@ eklenebilir.
 | Price | Free | — (App Store Connect'te elle) |
 
 ### App Privacy (Apple "besin etiketi") — AdMob'a göre
-App Store Connect → App Privacy → "Get Started". Sunucumuz yok; tek veri kaynağı AdMob.
+App Store Connect → App Privacy → "Get Started". Veri kaynakları: AdMob + isteğe bağlı dünya
+sıralaması (Supabase; yalnız oyuncu takma ad seçerse — bkz. `server/supabase.sql`).
 
 | Veri | Toplanıyor | Amaç | Kimliğe bağlı | İzleme için |
 |---|---|---|---|---|
@@ -138,6 +139,11 @@ App Store Connect → App Privacy → "Get Started". Sunucumuz yok; tek veri kay
 | Usage Data → Product Interaction | Evet | Third-Party Advertising, Analytics | Evet | **Evet** |
 | Location → Coarse Location | Evet | Third-Party Advertising | Evet | **Evet** |
 | Diagnostics → Crash / Performance Data | Evet | Analytics | Hayır | Hayır |
+| User Content → Other User Content (takma ad) | Evet | App Functionality | Evet | Hayır |
+| Usage Data → Other Usage Data (puan + seviye) | Evet | App Functionality | Evet | Hayır |
+| Identifiers → User ID (rastgele oyuncu kimliği) | Evet | App Functionality | Evet | Hayır |
+
+Son üç satır dünya sıralaması içindir: Supabase'e gider, reklam/izleme için kullanılmaz.
 
 → "This app uses data to track you" = **Evet** (AdMob reklam kimliği). ATT istemi
 zaten kodda var (`requestTrackingAuthorization`).
@@ -157,7 +163,8 @@ Connect'te derecelendirmeyi bir kez gözden geçirip onayla.
 - **Advertising Identifier (IDFA)**: kullanılıyor → "Serve advertisements within the
   app" kutusunu işaretle + ATT ile onurlandırıldığını beyan et.
 - **App Review Information**: giriş yok → demo hesap gerekmez. Not: "Ödüllü/geçiş
-  reklamları AdMob canlı; oyun tümüyle çevrimdışı."
+  reklamları AdMob canlı; oyun çevrimdışı oynanır, yalnız isteğe bağlı dünya sıralaması
+  internet kullanır (takma ad, sunucuda küfür süzgeci)."
 
 ### EU Trader Status (DSA — App Store Connect'teki uyarı)
 App Store Connect → **Business** → Trader Status. Bireysel geliştiricisin; reklam
@@ -188,7 +195,8 @@ kaynakları değiştirip yeniden üretebilirsin. Ekran görüntüleri emülatör
 
 ### İçerik derecelendirmesi (IARC anketi) — beklenen yanıtlar
 Şiddet: yok · Cinsellik: yok · Küfür: yok · Madde: yok · Kumar: yok
-Kullanıcılar arası etkileşim / konum paylaşımı / kullanıcı içeriği: yok
+Kullanıcılar arası etkileşim / konum paylaşımı: yok. Kullanıcı içeriği: **yalnız takma ad**
+(dünya sıralaması; sunucuda küfür süzgeci, uygunsuz ad elle silinebilir — bkz. `server/supabase.sql`).
 Dijital satın alma: şu an yok (reklam var). → Sonuç: **Herkes / 3+**
 
 ### Hedef kitle
@@ -205,8 +213,12 @@ Referans: https://support.google.com/admob/answer/11150250
 | Cihaz veya diğer kimlikler | Evet | Evet | Reklamlar, Analiz, Sahtekârlık önleme |
 | Uygulama etkinliği → Uygulama etkileşimleri | Evet | Evet | Reklamlar, Analiz |
 | Uygulama bilgileri ve performansı → Çökme günlükleri, Tanılama | Evet | Hayır | Analiz |
+| Kişisel bilgiler → Kullanıcı kimlikleri (takma ad + rastgele oyuncu kimliği) | Evet (isteğe bağlı) | Hayır | Uygulama işlevi |
+| Uygulama etkinliği → Diğer uygulama içi işlemler (puan, seviye) | Evet (isteğe bağlı) | Hayır | Uygulama işlevi |
 
-- Aktarımda şifreleme: **Evet**
-- Veri silme talebi yolu: kullanıcı verisi sunucumuzda tutulmuyor; yerel veri
-  uygulamanın kaldırılmasıyla siler. İletişim: osmankotil@outlook.com
-- Bu tablo yalnızca AdMob içindir; başka SDK yok. Mediation eklersen güncelle.
+- Son iki satır dünya sıralaması (Supabase) içindir; yalnız oyuncu takma ad seçerse gönderilir →
+  formda "isteğe bağlı" işaretle.
+- Aktarımda şifreleme: **Evet** (HTTPS)
+- Veri silme talebi yolu: sıralama kaydı e-postayla silinir (takma adla birlikte yazılır):
+  osmankotil@outlook.com. Yerel veri uygulamanın kaldırılmasıyla silinir.
+- AdMob dışında SDK yok (sıralama düz `fetch` ile). Mediation eklersen güncelle.
