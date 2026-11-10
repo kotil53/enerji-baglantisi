@@ -86,11 +86,13 @@ Kullanılan eklentiler ([capacitor-app/package.json](capacitor-app/package.json)
 Rahat/Zor 1.4.0'da kalktı, tek zorluk var; kayıt anahtarları `.normal.` kalır ve `cfg.diff` sabit `"normal"`dır.
 `mergeOldDiffs` eski Rahat/Zor ilerlemesini bir kez Normal'e katar (`diffMerged`), en iyisini alır, eski anahtarları silmez.
 
-- **Enerji sayısı** (`levelParams`) — 1-9: 1, 10+: 2, 30+: 3, 60+: 4. Günlük 7 seviye olduğu için hep tek enerjidir.
-  1-9 arası tahtalar eski sürümle birebir aynıdır: `k=1` yolu RNG'yi aynı sırayla tüketmeli, bozma.
+- **Zorluk eğrisi** (`levelParams`, 1.5.0) — 200 seviyeye yayılır: ızgara `SIZE_STEPS` (1: 3x3, 3: 4x4, 7: 5x5, 15: 6x6,
+  30: 7x7, 60+: 8x8), yol boyu `3 + 3.2·√(n−1)`, ampul 8+: 2, 22+: 3, 100/150/200: 4/5/6. Süre tavanı 180 sn.
+  Eğriyi değiştirince 200 seviyenin par/süre ortalamasını ölçüp tekdüze arttığını doğrula.
+- **Enerji sayısı** — 1-14: 1, 15+: 2, 40+: 3, 80+: 4. Günlük 7 seviye olduğu için hep tek enerjidir.
 - **Üretici** — `layoutPaths` her renge birbirine değmeyen yol çizer; sığmazsa yeniden dener, olmazsa renk azaltır.
   Çözülmüş halde kollar yalnız kendi yoluna baktığından renkler değmez, çözülebilirlik garantisi korunur.
-- **Pervane** — 40+ her 5 seviyede (`role: "fan"`, ortadaki hücre, `sockets[yön]` = hazne rengi, en az 3 renk). Her yol
+- **Pervane** — her 5 seviyede, 5'ten başlar (`role: "fan"`, ortadaki hücre, `sockets[yön]` = hazne rengi; tek renkte de olur, sığmazsa pervanesiz). Her yol
   haznenin yanından başlar, kaynak yolun ucundadır. Hazne iletmez; yalnız kendi rengiyle dolar (`fill`).
 - **Kısa devre** — `computePower` iki rengin aynı kabloda buluşmasını `game.shorted`a yazar → `beginBoom` →
   `game.phase = "boom"`, `BOOM_MS` sonra `resetLevel`. Can gitmez. Yanlış renk ampul/haznede patlamadan durur.

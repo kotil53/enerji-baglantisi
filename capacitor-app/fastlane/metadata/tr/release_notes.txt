@@ -1,5 +1,4 @@
 Yenilikler:
-• Dört renkli enerji: 10. seviyeden itibaren her enerji kendi rengindeki ampule gider. Renkler birbirine değerse kısa devre olur!
-• Pervaneli ampul: bütün enerjileri ortadaki haznelere ulaştır, pervane dönsün.
-• Zorluk seçimi kalktı, ilerlemen korunarak tek düzeyde devam ediyorsun.
-• Seviye süreleri uzatıldı.
+• Zorluk baştan sona yeniden dengelendi: seviyeler artık küçük adımlarla, kolaydan zora doğru ilerliyor.
+• Pervaneli ampul artık 5. seviyeden başlıyor ve her 5 seviyede bir geliyor.
+• İleri seviyelerde süre, tahtanın büyüklüğüne göre uzatıldı.
