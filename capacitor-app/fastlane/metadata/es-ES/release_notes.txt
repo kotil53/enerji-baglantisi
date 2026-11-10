@@ -1,0 +1,4 @@
+Novedades:
+• Dificultad reequilibrada de principio a fin: los niveles avanzan ahora en pasos pequeños y justos, de fácil a difícil.
+• La bombilla con ventilador aparece desde el nivel 5, cada 5 niveles.
+• En los niveles avanzados tienes más tiempo, según el tamaño del tablero.

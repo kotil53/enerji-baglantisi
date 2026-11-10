@@ -1,0 +1,4 @@
+What's new:
+• Difficulty rebalanced from start to finish: levels now ramp up in small, fair steps from easy to hard.
+• The fan bulb now appears from level 5, every 5 levels.
+• Later levels give you more time, scaled to the size of the board.

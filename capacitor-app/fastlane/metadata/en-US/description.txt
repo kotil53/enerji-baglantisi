@@ -1,0 +1,32 @@
+⚡ ENERJİ BAĞLANTISI
+
+Power flows from the source but never reaches the bulb. Rotate the wires one by one, reconnect the broken circuit and light up every bulb.
+
+The rule is simple and hard to put down: every tap rotates one piece. Don't waste moves — your stars depend on how few you use.
+
+▸ HOW TO PLAY
+• Build a path from the source (⚡) to the bulbs (💡)
+• Tap pieces to rotate them
+• Locked pieces (🔒) never move — route the solution around them
+• The level is complete when every bulb is lit
+
+▸ FEATURES
+• Levels — 200 levels, the same for every player
+• Daily — seven fresh puzzles every day, the same for everyone
+• Endless — puzzles that never run out and keep getting harder; unlocks after you finish Levels
+• Four colors of energy: send each to its own bulb and keep them apart
+• Fan bulb: fill every socket in the center to spin the fan
+• Up to 3 stars per level — solve it in few moves and without hints
+• Every level is timed, and you have lives that refill over time
+• Stuck? A hint fixes up to two wires. You get 3 free hints every day; after that, watch a short ad for more
+• Works offline — no internet needed
+• Relaxing ambient music, haptic feedback and a clean dark design
+• Available in English, Türkçe, Español and العربية
+• No account, no sign-in, no registration
+
+▸ REMINDERS
+With your permission, the game can send a gentle reminder when your daily puzzle is ready or you haven't played for a while. You can turn it off in Settings.
+
+The game is free and shows ads: a banner at the bottom, short ads between levels, and optional ads that give you extra hints and lives.
+
+For a short break or a long sit-down: rotate one more wire.
