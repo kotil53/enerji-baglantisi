@@ -47,6 +47,13 @@ Kullanılan eklentiler ([capacitor-app/package.json](capacitor-app/package.json)
 - **`Haptic`** — Capacitor Haptics varsa o, yoksa `navigator.vibrate`.
 - **`Notify`** — yerel "geri dön" hatırlatıcıları. **Sunucu yok.** Her açılışta/öne gelişte
   sıfırdan planlanır. Varsayılan açık, ilk açılışta izin bir kez istenir.
+- **`Online`** (1.6.0) — dünya sıralaması, puan = `totalStarsAll()` (Seviyeler + Sonsuz yıldızı). Supabase
+  projesi `enerji` (ref `hnovdpumjqdflkcxxjxa`, Frankfurt); şema ve güvenlik modeli [server/supabase.sql](server/supabase.sql)
+  (Yörünge'nin birebir uyarlaması: RLS, yalnız 4 RPC, cihaz kimliği + gizli anahtar özeti, IP özetiyle hız sınırı,
+  küfür filtresi yalnız sunucuda). İstemci yalnız `apikey` başlığıyla çağırır (publishable anahtar JWT değil,
+  `Authorization` gönderme). Takma ad Sıralama ekranında (`#rank`, ana menüdeki 🏆 rozeti) kaydedilir; `onWin`
+  her kazanmada `Online.sync()` ile yeni yıldızı sessizce gönderir. Sunucu en yüksek puanı tutar ("İlerlemeyi
+  sıfırla" sıralamadaki puanı düşürmez). Şema değişirse SQL'i Supabase SQL Editor'de yeniden çalıştır.
 - **`Ads`** — AdMob geçiş + ödüllü-geçiş (rewarded interstitial). `ADS_CFG` ayarları,
   `AD_UNITS.test` / `AD_UNITS.live` birim ID'leri. **Tuzak:** eklentinin
   `showRewardInterstitialAd()` sözü reklam KAPANINCA değil ödül verilince çözülür (reklam hâlâ

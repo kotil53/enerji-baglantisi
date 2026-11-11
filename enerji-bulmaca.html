@@ -780,6 +780,38 @@
   .about { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 24px 0 8px; font-size: 12px; color: var(--e-faint); text-align: center; }
   .about b { font-size: 14px; letter-spacing: 1px; color: var(--e-muted); }
 
+  /* ---- SIRALAMA (dünya listesi, toplam yıldız) ---- */
+  .pill.tap { -webkit-appearance: none; appearance: none; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; touch-action: manipulation; transition: transform .08s ease, background .15s ease; }
+  .pill.tap:active { transform: scale(0.95); background: var(--e-panel-hi); border-color: var(--e-border-hi); }
+  .pill.tap .i.cup { color: var(--e-accent-a); }
+  .name-card { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border: 1px solid var(--e-border); border-radius: 16px; background: var(--e-panel); }
+  .name-card label { font-size: 13px; font-weight: 700; color: var(--e-muted); }
+  .name-row { display: flex; gap: 8px; }
+  .name-row input {
+    flex: 1 1 auto; min-width: 0; height: 48px; padding: 0 12px;
+    border: 1px solid var(--e-border); border-radius: 12px; background: var(--e-panel-hi); color: var(--e-ink-hi);
+    font: inherit; font-size: 16px;   /* 16px altı iOS'ta odaklanınca sayfayı yakınlaştırır */
+    -webkit-user-select: text; user-select: text; touch-action: manipulation;
+  }
+  .name-row input:focus { outline: none; border-color: var(--e-accent-a); }
+  .name-row .btn2 { flex: 0 0 auto; }
+  .name-msg { margin: 0; min-height: 1.3em; font-size: 12px; color: var(--e-muted); }
+  .name-msg.bad { color: var(--e-danger); }
+  .rank-me { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px; font-size: 14px; font-weight: 700; color: var(--e-ink-hi); }
+  .link-btn { -webkit-appearance: none; appearance: none; border: 0; background: none; padding: 10px 4px; font: inherit; font-size: 13px; font-weight: 700; color: var(--e-accent-a); cursor: pointer; }
+  .rank-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 0; font-size: 14px; color: var(--e-muted); text-align: center; }
+  .rank-state p { margin: 0; }
+  .name-card[hidden], .rank-me[hidden], .rank-state[hidden], .rank-state .btn2[hidden] { display: none; }
+  .rank-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .rank-row { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 14px; border: 1px solid var(--e-border); border-radius: 14px; background: var(--e-panel); }
+  .rank-row.me { border-color: var(--e-accent-a); background: var(--e-panel-hi); }
+  .rank-row .pos { flex: 0 0 2.6em; font-weight: 800; color: var(--e-muted); font-variant-numeric: tabular-nums; }
+  .rank-row.top .pos { color: var(--e-hint); }
+  .rank-row .who { flex: 1; min-width: 0; font-weight: 700; color: var(--e-ink-hi); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank-row .sc { display: flex; align-items: center; gap: 4px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .rank-row .sc .i { width: 16px; height: 16px; color: var(--e-hint); }
+  .rank-gap { text-align: center; color: var(--e-faint); }
+
   /* Ses düzeyi kaydırıcısı (accent dolgu, 44px dokunma alanı) */
   input.range {
     -webkit-appearance: none; appearance: none;
@@ -1026,6 +1058,7 @@
   <defs>
     <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
     <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 01-10 0z"/><path d="M7 6H4a3 3 0 003 4M17 6h3a3 3 0 01-3 4M12 14v4M8 20h8"/></symbol>
     <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.8"/></symbol>
     <symbol id="i-infinity" viewBox="0 0 24 24"><path d="M12 12c-2-2.5-3.5-4-5.5-4a4 4 0 100 8c2 0 3.5-1.5 5.5-4zm0 0c2 2.5 3.5 4 5.5 4a4 4 0 100-8c-2 0-3.5 1.5-5.5 4z"/></symbol>
     <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="3"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></symbol>
@@ -1105,7 +1138,7 @@
     <div class="topbar">
       <button class="ibtn" id="homeSettingsBtn" type="button" aria-label="Ayarlar" title="Ayarlar" data-i18n-attr="aria-label:home.settingsAria;title:home.settingsAria"><svg class="i"><use href="#i-sliders"/></svg></button>
       <span></span>
-      <span class="pill" title="Toplam yıldız" aria-label="Toplam yıldız" data-i18n-attr="title:home.starsAria;aria-label:home.starsAria"><svg class="i f"><use href="#i-star"/></svg><b id="homeStars">0</b></span>
+      <button class="pill tap" id="homeRank" type="button" title="Sıralama" aria-label="Sıralama" data-i18n-attr="title:rank.title;aria-label:rank.title"><svg class="i cup" aria-hidden="true"><use href="#i-trophy"/></svg><svg class="i f" aria-hidden="true"><use href="#i-star"/></svg><b id="homeStars">0</b></button>
     </div>
     <div class="scroll">
       <div class="home-inner">
@@ -1163,6 +1196,30 @@
       <span class="pill" title="Kazanılan yıldız" aria-label="Kazanılan yıldız" data-i18n-attr="title:levels.starsAria;aria-label:levels.starsAria"><svg class="i f"><use href="#i-star"/></svg><b id="levelsStars">0</b></span>
     </div>
     <div class="scroll map" id="levelsScroll"></div>
+  </section>
+
+  <!-- SIRALAMA: toplam yıldıza göre dünya listesi (Supabase RPC; sunucu: server/supabase.sql). -->
+  <section id="rank" class="screen" aria-label="Sıralama" data-i18n-attr="aria-label:rank.title">
+    <div class="topbar">
+      <button class="ibtn" type="button" data-back aria-label="Geri" title="Geri" data-i18n-attr="aria-label:common.back;title:common.back"><svg class="i"><use href="#i-back"/></svg></button>
+      <h1 class="topbar-title" data-i18n="rank.title">Sıralama</h1>
+      <span class="pill" title="Toplam yıldız" aria-label="Toplam yıldız" data-i18n-attr="title:home.starsAria;aria-label:home.starsAria"><svg class="i f"><use href="#i-star"/></svg><b id="rankStars">0</b></span>
+    </div>
+    <div class="scroll page">
+      <div class="list">
+        <form class="name-card" id="nameCard" hidden>
+          <label for="nameInput" data-i18n="rank.nameLabel">Takma adın</label>
+          <div class="name-row">
+            <input id="nameInput" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+            <button class="btn2 hint" id="btnName" type="submit" data-i18n="rank.save">Kaydet</button>
+          </div>
+          <p class="name-msg" id="nameMsg" role="status"></p>
+        </form>
+        <div class="rank-me" id="rankMe" hidden><span id="rankMeTxt"></span><button class="link-btn" id="btnRename" type="button" data-i18n="rank.rename">Adı değiştir</button></div>
+        <div class="rank-state" id="rankState"><p id="rankMsg" role="status"></p><button class="btn2" id="btnRankRetry" type="button" data-i18n="common.retry" hidden>Tekrar dene</button></div>
+        <ol class="rank-list" id="rankList"></ol>
+      </div>
+    </div>
   </section>
 
   <!-- AYARLAR -->
@@ -1497,6 +1554,16 @@
       "home.ariaLabel": "Ana menü", "home.settingsAria": "Ayarlar", "home.starsAria": "Toplam yıldız",
       "home.dailyDoneSub": "Bugünkü günlük tamam ✓", "home.dailySub": "Günlük · {n} / {total}",
       "home.modeSub": "{mode} · Seviye {n}",
+      "rank.title": "Sıralama", "rank.nameLabel": "Takma adın", "rank.namePh": "örn. Kablo Ustası",
+      "rank.save": "Kaydet", "rank.saving": "Kaydediliyor…", "rank.saved": "Takma ad kaydedildi",
+      "rank.nameHint": "3–16 karakter. Takma adın ve toplam yıldızın herkese görünür.",
+      "rank.nameBad": "Bu ad kullanılamaz. Harf, rakam, boşluk ya da _ . - kullan.",
+      "rank.nameTaken": "Bu ad alınmış, başka bir tane dene.", "rank.nameBlocked": "Bu ad uygun değil, başka bir ad dene.",
+      "rank.offline": "Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.", "rank.rate": "Biraz bekleyip tekrar dene.",
+      "rank.error": "Bir sorun oluştu, tekrar dene.", "rank.loading": "Yükleniyor…",
+      "rank.empty": "Henüz kimse yok. Listeye ilk giren sen ol!",
+      "rank.me": "{name} · {n}. sıradasın", "rank.meNone": "{name} · listeye girmek için yıldız topla",
+      "rank.rename": "Adı değiştir",
       "tiles.campaign": "Seviyeler", "tiles.endless": "Sonsuz", "tiles.daily": "Günlük",
       "tiles.new": "Yeni", "tiles.locked": "Kilitli", "tiles.best": "En iyi {n}", "tiles.dailyDone": "Tamam ✓",
       "levels.starsAria": "Kazanılan yıldız", "levels.suffixLocked": ", kilitli",
@@ -1602,6 +1669,16 @@
       "home.ariaLabel": "Main menu", "home.settingsAria": "Settings", "home.starsAria": "Total stars",
       "home.dailyDoneSub": "Today's daily complete ✓", "home.dailySub": "Daily · {n} / {total}",
       "home.modeSub": "{mode} · Level {n}",
+      "rank.title": "Leaderboard", "rank.nameLabel": "Your nickname", "rank.namePh": "e.g. Wire Master",
+      "rank.save": "Save", "rank.saving": "Saving…", "rank.saved": "Nickname saved",
+      "rank.nameHint": "3–16 characters. Your nickname and total stars are public.",
+      "rank.nameBad": "That name can’t be used. Use letters, numbers, spaces or _ . -",
+      "rank.nameTaken": "That name is taken, try another.", "rank.nameBlocked": "That name isn’t allowed, try another.",
+      "rank.offline": "Couldn’t connect. Check your internet and try again.", "rank.rate": "Wait a moment and try again.",
+      "rank.error": "Something went wrong, try again.", "rank.loading": "Loading…",
+      "rank.empty": "No one here yet. Be the first on the list!",
+      "rank.me": "{name} · you are #{n}", "rank.meNone": "{name} · collect stars to get on the list",
+      "rank.rename": "Change name",
       "tiles.campaign": "Levels", "tiles.endless": "Endless", "tiles.daily": "Daily",
       "tiles.new": "New", "tiles.locked": "Locked", "tiles.best": "Best {n}", "tiles.dailyDone": "Done ✓",
       "levels.starsAria": "Stars earned", "levels.suffixLocked": ", locked",
@@ -1708,6 +1785,16 @@
       "home.ariaLabel": "القائمة الرئيسية", "home.settingsAria": "الإعدادات", "home.starsAria": "إجمالي النجوم",
       "home.dailyDoneSub": "اكتملت لعبة اليوم اليومية ✓", "home.dailySub": "يومي · {n} / {total}",
       "home.modeSub": "{mode} · المستوى {n}",
+      "rank.title": "لوحة المتصدرين", "rank.nameLabel": "اسمك المستعار", "rank.namePh": "مثال: Wire Master",
+      "rank.save": "حفظ", "rank.saving": "جارٍ الحفظ…", "rank.saved": "تم حفظ الاسم المستعار",
+      "rank.nameHint": "من 3 إلى 16 حرفًا. اسمك المستعار ومجموع نجومك مرئيان للجميع.",
+      "rank.nameBad": "لا يمكن استخدام هذا الاسم. استخدم الحروف اللاتينية أو الأرقام أو المسافات أو _ . -",
+      "rank.nameTaken": "هذا الاسم مستخدم، جرّب اسمًا آخر.", "rank.nameBlocked": "هذا الاسم غير مسموح، جرّب اسمًا آخر.",
+      "rank.offline": "تعذّر الاتصال. تحقّق من الإنترنت وأعد المحاولة.", "rank.rate": "انتظر قليلًا ثم أعد المحاولة.",
+      "rank.error": "حدث خطأ، أعد المحاولة.", "rank.loading": "جارٍ التحميل…",
+      "rank.empty": "لا أحد هنا بعد. كن أول من يدخل القائمة!",
+      "rank.me": "{name} · ترتيبك {n}", "rank.meNone": "{name} · اجمع النجوم لتدخل القائمة",
+      "rank.rename": "تغيير الاسم",
       "tiles.campaign": "المستويات", "tiles.endless": "بلا نهاية", "tiles.daily": "يومي",
       "tiles.new": "جديد", "tiles.locked": "مقفل", "tiles.best": "الأفضل {n}", "tiles.dailyDone": "تم ✓",
       "levels.starsAria": "النجوم المكتسبة", "levels.suffixLocked": "، مقفل",
@@ -1813,6 +1900,16 @@
       "home.ariaLabel": "Menú principal", "home.settingsAria": "Ajustes", "home.starsAria": "Estrellas totales",
       "home.dailyDoneSub": "Diario de hoy completado ✓", "home.dailySub": "Diario · {n} / {total}",
       "home.modeSub": "{mode} · Nivel {n}",
+      "rank.title": "Clasificación", "rank.nameLabel": "Tu apodo", "rank.namePh": "p. ej. Maestro del Cable",
+      "rank.save": "Guardar", "rank.saving": "Guardando…", "rank.saved": "Apodo guardado",
+      "rank.nameHint": "3–16 caracteres. Tu apodo y tus estrellas totales son públicos.",
+      "rank.nameBad": "Ese nombre no se puede usar. Usa letras, números, espacios o _ . -",
+      "rank.nameTaken": "Ese nombre ya está en uso, prueba otro.", "rank.nameBlocked": "Ese nombre no está permitido, prueba otro.",
+      "rank.offline": "No se pudo conectar. Revisa tu internet e inténtalo de nuevo.", "rank.rate": "Espera un momento e inténtalo de nuevo.",
+      "rank.error": "Algo salió mal, inténtalo de nuevo.", "rank.loading": "Cargando…",
+      "rank.empty": "Aún no hay nadie. ¡Sé el primero de la lista!",
+      "rank.me": "{name} · estás en el puesto {n}", "rank.meNone": "{name} · consigue estrellas para entrar en la lista",
+      "rank.rename": "Cambiar nombre",
       "tiles.campaign": "Niveles", "tiles.endless": "Infinito", "tiles.daily": "Diario",
       "tiles.new": "Nuevo", "tiles.locked": "Bloqueado", "tiles.best": "Mejor {n}", "tiles.dailyDone": "Hecho ✓",
       "levels.starsAria": "Estrellas ganadas", "levels.suffixLocked": ", bloqueado",
@@ -1948,6 +2045,7 @@
     updateHintBtn();
     updateLives();
     if (screenNow === "levels") renderLevels();
+    if (screenNow === "rank") renderRank();
     syncMenu();
   }
 
@@ -4545,6 +4643,7 @@
       // Kart açıkken uygulama kapansa da "Devam Et" tamamlanan seviyeyi tekrar açmasın
       // (en ileri gider; "Seviyeler"in son seviyesi lastLevelFor'da 199'a sınırlanır).
       if (lv > Store.get(ekey("lastLevel"), 0)) Store.set(ekey("lastLevel"), lv);
+      Online.sync();   // yeni yıldız varsa dünya sıralamasına sessizce gönder (adı olmayanlarda no-op)
     } else {
       // GÜNLÜK: birikimli hamle + yıldız
       Store.set(dkey("moves"), Store.get(dkey("moves"), 0) + game.moves);
@@ -4944,7 +5043,7 @@
      ----------------------------------------------------------------------
      Oyun tuvali hep arkada durur; ekranlar üstüne biner. Herhangi bir ekran açıkken
      menuOpen = true -> süre, ipucu nabzı ve girdi zaten durur (bkz. frame, onPointerDown).
-     screenNow: "game" (ekran yok) | "home" | "levels" | "settings" | "pause".
+     screenNow: "game" (ekran yok) | "home" | "levels" | "rank" | "settings" | "pause".
      Akış: açılış -> home; home -[Oyna | kutucuk | harita]-> game; game -☰-> pause -> home.
      Aynı tahtaya ana menüden dönülünce tahta yeniden kurulmaz (levelKey) -> hamleler/süre kalır. */
   function byId(id) { return document.getElementById(id); }
@@ -4961,7 +5060,126 @@
     soundBtn.textContent = (Sound.muted || Sound.vol <= 0) ? "🔇" : "🔊";  // 🔇 / 🔊
   }
 
-  var screens = { home: byId("home"), levels: byId("levels"), settings: byId("settings"), pause: byId("pause") };
+  /* --- Dünya sıralaması: puan = toplam yıldız (Seviyeler + Sonsuz). Supabase RPC; kurulum ve güvenlik
+     modeli: server/supabase.sql (Yörünge'deki düzenin aynısı). Ağ yoksa oyun etkilenmez, gönderim sonraki
+     kazanmada ya da Sıralama açılınca yeniden denenir. --- */
+  var ONLINE_CFG = {   // Supabase "enerji" projesi (Frankfurt); publishable anahtar herkese açık olacak şekilde tasarlandı
+    URL: "https://hnovdpumjqdflkcxxjxa.supabase.co",
+    KEY: "sb_publishable_wEyNmcgxDob9WHwiEuTBeg_m7JxK7wY"
+  };
+  var NAME_RE = /^[A-Za-z0-9ÇĞİÖŞÜçğıöşü_. -]{3,16}$/;   // sunucudaki enerji_name_ok ile aynı (küfür listesi yalnız sunucuda)
+  function totalStarsAll() { return Store.get(pkey("campaign", "totalStars"), 0) + Store.get(pkey("endless", "totalStars"), 0); }
+  function randHex(n) {
+    var a = new Uint8Array(n), s = "", i;
+    crypto.getRandomValues(a);
+    for (i = 0; i < n; i++) s += (a[i] < 16 ? "0" : "") + a[i].toString(16);
+    return s;
+  }
+  var Online = {
+    // Cihaz kimliği (UUID v4) ve gizli anahtar ilk kullanımda üretilir; sunucu anahtarın yalnız özetini tutar
+    id: function () {
+      var v = Store.get("online.id", "");
+      if (!v) {
+        var h = randHex(16);
+        v = h.slice(0, 8) + "-" + h.slice(8, 12) + "-4" + h.slice(13, 16) + "-" + (8 | (parseInt(h.charAt(16), 16) & 3)).toString(16) + h.slice(17, 20) + "-" + h.slice(20);
+        Store.set("online.id", v);
+      }
+      return v;
+    },
+    secret: function () {
+      var v = Store.get("online.secret", "");
+      if (!v) { v = randHex(24); Store.set("online.secret", v); }
+      return v;
+    },
+    name: function () { return Store.get("online.name", ""); },
+    _rpc: function (fn, body) {
+      var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 8000);
+      return fetch(ONLINE_CFG.URL + "/rest/v1/rpc/" + fn, {
+        method: "POST", signal: ctl ? ctl.signal : undefined,
+        headers: { "Content-Type": "application/json", apikey: ONLINE_CFG.KEY },   // publishable anahtar JWT değil: Authorization yok
+        body: JSON.stringify(body)
+      }).then(function (r) {
+        clearTimeout(tm);
+        if (!r.ok) throw new Error("http " + r.status);
+        return r.json();
+      }, function (e) { clearTimeout(tm); throw e; });
+    },
+    // Adı ve toplam yıldızı gönderir; sunucu {ok, err?, rank?} döner (sunucu en yükseği tutar, sıfırlama puanı düşürmez)
+    submit: function (name) {
+      var sent = totalStarsAll();
+      return this._rpc("submit_score", { p_id: this.id(), p_secret: this.secret(), p_name: name, p_score: sent })
+        .then(function (r) {
+          if (r && r.ok) { Store.set("online.name", name); Store.set("online.sent", sent); }
+          return r;
+        });
+    },
+    // Gönderilmemiş yıldız varsa sessizce gönderir; çevrimdışıysa sonra yeniden dener. Hep çözülür.
+    sync: function () {
+      if (!this.name() || totalStarsAll() <= Store.get("online.sent", 0)) return Promise.resolve();
+      return this.submit(this.name()).catch(function () {});
+    },
+    load: function () {
+      var named = !!this.name();
+      return Promise.all([this._rpc("top_scores", { p_limit: 50 }), named ? this._rpc("my_rank", { p_id: this.id() }) : [],
+                          named ? this._rpc("around_me", { p_id: this.id() }) : []]);
+    }
+  };
+
+  var _rankReq = 0;
+  function rankState(key, retry) {
+    byId("rankState").hidden = !key;
+    byId("rankMsg").textContent = key ? t(key) : "";
+    byId("btnRankRetry").hidden = !retry;
+  }
+  function nameMsg(k, bad) { var m = byId("nameMsg"); m.textContent = t(k); m.classList.toggle("bad", !!bad); }
+  function showNameCard(v) {
+    byId("nameCard").hidden = false;
+    byId("nameInput").value = v;
+    byId("nameInput").placeholder = t("rank.namePh");
+    nameMsg("rank.nameHint", false);
+  }
+  // Sunucudan gelen ad güvenilmez: yalnız textContent ile yazılır
+  function rankRow(e, isMe) {
+    var li = document.createElement("li"), pos = document.createElement("span"), who = document.createElement("span"), sc = document.createElement("span");
+    li.className = "rank-row" + (isMe ? " me" : "") + (e.rank <= 3 ? " top" : "");
+    pos.className = "pos"; pos.textContent = e.rank;
+    who.className = "who"; who.textContent = e.name;
+    sc.className = "sc"; sc.innerHTML = '<svg class="i f" aria-hidden="true"><use href="#i-star"/></svg>';
+    sc.appendChild(document.createTextNode(e.score));
+    li.appendChild(pos); li.appendChild(who); li.appendChild(sc);
+    return li;
+  }
+  function renderRank() {
+    var ol = byId("rankList"), req = ++_rankReq;
+    byId("rankStars").textContent = totalStarsAll();
+    ol.innerHTML = "";
+    byId("rankMe").hidden = true;
+    if (!Online.name()) showNameCard(""); else byId("nameCard").hidden = true;
+    rankState("rank.loading");
+    Online.sync().then(function () { return Online.load(); }).then(function (res) {
+      if (req !== _rankReq || screenNow !== "rank") return;
+      var top = res[0] || [], me = res[1] && res[1][0], seen = false;
+      top.forEach(function (e) { var isMe = !!me && e.name === me.name; seen = seen || isMe; ol.appendChild(rankRow(e, isMe)); });
+      // Oyuncu ilk 50'de değilse: "…" + çevresi (3 üstü, kendisi, 2 altı)
+      if (me && !seen && me.score > 0) {
+        var shown = top.map(function (e) { return e.name; });
+        var near = (res[2] || []).filter(function (e) { return shown.indexOf(e.name) < 0; });
+        if (!near.length) near = [me];
+        if (!top.length || near[0].rank > top[top.length - 1].rank + 1) {   // "…" yalnız arada atlanan sıra varsa
+          var gap = document.createElement("li"); gap.className = "rank-gap"; gap.textContent = "…"; gap.setAttribute("aria-hidden", "true");
+          ol.appendChild(gap);
+        }
+        near.forEach(function (e) { ol.appendChild(rankRow(e, e.me === true || e.name === me.name)); });
+      }
+      rankState(top.length ? "" : "rank.empty");
+      if (me) {
+        byId("rankMe").hidden = false;
+        byId("rankMeTxt").textContent = me.score > 0 ? t("rank.me", { name: me.name, n: me.rank }) : t("rank.meNone", { name: me.name });
+      }
+    }, function () { if (req === _rankReq) rankState("rank.offline", true); });
+  }
+
+  var screens = { home: byId("home"), levels: byId("levels"), rank: byId("rank"), settings: byId("settings"), pause: byId("pause") };
   var confirmEl = byId("confirm");
   var screenNow = "home";
 
@@ -4970,6 +5188,7 @@
     menuOpen = name !== "game";
     for (var k in screens) screens[k].classList.toggle("show", k === name);
     if (name === "levels") renderLevels();
+    if (name === "rank") renderRank();
     if (menuOpen) syncMenu();
     var f = screens[name] && screens[name].querySelector("[data-autofocus]");
     if (f) setTimeout(function () { try { f.focus({ preventScroll: true }); } catch (e) {} }, 60);
@@ -5007,7 +5226,7 @@
 
   function syncHome() {
     var d = dailyState(), i;
-    byId("homeStars").textContent = Store.get(pkey("campaign", "totalStars"), 0) + Store.get(pkey("endless", "totalStars"), 0);
+    byId("homeStars").textContent = totalStarsAll();
     var cDone = bestOf("campaign") >= CAMPAIGN_LEVELS && Store.get(pkey("campaign", "done"), false) ? CAMPAIGN_LEVELS : lastLevelFor("campaign");   // tamamlanan seviye sayısı
     byId("tileCampaign").textContent = cDone > 0 ? cDone + " / " + CAMPAIGN_LEVELS : t("tiles.new");
     var eb = bestOf("endless"), eOpen = endlessUnlocked(), eBtn = byId("tileEndlessBtn");
@@ -5222,7 +5441,7 @@
   function handleBack() {
     if (confirmEl.classList.contains("show")) { closeConfirm(false); return; }
     if (screenNow === "pause") { showScreen("game"); return; }
-    if (screenNow === "settings" || screenNow === "levels") { showScreen("home"); return; }
+    if (screenNow === "settings" || screenNow === "levels" || screenNow === "rank") { showScreen("home"); return; }
     if (screenNow === "home") {          // Android: uygulamadan çık; tarayıcıda/iOS'ta bir şey yapma
       try { var ap = capPlugin("App"); if (ap && ap.exitApp) ap.exitApp(); } catch (e) {}
       return;
@@ -5283,6 +5502,25 @@
     syncVol();
   });
   byId("setRate").addEventListener("click", function () { Rate.open(); });
+
+  // Sıralama
+  byId("homeRank").addEventListener("click", function () { showScreen("rank"); });
+  byId("btnRankRetry").addEventListener("click", renderRank);
+  byId("btnRename").addEventListener("click", function () { showNameCard(Online.name()); byId("nameInput").focus(); });
+  byId("nameCard").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var v = byId("nameInput").value.replace(/\s+/g, " ").trim(), btn = byId("btnName");
+    if (!NAME_RE.test(v)) { Haptic.error(); nameMsg("rank.nameBad", true); return; }
+    btn.disabled = true;
+    nameMsg("rank.saving", false);
+    Online.submit(v).then(function (r) {
+      btn.disabled = false;
+      var err = r && r.err;
+      if (r && r.ok) { Haptic.success(); byId("nameInput").blur(); showToast(t("rank.saved"), 1400); renderRank(); return; }
+      Haptic.error();
+      nameMsg(err === "taken" ? "rank.nameTaken" : err === "name" ? "rank.nameBlocked" : err === "rate" ? "rank.rate" : "rank.error", true);
+    }, function () { btn.disabled = false; nameMsg("rank.offline", true); });
+  });
   byId("setReset").addEventListener("click", function () {
     askConfirm({
       title: t("confirm.resetTitle"),
