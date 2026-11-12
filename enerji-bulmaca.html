@@ -2110,15 +2110,71 @@
       o.connect(g); g.connect(this._out() || ac.destination);
       o.start(t); o.stop(t + dur + 0.02);
     },
-    rotate: function () { this.blip(300 + rndInt(50), 0.055, "square", 0.09); },
-    locked: function () { this.blip(160, 0.13, "sawtooth", 0.11, 95); },
-    undo:   function () { this.blip(260, 0.05, "square", 0.07); },
-    boom:   function () { this.blip(190, 0.45, "sawtooth", 0.2, 38); this.blip(90, 0.6, "square", 0.14, 30); },
-    win:    function () {
-      var s = this, notes = [523, 659, 784, 1047];
-      notes.forEach(function (f, i) { setTimeout(function () { s.blip(f, 0.16, "triangle", 0.13); }, i * 70); });
+    // Efekt yapı taşları. o.at: gecikme (sn) — setTimeout yerine ses saatiyle planlanır, takılmaz.
+    // Rastgelelik Math.random: oyunun tohumlu RNG'sine (günlük mod) dokunmasın.
+    _ok: function () { return (!this.muted && this.vol > 0 && this.ensure()) || null; },
+    _tone: function (freq, dur, o) {
+      var ac = this._ok(); if (!ac) return;
+      var t = ac.currentTime + (o.at || 0), osc = ac.createOscillator(), g = ac.createGain(), end = g;
+      osc.type = o.type || "sine";
+      osc.frequency.setValueAtTime(freq, t);
+      if (o.slide) osc.frequency.exponentialRampToValueAtTime(o.slide, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(o.vol, t + (o.atk || 0.006));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(g);
+      if (o.lp) { end = ac.createBiquadFilter(); end.type = "lowpass"; end.frequency.value = o.lp; g.connect(end); }
+      end.connect(this._out());
+      osc.start(t); osc.stop(t + dur + 0.03);
     },
-    star:   function (i) { this.blip(680 + i * 240, 0.12, "triangle", 0.12); },
+    _nbuf: null,
+    _noise: function (dur, o) {
+      var ac = this._ok(); if (!ac) return;
+      if (!this._nbuf) {
+        var n = ac.sampleRate | 0, d;
+        this._nbuf = ac.createBuffer(1, n, ac.sampleRate); d = this._nbuf.getChannelData(0);
+        for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+      }
+      var t = ac.currentTime + (o.at || 0), src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+      src.buffer = this._nbuf; src.loop = true;
+      f.type = o.band ? "bandpass" : "lowpass";
+      f.frequency.setValueAtTime(o.f, t);
+      if (o.fTo) f.frequency.exponentialRampToValueAtTime(o.fTo, t + dur);
+      if (o.q) f.Q.value = o.q;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(o.vol, t + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(f); f.connect(g); g.connect(this._out());
+      src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.03);
+    },
+    // Çan: temel + hafif uyumsuz üst ton (2.01x) -> metalik, cam gibi tını
+    _chime: function (freq, at, vol) {
+      this._tone(freq, 0.9, { at: at, vol: vol, atk: 0.004 });
+      this._tone(freq * 2.01, 0.4, { at: at, vol: vol * 0.3, atk: 0.004 });
+    },
+    // Döndürme: anahtar/düğme tıkı (kısa filtreli gürültü + küçük ton)
+    rotate: function () {
+      this._noise(0.035, { band: 1, f: 2600 + Math.random() * 600, q: 1.2, vol: 0.2 });
+      this._tone(480 + Math.random() * 60, 0.06, { slide: 360, vol: 0.06 });
+    },
+    // Kilitli parça: boğuk "tok" (sert testere yerine filtreli üçgen)
+    locked: function () {
+      this._tone(150, 0.16, { type: "triangle", slide: 95, vol: 0.2, lp: 700 });
+      this._noise(0.06, { f: 500, vol: 0.12 });
+    },
+    undo: function () { this._tone(380, 0.09, { type: "triangle", slide: 280, vol: 0.09, lp: 1800 }); },
+    // Kısa devre: kıvılcım cızırtıları + aşağı süzülen boğuk patlama
+    boom: function () {
+      this._noise(0.55, { f: 4000, fTo: 120, vol: 0.3 });
+      this._tone(130, 0.5, { type: "sawtooth", slide: 32, vol: 0.2, lp: 420 });
+      for (var i = 0; i < 4; i++) this._noise(0.025, { band: 1, f: 3000 + Math.random() * 3000, q: 2, vol: 0.12, at: 0.04 + i * 0.07 + Math.random() * 0.03 });
+    },
+    win: function () {
+      var s = this;
+      [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) { s._chime(f, i * 0.075, 0.11); });
+      this._chime(2093, 0.36, 0.035);   // sonda ince parıltı
+    },
+    star: function (i) { this._chime([1046.5, 1318.5, 1568][i] || 1568, 0, 0.12); },   // Do–Mi–Sol, sırayla yükselir
 
     // 🔊 HUD düğmesi — ana kısma: SES efektleri VE müzik birden.
     // "Ses çıkmıyor" (sessiz ya da düzey 0) durumunda tek dokunuş sesi geri getirir.
@@ -2191,6 +2247,15 @@
       m.bus.gain.setValueAtTime(0.0001, ac.currentTime);
       m.bus.gain.exponentialRampToValueAtTime(0.2, ac.currentTime + 2.5);  // yumuşak giriş
       m.bus.connect(this._out() || ac.destination);
+      // Pad + arpej -> yumuşatıcı alçak geçiren -> bus. Arpejler ayrıca 1.5 adımlık yankıya da gider.
+      var lp = ac.createBiquadFilter(), echo = ac.createDelay(2), fb = ac.createGain(), wet = ac.createGain();
+      lp.type = "lowpass"; lp.frequency.value = 1600; lp.Q.value = 0.4;
+      echo.delayTime.value = m.STEP * 1.5;
+      fb.gain.value = 0.3; wet.gain.value = 0.35;
+      lp.connect(m.bus);
+      echo.connect(fb); fb.connect(echo); echo.connect(wet); wet.connect(lp);
+      m.in = lp; m.echo = echo;
+      m.nodes = [m.bus, lp, echo, fb, wet];   // stopMusic hepsini koparır (yankı döngüsü kendi kendine sönmez)
       m.step = 0;
       m.nextT = ac.currentTime + 0.15;
       m.timer = setInterval(function () { self._musTick(); }, 120);
@@ -2201,7 +2266,7 @@
       var m = this._mus, ac = this.ac;
       m.waking = false; m.gen++;   // bekleyen uyandırma varsa geçersizle
       if (m.timer) { clearInterval(m.timer); m.timer = null; }
-      var b = m.bus; m.bus = null;
+      var b = m.bus, ns = m.nodes; m.bus = m.in = m.echo = m.nodes = null;
       if (b && ac) {
         var t = ac.currentTime, tail = quick ? 0.18 : 1.2;
         try {
@@ -2209,7 +2274,7 @@
           b.gain.setValueAtTime(b.gain.value, t);
           b.gain.exponentialRampToValueAtTime(0.0001, t + tail);
         } catch (e) {}
-        setTimeout(function () { try { b.disconnect(); } catch (e) {} }, (tail + 0.2) * 1000);
+        setTimeout(function () { ns.forEach(function (n) { try { n.disconnect(); } catch (e) {} }); }, (tail + 0.2) * 1000);
       }
     },
 
@@ -2245,6 +2310,8 @@
       if (rnd() < 0.55) {
         var base = (step % 8 < 4) ? 5 : 9;          // orta / üst oktav arası dolaş
         var n = sc[base + rndInt(5)];
+        if (n === m.last) n = sc[base + (sc.indexOf(n) - base + 2) % 5];   // aynı nota üst üste çalmasın
+        m.last = n;
         this._arp(n, t + (rnd() < 0.28 ? m.STEP * 0.5 : 0));
       }
     },
@@ -2255,7 +2322,7 @@
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(0.18, t + 1.8);    // yavaş atak
       g.gain.exponentialRampToValueAtTime(0.0001, t + 7.5);  // uzun kuyruk
-      g.connect(m.bus);
+      g.connect(m.in);
       var a = ac.createOscillator(), b = ac.createOscillator();
       a.type = "triangle"; a.frequency.value = freq;
       b.type = "sine";     b.frequency.value = freq * 1.006;  // hafif detune -> canlılık
@@ -2270,7 +2337,7 @@
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(0.15, t + 0.06);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
-      o.connect(g); g.connect(m.bus);
+      o.connect(g); g.connect(m.in); g.connect(m.echo);
       o.start(t); o.stop(t + 1.2);
     }
   };
