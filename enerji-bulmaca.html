@@ -2128,15 +2128,18 @@
       osc.start(t); osc.stop(t + dur + 0.03);
     },
     _nbuf: null,
-    _noise: function (dur, o) {
-      var ac = this._ok(); if (!ac) return;
+    _noiseBuf: function (ac) {   // 1 sn beyaz gürültü, bir kez üretilir (efektler + müzik şıkırtısı)
       if (!this._nbuf) {
         var n = ac.sampleRate | 0, d;
         this._nbuf = ac.createBuffer(1, n, ac.sampleRate); d = this._nbuf.getChannelData(0);
         for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
       }
+      return this._nbuf;
+    },
+    _noise: function (dur, o) {
+      var ac = this._ok(); if (!ac) return;
       var t = ac.currentTime + (o.at || 0), src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
-      src.buffer = this._nbuf; src.loop = true;
+      src.buffer = this._noiseBuf(ac); src.loop = true;
       f.type = o.band ? "bandpass" : "lowpass";
       f.frequency.setValueAtTime(o.f, t);
       if (o.fTo) f.frequency.exponentialRampToValueAtTime(o.fTo, t + dur);
@@ -2196,8 +2199,9 @@
     /* --------------------------------------------------------------------
        ÜRETKEN MÜZİK — sakin ambient (WebAudio ile sentezlenir, dosya yok)
        --------------------------------------------------------------------
-       Yavaş bir pad akoru (~9 sn'de bir değişir) + üstünde seyrek arpej.
-       Notalar A minör pentatonikten seçilir -> hiçbiri diğeriyle çelişmez.
+       Am7–Fmaj7–Cadd9–G6 pad akorları (~7 sn'de bir değişir), yumuşak bas,
+       hafif ritim (davul + şıkırtı) ve akor seslerinden yükselip inen arpej.
+       Arpej yalnız o anki akorun seslerini çalar -> hiçbir nota çelişmez.
        "A Tale of Two Clocks" deseni: setInterval yalnız ileriyi PLANLAR,
        asıl zamanlama AudioContext saatiyle örneklenir -> takılma olmaz.
        Otomatik-oynatma politikası: ilk kullanıcı jestinde başlar (bkz. 12).
@@ -2206,14 +2210,12 @@
       timer: null, bus: null, step: 0, nextT: 0,
       waking: false,     // resume() bekleniyor mu (çift uyandırmayı önler)
       gen: 0,            // istek kuşağı — stopMusic artırır, bayat uyandırmayı geçersizler
-      STEP: 0.55,        // saniye / adım
+      STEP: 0.42,        // saniye / adım (sekizlik; ~71 BPM)
       AHEAD: 1.0,        // kaç saniye ileriye planla
-      // A minör pentatonik, üç oktav (Hz)
-      scale: [110.00, 130.81, 146.83, 164.81, 196.00,
-              220.00, 261.63, 293.66, 329.63, 392.00,
-              440.00, 523.25, 587.33, 659.25, 783.99],
-      roots: [0, 4, 1, 2]   // pad kök ilerlemesi (Am–G–C–D hissi)
+      // Akorlar MIDI nota no: [bas, pad sesleri...] — Am7, Fmaj7, Cadd9, G6 (vi–IV–I–V)
+      chords: [[45, 57, 60, 64, 67], [41, 53, 57, 60, 64], [48, 55, 60, 62, 64], [43, 55, 59, 62, 64]]
     },
+    _hz: function (n) { return 440 * Math.pow(2, (n - 69) / 12); },
 
     // Motoru başlat. muted / musicOn kapalıysa ya da AudioContext yoksa sessizce çıkar.
     // Idempotent: zaten çalışıyorsa hiçbir şey yapmaz (arka plandan dönüş, reklam bitişi).
@@ -2249,7 +2251,7 @@
       m.bus.connect(this._out() || ac.destination);
       // Pad + arpej -> yumuşatıcı alçak geçiren -> bus. Arpejler ayrıca 1.5 adımlık yankıya da gider.
       var lp = ac.createBiquadFilter(), echo = ac.createDelay(2), fb = ac.createGain(), wet = ac.createGain();
-      lp.type = "lowpass"; lp.frequency.value = 1600; lp.Q.value = 0.4;
+      lp.type = "lowpass"; lp.frequency.value = 2600; lp.Q.value = 0.4;
       echo.delayTime.value = m.STEP * 1.5;
       fb.gain.value = 0.3; wet.gain.value = 0.35;
       lp.connect(m.bus);
@@ -2298,29 +2300,58 @@
     },
 
     _musStep: function (step, t) {
-      var m = this._mus, sc = m.scale;
-      // her 16 adımda (~8.8 sn) yeni pad akoru: kök (bir oktav altta) + pentatonik 3. + 5. derece
-      if (step % 16 === 0) {
-        var r = m.roots[((step / 16) | 0) % m.roots.length];
-        this._pad(sc[r] * 0.5, t);
-        this._pad(sc[r + 2], t);
-        this._pad(sc[r + 4], t);
+      var m = this._mus, s = step % 16, ch = m.chords[((step / 16) | 0) % m.chords.length], i;
+      // her 16 adımda (~6.7 sn) yeni pad akoru
+      if (s === 0) for (i = 1; i < ch.length; i++) this._pad(this._hz(ch[i]), t);
+      // bas: 1. ve 9. adımda, bazen 15.'de senkop
+      if (s === 0 || s === 8 || (s === 14 && rnd() < 0.5)) this._bass(this._hz(ch[0]), t);
+      // ritim: yarım ölçüde bir yumuşak davul, tek adımlarda şıkırtı (her ikincisi vurgulu)
+      if (s % 8 === 0) this._kick(t);
+      if (s % 2 === 1) this._hat(t, s % 4 === 3 ? 0.05 : 0.025);
+      // arpej: akor seslerinde iki oktav yukarı çıkıp iner (adım 0-7 çıkış, 8-15 iniş); ~%25 boşluk nefes verir
+      if (rnd() < 0.75) {
+        var j = s < 8 ? s : 15 - s, tones = ch.slice(1);
+        this._arp(this._hz(tones[j % tones.length] + (j < 4 ? 12 : 24)), t);
       }
-      // seyrek arpej: adımların ~yarısında tek yumuşak nota (nefes alsın diye atlanır)
-      if (rnd() < 0.55) {
-        var base = (step % 8 < 4) ? 5 : 9;          // orta / üst oktav arası dolaş
-        var n = sc[base + rndInt(5)];
-        if (n === m.last) n = sc[base + (sc.indexOf(n) - base + 2) % 5];   // aynı nota üst üste çalmasın
-        m.last = n;
-        this._arp(n, t + (rnd() < 0.28 ? m.STEP * 0.5 : 0));
-      }
+    },
+
+    _bass: function (freq, t) {
+      var ac = this.ac, m = this._mus, o = ac.createOscillator(), g = ac.createGain(), len = m.STEP * 3;
+      o.type = "triangle"; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      o.connect(g); g.connect(m.in);
+      o.start(t); o.stop(t + len + 0.05);
+    },
+    // Yumuşak davul: aşağı süzülen sinüs (tok "dum", sert vuruş değil)
+    _kick: function (t) {
+      var ac = this.ac, o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.setValueAtTime(110, t);
+      o.frequency.exponentialRampToValueAtTime(42, t + 0.18);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.32, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      o.connect(g); g.connect(this._mus.in);
+      o.start(t); o.stop(t + 0.32);
+    },
+    // Şıkırtı: tiz gürültü; alçak geçireni atlayıp doğrudan bus'a gider (yoksa süzülüp kaybolur)
+    _hat: function (t, vol) {
+      var ac = this.ac, src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+      src.buffer = this._noiseBuf(ac);
+      f.type = "highpass"; f.frequency.value = 7000;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.003);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+      src.connect(f); f.connect(g); g.connect(this._mus.bus);
+      src.start(t, Math.random() * 0.5); src.stop(t + 0.08);
     },
 
     _pad: function (freq, t) {
       var ac = this.ac, m = this._mus;
       var g = ac.createGain();
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.18, t + 1.8);    // yavaş atak
+      g.gain.exponentialRampToValueAtTime(0.13, t + 1.8);    // yavaş atak (4 ses birden çalar)
       g.gain.exponentialRampToValueAtTime(0.0001, t + 7.5);  // uzun kuyruk
       g.connect(m.in);
       var a = ac.createOscillator(), b = ac.createOscillator();
