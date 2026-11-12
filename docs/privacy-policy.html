@@ -51,7 +51,7 @@
 <header>
   <div class="wrap">
     <h1>Gizlilik Politikası — Enerji Bağlantısı</h1>
-    <p>Son güncelleme: 29 Ağustos 2026</p>
+    <p>Son güncelleme: 11 Kasım 2026 · Last updated: 11 November 2026</p>
   </div>
 </header>
 
@@ -65,9 +65,10 @@
 
     <h2>1. Kısaca</h2>
     <ul>
-      <li>Uygulamanın <strong>kendi sunucusu yoktur</strong>. Hesap açmanız, giriş yapmanız veya
-      kişisel bilgi vermeniz gerekmez.</li>
-      <li>Oyun ilerlemeniz ve ayarlarınız <strong>yalnızca cihazınızda</strong> saklanır.</li>
+      <li>Hesap açmanız, giriş yapmanız veya kişisel bilgi vermeniz gerekmez.</li>
+      <li>Oyun ilerlemeniz ve ayarlarınız <strong>cihazınızda</strong> saklanır.</li>
+      <li><strong>İsteğe bağlı dünya sıralaması:</strong> bir takma ad kaydederseniz takma adınız ve
+      toplam yıldız sayınız sunucumuza gönderilir ve <strong>herkese görünür</strong> (bkz. 2a).</li>
       <li>Uygulama <strong>Google AdMob</strong> aracılığıyla reklam gösterir. Reklam ağı,
       standart reklam verilerini (aşağıda açıklanmıştır) toplar.</li>
       <li>Başka hiçbir analiz, izleme veya üçüncü taraf SDK kullanılmaz.</li>
@@ -82,6 +83,21 @@
       <li>"Reklamsız" durumu (ileride bir satın alma eklenirse)</li>
     </ul>
     <p>Uygulamayı kaldırdığınızda bu veriler silinir. Bu verilere biz erişemeyiz.</p>
+
+    <h2>2a. Dünya sıralaması (isteğe bağlı)</h2>
+    <p>Sıralama ekranında bir takma ad kaydetmediğiniz sürece sunucuya hiçbir oyun verisi gönderilmez.
+    Takma ad kaydederseniz:</p>
+    <ul>
+      <li><strong>Sunucuda saklananlar:</strong> seçtiğiniz takma ad, toplam yıldız sayınız, cihazınızda
+      rastgele üretilen bir kimlik ve gizli anahtarın tek yönlü özeti (SHA-256), son güncelleme zamanı.
+      Adınız, e-postanız, reklam kimliğiniz veya konumunuz <strong>gönderilmez</strong>.</li>
+      <li><strong>Herkese görünenler:</strong> takma adınız, toplam yıldızınız ve sıranız.</li>
+      <li><strong>Kötüye kullanım önleme:</strong> yeni kayıtları sınırlamak için IP adresinizin yalnızca
+      tek yönlü özeti en fazla 1 saat tutulur; IP adresinin kendisi saklanmaz.</li>
+      <li><strong>Altyapı:</strong> veriler Supabase (AB, Frankfurt) üzerinde barındırılır.</li>
+      <li>Takma adınızı istediğiniz an Sıralama ekranından değiştirebilirsiniz. Kaydınızın silinmesi için
+      takma adınızla birlikte bize yazın (bkz. 9).</li>
+    </ul>
 
     <h2>3. Bildirimler (yerel hatırlatıcılar)</h2>
     <p>Uygulama, "oyuna geri dön" türünde hatırlatıcılar planlayabilir. Bu bildirimler
@@ -134,6 +150,8 @@
     <h2>7. Veri saklama ve silme</h2>
     <ul>
       <li>Cihazda saklanan oyun verileri, uygulamayı kaldırdığınızda silinir.</li>
+      <li>Dünya sıralaması kaydınız (takma ad ve toplam yıldız), siz silinmesini isteyene kadar saklanır;
+      talebiniz üzerine silinir.</li>
       <li>AdMob tarafından toplanan veriler Google'ın saklama politikalarına tabidir
       (yukarıdaki bağlantılara bakın).</li>
       <li>Talepleriniz için bizimle iletişime geçebilirsiniz (aşağıya bakın).</li>
@@ -158,9 +176,10 @@
 
     <h2>1. In short</h2>
     <ul>
-      <li>The app has <strong>no server of its own</strong>. No account, sign-in or personal
-      information is required.</li>
-      <li>Your game progress and settings are stored <strong>only on your device</strong>.</li>
+      <li>No account, sign-in or personal information is required.</li>
+      <li>Your game progress and settings are stored <strong>on your device</strong>.</li>
+      <li><strong>Optional world leaderboard:</strong> if you save a nickname, your nickname and total
+      star count are sent to our server and are <strong>publicly visible</strong> (see 2a).</li>
       <li>The app shows ads through <strong>Google AdMob</strong>, which collects standard
       advertising data (described below).</li>
       <li>No other analytics, tracking or third-party SDKs are used.</li>
@@ -176,6 +195,21 @@
       <li>"Ads removed" state (in case an in-app purchase is added later)</li>
     </ul>
     <p>This data is deleted when you uninstall the app. We have no access to it.</p>
+
+    <h2>2a. World leaderboard (optional)</h2>
+    <p>No game data is sent to a server unless you save a nickname on the Leaderboard screen.
+    If you do:</p>
+    <ul>
+      <li><strong>Stored on the server:</strong> the nickname you choose, your total star count, a random
+      identifier generated on your device and a one-way hash (SHA-256) of a secret key, and the time of the
+      last update. Your name, e-mail, advertising ID or location are <strong>not</strong> sent.</li>
+      <li><strong>Publicly visible:</strong> your nickname, total stars and rank.</li>
+      <li><strong>Abuse prevention:</strong> to rate-limit new entries, only a one-way hash of your IP address
+      is kept for at most 1 hour; the IP address itself is not stored.</li>
+      <li><strong>Infrastructure:</strong> data is hosted on Supabase (EU, Frankfurt).</li>
+      <li>You can change your nickname at any time on the Leaderboard screen. To have your entry deleted,
+      e-mail us with your nickname (see 9).</li>
+    </ul>
 
     <h2>3. Notifications (local reminders)</h2>
     <p>The app can schedule "come back and play" reminders. These notifications are scheduled
@@ -225,6 +259,8 @@
     <h2>7. Data retention and deletion</h2>
     <ul>
       <li>Game data stored on the device is deleted when you uninstall the app.</li>
+      <li>Your leaderboard entry (nickname and total stars) is kept until you ask us to delete it; it is
+      deleted on request.</li>
       <li>Data collected by AdMob is subject to Google's retention policies (see links above).</li>
       <li>You may contact us with any requests (see below).</li>
     </ul>

@@ -1,0 +1,32 @@
+⚡ ENERJİ BAĞLANTISI
+
+La electricidad sale de la fuente, pero no llega a la bombilla. Gira los cables uno a uno, une el circuito roto y enciende todas las bombillas.
+
+La regla es simple y difícil de soltar: cada toque gira una pieza. No malgastes movimientos: tus estrellas dependen de cuántos uses.
+
+▸ CÓMO JUGAR
+• Construye el camino desde la fuente (⚡) hasta las bombillas (💡)
+• Toca las piezas para girarlas
+• Las piezas bloqueadas (🔒) no se mueven: pasa la solución por su alrededor
+• El nivel termina cuando todas las bombillas están encendidas
+
+▸ CARACTERÍSTICAS
+• Niveles: 200 niveles, los mismos para todos los jugadores
+• Diario: siete puzles nuevos cada día, iguales para todos
+• Infinito: puzles que no se acaban y son cada vez más difíciles; se desbloquea al terminar los Niveles
+• Cuatro colores de energía: lleva cada uno a su bombilla y mantenlos separados
+• Bombilla con ventilador: llena todos los depósitos del centro para que gire
+• Hasta 3 estrellas por nivel: resuélvelo con pocos movimientos y sin pistas
+• Cada nivel tiene tiempo límite y tienes vidas que se recuperan con el paso del tiempo
+• ¿Atascado? Una pista corrige hasta dos cables. Tienes 3 pistas gratis al día; después, puedes ver un anuncio breve para conseguir más
+• Funciona sin conexión: no necesitas internet
+• Música ambiental relajante, respuesta háptica y un diseño oscuro y sencillo
+• Disponible en español, English, Türkçe y العربية
+• Sin cuenta, sin inicio de sesión, sin registro
+
+▸ RECORDATORIOS
+Con tu permiso, el juego puede enviarte un aviso amable cuando tu puzle diario esté listo o si llevas un tiempo sin jugar. Puedes desactivarlo en Ajustes.
+
+El juego es gratuito y muestra anuncios: un banner en la parte inferior, anuncios breves entre niveles y anuncios opcionales que te dan pistas y vidas extra.
+
+Para un descanso corto o una sesión larga: gira un cable más.
