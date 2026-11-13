@@ -1005,8 +1005,9 @@
   #intro .skip {
     position: absolute;
     left: 50%;
-    bottom: calc(env(safe-area-inset-bottom) + 80px);
+    bottom: calc(env(safe-area-inset-bottom) + 112px);   /* imza bloğu (~84px: 18 + 44 logo + 7 + yazı) + boşluk */
     transform: translateX(-50%);
+    white-space: nowrap;
     font-size: 11px;
     letter-spacing: 2px;
     text-transform: uppercase;
