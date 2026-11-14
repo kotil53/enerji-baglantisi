@@ -147,9 +147,8 @@ zaten kodda var (`requestTrackingAuthorization`).
 "Unrestricted Web Access" = No. → Sonuç genelde **4+** (reklam varlığı yaş
 derecesini yükseltmez). "Made for Kids" işaretleme — 13+ hedefliyoruz.
 
-Bu yanıtlar `capacitor-app/fastlane/metadata/app_rating_config.json` içinde
-(hepsi `0`/`false`) → `ios-metadata.yml` push ederken yazıyor. Yine de App Store
-Connect'te derecelendirmeyi bir kez gözden geçirip onayla.
+Yaş derecesi App Store Connect'te elle yönetilir. Eski `app_rating_config.json`
+2026-11-14'te kaldırıldı: Apple anketi değiştirdi, eski alan adları push'u bozuyordu.
 
 ### Diğer sorular
 - **Export Compliance**: `ITSAppUsesNonExemptEncryption=false` gömülü → soru çıkmaz.
