@@ -17,7 +17,7 @@ default_platform(:ios)
 APP_IDENTIFIER = "com.enerji.baglantisi".freeze
 
 platform :ios do
-  desc "fastlane/metadata/ + yaş derecesini App Store Connect'e yazar (incelemeye GÖNDERMEZ)"
+  desc "fastlane/metadata/ metinlerini App Store Connect'e yazar (incelemeye GÖNDERMEZ)"
   lane :metadata_push do
     rating = File.expand_path("metadata/app_rating_config.json", __dir__)
 

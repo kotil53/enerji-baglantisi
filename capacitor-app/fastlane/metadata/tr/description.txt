@@ -1,13 +1,13 @@
-⚡ ENERJİ BAĞLANTISI
+ENERJİ BAĞLANTISI
 
 Elektrik kaynaktan çıkıyor ama ampule ulaşamıyor. Kabloları tek tek döndür, kopuk devreyi birleştir ve bütün ampulleri yak.
 
 Basit bir kuralı var, bırakması zor: her dokunuşta bir parça döner. Fazladan hamle yapma — yıldızların hamle sayına bağlı.
 
 ▸ NASIL OYNANIR
-• Kaynaktan (⚡) ampullere (💡) giden yolu kur
+• Kaynaktan ampullere giden yolu kur
 • Parçalara dokunarak döndür
-• Kilitli parçalar (🔒) sabittir — çözümü onların etrafından geçir
+• Kilitli parçalar sabittir — çözümü onların etrafından geçir
 • Bütün ampuller yanınca seviye biter
 
 ▸ ÖZELLİKLER

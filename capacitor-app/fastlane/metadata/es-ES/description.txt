@@ -1,13 +1,13 @@
-⚡ ENERJİ BAĞLANTISI
+ENERJİ BAĞLANTISI
 
 La electricidad sale de la fuente, pero no llega a la bombilla. Gira los cables uno a uno, une el circuito roto y enciende todas las bombillas.
 
 La regla es simple y difícil de soltar: cada toque gira una pieza. No malgastes movimientos: tus estrellas dependen de cuántos uses.
 
 ▸ CÓMO JUGAR
-• Construye el camino desde la fuente (⚡) hasta las bombillas (💡)
+• Construye el camino desde la fuente hasta las bombillas
 • Toca las piezas para girarlas
-• Las piezas bloqueadas (🔒) no se mueven: pasa la solución por su alrededor
+• Las piezas bloqueadas no se mueven: pasa la solución por su alrededor
 • El nivel termina cuando todas las bombillas están encendidas
 
 ▸ CARACTERÍSTICAS

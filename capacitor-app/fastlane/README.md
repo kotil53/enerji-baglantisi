@@ -22,7 +22,6 @@ anketini** `deliver` ile yönetir. Tek doğruluk kaynağı `fastlane/metadata/`.
 | `metadata/tr/release_notes.txt` | What's New (sürüm notu) |
 | `metadata/tr/support_url.txt` | Support URL |
 | `metadata/tr/privacy_url.txt` | Privacy Policy URL |
-| `metadata/app_rating_config.json` | Age Rating anketi (hepsi 0/false → 4+) |
 | `screenshots/tr/*.png` | Ekran görüntüleri — yalnız `include_screenshots=true` iken |
 
 `deliver` yalnız **var olan** dosyaları yükler; App Store Connect'te elle
