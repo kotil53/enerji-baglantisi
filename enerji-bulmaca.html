@@ -286,6 +286,7 @@
   }
   #timerFill.warn   { background: linear-gradient(90deg, #e8a83a, #ff9a1f); }
   #timerFill.danger { background: linear-gradient(90deg, #ff5c5c, #ff2e2e); }
+  #subhud.untimed #timeLabel, #subhud.untimed #timerWrap { visibility: hidden; }   /* yer korunur: kalpler kaymaz */
   #livesLabel { flex: 0 0 auto; display: flex; gap: 2px; }
   #livesLabel .heart {
     font-size: 14px;
@@ -296,6 +297,17 @@
   }
   #livesLabel .heart.off { color: #333c5c; opacity: 0.55; transform: scale(0.82); }
   #livesLabel .heart.hide { display: none; }   /* normal tavanın (MAX_LIVES) üstü: yalnız bonus canla açığa çıkar */
+  /* can kaybı: kalp büyüyüp sallanarak söner; can dolumu: kalp "pop" ile yanar (bkz. updateLives) */
+  #livesLabel .heart.lost { animation: heartLost .55s ease-out; }
+  #livesLabel .heart.gain, #homeLives.gain .hh { animation: heartGain .45s cubic-bezier(.2, 1.4, .4, 1); }
+  @keyframes heartLost { 0% { transform: scale(1.6); color: #ff5c7a; opacity: 1; } 25% { transform: scale(1.35) rotate(-14deg); } 50% { transform: scale(1.15) rotate(10deg); } 100% { transform: scale(.82); } }
+  @keyframes heartGain { 0% { transform: scale(.4); } 60% { transform: scale(1.4); } 100% { transform: scale(1); } }
+  #homeLives .hh { display: inline-block; color: #ff5c7a; font-size: 15px; }
+  #homeLives small { font-size: 11px; font-weight: 700; color: var(--e-muted); }
+  #homeLives small:empty { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    #livesLabel .heart.lost, #livesLabel .heart.gain, #homeLives.gain .hh { animation: none; }
+  }
 
   /* ---------- CAN BİTTİ / KUTLAMA / ARA ÖVGÜ KATMANLARI ---------- */
   #lifeOverlay, #timeUpOverlay, #milestoneOverlay, #praiseOverlay {
@@ -510,6 +522,9 @@
     pointer-events: auto;
     transition: opacity .24s ease, visibility 0s;
   }
+  /* ekranlar soldurmaya ek olarak hafifçe yerine oturur (kapanırken geri çekilir) */
+  .screen { transform: translateY(10px) scale(.985); transition: opacity .24s ease, transform .24s cubic-bezier(.2, .9, .3, 1), visibility 0s linear .24s; }
+  .screen.show { transform: none; transition: opacity .24s ease, transform .24s cubic-bezier(.2, .9, .3, 1), visibility 0s; }
   .screen {
     color: var(--e-ink);
     background-color: var(--e-bg);
@@ -798,12 +813,21 @@
   .name-msg { margin: 0; min-height: 1.3em; font-size: 12px; color: var(--e-muted); }
   .name-msg.bad { color: var(--e-danger); }
   .rank-me { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px; font-size: 14px; font-weight: 700; color: var(--e-ink-hi); }
+  .link-btn:disabled { cursor: default; }
+  /* kazanma kartı: dünya sıralamasında oyuncunun hemen üstü ve altı (Yörünge'deki oyun sonu listesi gibi) */
+  .mini-rank { list-style: none; margin: 0 auto 8px; padding: 4px; width: 100%; max-width: 280px; border-radius: 12px; background: var(--e-panel); border: 1px solid var(--e-border); }
+  .mini-rank[hidden] { display: none; }
+  .mini-rank li { display: grid; grid-template-columns: 2.8em 1fr auto; gap: 8px; align-items: center; padding: 3px 8px; border-radius: 8px;
+    font-size: 13px; color: var(--e-muted); font-variant-numeric: tabular-nums; text-align: start; }
+  .mini-rank li b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+  .mini-rank li.me { background: var(--e-panel-hi); color: var(--e-ink-hi); font-weight: 800; box-shadow: inset 0 0 0 1px var(--e-accent-a); }
   .link-btn { -webkit-appearance: none; appearance: none; border: 0; background: none; padding: 10px 4px; font: inherit; font-size: 13px; font-weight: 700; color: var(--e-accent-a); cursor: pointer; }
   .rank-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 0; font-size: 14px; color: var(--e-muted); text-align: center; }
   .rank-state p { margin: 0; }
   .name-card[hidden], .rank-me[hidden], .rank-state[hidden], .rank-state .btn2[hidden] { display: none; }
   .rank-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-  .rank-row { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 14px; border: 1px solid var(--e-border); border-radius: 14px; background: var(--e-panel); }
+  .rank-row { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 14px; border: 1px solid var(--e-border); border-radius: 14px; background: var(--e-panel);
+              animation: rise .32s cubic-bezier(.2, .9, .3, 1) both; animation-delay: calc(min(var(--i, 0), 12) * 30ms); }   /* 12'den sonrası beklemez */
   .rank-row.me { border-color: var(--e-accent-a); background: var(--e-panel-hi); }
   .rank-row .pos { flex: 0 0 2.6em; font-weight: 800; color: var(--e-muted); font-variant-numeric: tabular-nums; }
   .rank-row.top .pos { color: var(--e-hint); }
@@ -878,7 +902,8 @@
 
   @media (prefers-reduced-motion: reduce) {
     .screen, .overlay, .screen.show, .overlay.show { transition: none; }
-    .screen.show .rise, .overlay.show .dlg { animation: none; }
+    .screen { transform: none; }
+    .screen.show .rise, .overlay.show .dlg, .rank-row { animation: none; }
     .hl-flow, .hl-halo, .lv.current::after { animation: none; }
     .lv.current::after { opacity: .8; }
     .win-stars .st.on { opacity: 1; transform: none; }
@@ -918,7 +943,7 @@
      - Uygulama SOĞUK başlangıcında bir kez oynar (webview yeniden yüklenmez,
        yani öne/arkaya alma tekrar tetiklemez).
      - Tamamen CSS + inline SVG: harici görsel/kütüphane yok, ilk boyamada hazır.
-     - ~2.2 sn sonra ya da ekrana dokununca kapanır (bkz. sayfa sonundaki script).
+     - ~2.5 sn sonra ya da ekrana dokununca kapanır (bkz. sayfa sonundaki script).
      - Arka planı #app ile birebir aynı -> kaybolurken dikiş izi olmaz.
      - prefers-reduced-motion: hareket kapanır, yalnız hızlı bir görünürlük.
      ======================================================================= */
@@ -936,9 +961,9 @@
       radial-gradient(1200px 800px at 20% -10%, #14203c 0%, rgba(20,32,60,0) 60%),
       radial-gradient(1000px 700px at 110% 120%, #1a1330 0%, rgba(26,19,48,0) 55%),
       #0a0e1a;
-    transition: opacity .5s ease;
+    transition: opacity .5s ease, transform .5s ease-in;
   }
-  #intro.hide { opacity: 0; pointer-events: none; }
+  #intro.hide { opacity: 0; transform: scale(1.06); pointer-events: none; }   /* menüye "içinden geçerek" kapanır */
 
   #intro .logo {
     width: min(74vw, 300px);
@@ -967,6 +992,10 @@
     transform-origin: 204px 60px;
     animation: introRing .75s ease-out 1.3s forwards;
   }
+  #intro .bulb-ring.r2 { animation-delay: 1.5s; animation-duration: .9s; }
+  #intro .bulb-flash { opacity: 0; animation: introFlash .6s ease-out 1.3s forwards; }
+  /* kaynak: kablo çizilmeden önce kısa "güç açılır" atımı */
+  #intro .src { transform-box: fill-box; transform-origin: center; animation: introPower .5s ease-out .2s both; }
 
   #intro .title {
     font-size: clamp(19px, 6.2vw, 30px);
@@ -974,9 +1003,15 @@
     letter-spacing: 5px;
     color: #eaf1ff;
     text-align: center;
+  }
+  /* harfler sırayla yükselir (span'lere bölme: sayfa sonundaki açılış script'i) */
+  #intro .title span {
+    display: inline-block;
+    white-space: pre;
     opacity: 0;
     transform: translateY(10px);
-    animation: introRise .6s ease-out .5s forwards;
+    animation: introRise .45s cubic-bezier(.2, .9, .3, 1) forwards;
+    animation-delay: calc(.5s + var(--i, 0) * 35ms);
   }
   #intro .tagline {
     margin-top: -12px;
@@ -990,8 +1025,9 @@
   #intro .skip {
     position: absolute;
     left: 50%;
-    bottom: calc(env(safe-area-inset-bottom) + 80px);
+    bottom: calc(env(safe-area-inset-bottom) + 112px);   /* imza bloğu (~84px: 18 + 44 logo + 7 + yazı) + boşluk */
     transform: translateX(-50%);
+    white-space: nowrap;
     font-size: 11px;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -1006,6 +1042,8 @@
   @keyframes introRing { from { opacity: .6; transform: scale(.35); } to { opacity: 0; transform: scale(2); } }
   @keyframes introRise { to { opacity: 1; transform: translateY(0); } }
   @keyframes introFade { to { opacity: 1; } }
+  @keyframes introFlash { 0% { opacity: 0; } 30% { opacity: .85; } 100% { opacity: 0; } }
+  @keyframes introPower { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.18); filter: drop-shadow(0 0 6px #7bffe6); } }
 
   @media (prefers-reduced-motion: reduce) {
     #intro .logo,
@@ -1013,18 +1051,21 @@
     #intro .wire-flow,
     #intro .bulb-lit,
     #intro .bulb-ring,
-    #intro .title,
+    #intro .bulb-flash,
+    #intro .src,
+    #intro .title span,
     #intro .tagline,
     #intro .credit,
     #intro .skip { animation: none !important; }
+    #intro.hide { transform: none; }
     #intro .wire-live { stroke-dashoffset: 0; }
-    #intro .wire-flow { display: none; }
+    #intro .wire-flow, #intro .bulb-flash { display: none; }
     #intro .bulb-lit,
-    #intro .title,
+    #intro .title span,
     #intro .tagline,
     #intro .credit,
     #intro .skip { opacity: 1; }
-    #intro .title { transform: none; }
+    #intro .title span { transform: none; }
   }
 
   /* =======================================================================
@@ -1137,7 +1178,7 @@
   <section id="home" class="screen" aria-label="Ana menü" data-i18n-attr="aria-label:home.ariaLabel">
     <div class="topbar">
       <button class="ibtn" id="homeSettingsBtn" type="button" aria-label="Ayarlar" title="Ayarlar" data-i18n-attr="aria-label:home.settingsAria;title:home.settingsAria"><svg class="i"><use href="#i-sliders"/></svg></button>
-      <span></span>
+      <span class="pill" id="homeLives" role="img" aria-label="Canlar"><span class="hh" aria-hidden="true">&#10084;</span><b id="homeLivesN">5</b><small id="homeLivesT" aria-hidden="true"></small></span>
       <button class="pill tap" id="homeRank" type="button" title="Sıralama" aria-label="Sıralama" data-i18n-attr="title:rank.title;aria-label:rank.title"><svg class="i cup" aria-hidden="true"><use href="#i-trophy"/></svg><svg class="i f" aria-hidden="true"><use href="#i-star"/></svg><b id="homeStars">0</b></button>
     </div>
     <div class="scroll">
@@ -1319,6 +1360,8 @@
       <h2 id="winTitle">SEVİYE TAMAM</h2>
       <p class="sub" id="winSub"></p>
       <div class="chips" id="winChips"></div>
+      <button class="link-btn" id="winRank" type="button" hidden></button>
+      <ol class="mini-rank" id="winNear" hidden></ol>
       <div class="dlg-actions">
         <button class="cta gold" id="winNext" type="button" data-autofocus><span class="t"><b id="winNextLabel">Sonraki seviye</b></span><svg class="i" aria-hidden="true"><use href="#i-next"/></svg></button>
         <div class="btn-row">
@@ -1352,7 +1395,7 @@
     <div class="card">
       <div class="hearts">&#9200;</div>
       <h2 id="timeUpTitle" data-i18n="timeup.title">SÜRE DOLDU</h2>
-      <p class="sub" data-i18n="timeup.sub">Bir can kaybettin. Hazır olduğunda seviyeyi baştan başlat.</p>
+      <p class="sub" id="timeUpSub"></p>
       <button class="big" id="timeUpBtn" type="button" data-i18n="common.restart">Yeniden başla</button>
     </div>
   </div>
@@ -1399,6 +1442,10 @@
         <stop offset="0" stop-color="#fff7cf"/>
         <stop offset="1" stop-color="#ffc531"/>
       </radialGradient>
+      <radialGradient id="introFlash">
+        <stop offset="0" stop-color="#fff3b0" stop-opacity="0.9"/>
+        <stop offset="1" stop-color="#ffc531" stop-opacity="0"/>
+      </radialGradient>
     </defs>
 
     <!-- kablo izi (sönük taban) -->
@@ -1414,8 +1461,8 @@
     <path class="wire-flow" d="M41 60 H96 V30 H150 V60 H196" pathLength="100"
           stroke="#fffdf2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <!-- KAYNAK düğümü (⚡) -->
-    <g>
+    <!-- KAYNAK düğümü (⚡) — "güç açılır" atımı yapar -->
+    <g class="src">
       <rect x="11" y="45" width="30" height="30" rx="9" fill="url(#introSrc)" stroke="#0c7d70" stroke-width="2"/>
       <path d="M27.5 49 L20 61.5 L25.5 61.5 L23 72 L33 58 L27 58 Z" fill="#06342f"/>
     </g>
@@ -1442,7 +1489,10 @@
         <line x1="218" y1="78" x2="222" y2="74"/>
       </g>
     </g>
+    <!-- ampul yanınca kısa ışık patlaması + iki halka -->
+    <circle class="bulb-flash" cx="204" cy="60" r="46" fill="url(#introFlash)"/>
     <circle class="bulb-ring" cx="204" cy="60" r="13" fill="none" stroke="#ffd23f" stroke-width="2"/>
+    <circle class="bulb-ring r2" cx="204" cy="60" r="13" fill="none" stroke="#ffd23f" stroke-width="1.5"/>
   </svg>
 
   <div class="title">ENERJİ BAĞLANTISI</div>
@@ -1456,11 +1506,23 @@
 </div>
 
 <script>
-/* Açılış animasyonunu kapatır: ~2.2 sn sonra ya da ilk dokunuşta.
+/* Açılış animasyonunu kapatır: ~2.5 sn sonra ya da ilk dokunuşta.
    Bittiğinde DOM'dan tamamen kaldırır -> arkadaki oyuna dokunuşları engellemez. */
 (function () {
   var intro = document.getElementById("intro");
   if (!intro) return;
+  // Başlığı harflere böl (sırayla yükselme animasyonu için); ekran okuyucu tek parça okusun
+  var title = intro.querySelector(".title");
+  if (title) {
+    var txt = title.textContent;
+    title.setAttribute("aria-label", txt);
+    title.innerHTML = "";
+    Array.prototype.forEach.call(txt, function (ch, i) {
+      var s = document.createElement("span");
+      s.textContent = ch; s.setAttribute("aria-hidden", "true"); s.style.setProperty("--i", i);
+      title.appendChild(s);
+    });
+  }
   var closed = false;
   function close() {
     if (closed) return;
@@ -1470,7 +1532,7 @@
   }
   var reduce = false;
   try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
-  setTimeout(close, reduce ? 500 : 2200);
+  setTimeout(close, reduce ? 500 : 2500);   // ampul flaşı + ikinci halka ~2.4 sn'de biter
   // "click" (pointerdown DEĞİL): pointerdown'da kapanınca #intro pointer-events:none olur ve o dokunuşun
   // click'i arkadaki ana menü düğmesine (Devam Et / kutucuklar) düşüp oyunu istemeden başlatırdı.
   intro.addEventListener("click", close);
@@ -1555,7 +1617,8 @@
       "home.dailyDoneSub": "Bugünkü günlük tamam ✓", "home.dailySub": "Günlük · {n} / {total}",
       "home.modeSub": "{mode} · Seviye {n}",
       "rank.title": "Sıralama", "rank.nameLabel": "Takma adın", "rank.namePh": "örn. Kablo Ustası",
-      "rank.save": "Kaydet", "rank.saving": "Kaydediliyor…", "rank.saved": "Takma ad kaydedildi",
+      "win.rank": "🏆 Dünya sıralaması: #{n}", "win.rankUp": "🏆 Dünya sıralaması: #{n} (↑{d})", "win.rankJoin": "🏆 Dünya sıralamasına katıl",
+      "rank.invite": "🏆 Dünya sıralamasına katıl! Takma adını yaz, yıldızların listede görünsün.", "rank.save": "Kaydet", "rank.saving": "Kaydediliyor…", "rank.saved": "Takma ad kaydedildi",
       "rank.nameHint": "3–16 karakter. Takma adın ve toplam yıldızın herkese görünür.",
       "rank.nameBad": "Bu ad kullanılamaz. Harf, rakam, boşluk ya da _ . - kullan.",
       "rank.nameTaken": "Bu ad alınmış, başka bir tane dene.", "rank.nameBlocked": "Bu ad uygun değil, başka bir ad dene.",
@@ -1589,7 +1652,7 @@
       "life.title": "CANLARIN BİTTİ",
       "life.sub": "Ramak kaldı! Kısa bir reklamla aynı yerden, süren yenilenerek devam edebilir ya da seviyeyi baştan deneyebilirsin (baştan denemek can kazandırmaz).",
       "life.watchTitle": "+1 can", "life.timerText": "Bir can {clock} sonra dolacak",
-      "timeup.title": "SÜRE DOLDU", "timeup.sub": "Bir can kaybettin. Hazır olduğunda seviyeyi baştan başlat.",
+      "timeup.title": "SÜRE DOLDU", "timeup.sub": "Bir can kaybettin, {n} can kaldı. Hazır olduğunda seviyeyi baştan başlat.",
       "milestone.campaignDoneTitle": "{n} SEVİYE TAMAM!",
       "milestone.campaignDoneSub": "Bütün {n} seviyeyi bitirdin. Şimdi Sonsuz Mod başlıyor.",
       "milestone.sub": "Seviye {n}'i tamamladın. {praise}", "milestone.continueEndless": "Sonsuz Moda Geç",
@@ -1670,7 +1733,8 @@
       "home.dailyDoneSub": "Today's daily complete ✓", "home.dailySub": "Daily · {n} / {total}",
       "home.modeSub": "{mode} · Level {n}",
       "rank.title": "Leaderboard", "rank.nameLabel": "Your nickname", "rank.namePh": "e.g. Wire Master",
-      "rank.save": "Save", "rank.saving": "Saving…", "rank.saved": "Nickname saved",
+      "win.rank": "🏆 World rank: #{n}", "win.rankUp": "🏆 World rank: #{n} (↑{d})", "win.rankJoin": "🏆 Join the world leaderboard",
+      "rank.invite": "🏆 Join the world leaderboard! Pick a nickname to show your stars.", "rank.save": "Save", "rank.saving": "Saving…", "rank.saved": "Nickname saved",
       "rank.nameHint": "3–16 characters. Your nickname and total stars are public.",
       "rank.nameBad": "That name can’t be used. Use letters, numbers, spaces or _ . -",
       "rank.nameTaken": "That name is taken, try another.", "rank.nameBlocked": "That name isn’t allowed, try another.",
@@ -1704,7 +1768,7 @@
       "life.title": "OUT OF LIVES",
       "life.sub": "So close! Watch a short ad to continue right where you were with your time refreshed, or try the level again from scratch (retrying doesn't grant a life).",
       "life.watchTitle": "+1 life", "life.timerText": "A life refills in {clock}",
-      "timeup.title": "TIME'S UP", "timeup.sub": "You lost a life. Restart the level whenever you're ready.",
+      "timeup.title": "TIME'S UP", "timeup.sub": "You lost a life ({n} left). Restart the level whenever you're ready.",
       "milestone.campaignDoneTitle": "{n} LEVELS COMPLETE!",
       "milestone.campaignDoneSub": "You finished all {n} levels. Endless Mode starts now.",
       "milestone.sub": "You completed level {n}. {praise}", "milestone.continueEndless": "Go to Endless Mode",
@@ -1786,7 +1850,8 @@
       "home.dailyDoneSub": "اكتملت لعبة اليوم اليومية ✓", "home.dailySub": "يومي · {n} / {total}",
       "home.modeSub": "{mode} · المستوى {n}",
       "rank.title": "لوحة المتصدرين", "rank.nameLabel": "اسمك المستعار", "rank.namePh": "مثال: Wire Master",
-      "rank.save": "حفظ", "rank.saving": "جارٍ الحفظ…", "rank.saved": "تم حفظ الاسم المستعار",
+      "win.rank": "🏆 ترتيبك العالمي: #{n}", "win.rankUp": "🏆 ترتيبك العالمي: #{n} (↑{d})", "win.rankJoin": "🏆 انضم إلى لوحة المتصدرين",
+      "rank.invite": "🏆 انضم إلى لوحة المتصدرين العالمية! اختر اسمًا مستعارًا لتظهر نجومك.", "rank.save": "حفظ", "rank.saving": "جارٍ الحفظ…", "rank.saved": "تم حفظ الاسم المستعار",
       "rank.nameHint": "من 3 إلى 16 حرفًا. اسمك المستعار ومجموع نجومك مرئيان للجميع.",
       "rank.nameBad": "لا يمكن استخدام هذا الاسم. استخدم الحروف اللاتينية أو الأرقام أو المسافات أو _ . -",
       "rank.nameTaken": "هذا الاسم مستخدم، جرّب اسمًا آخر.", "rank.nameBlocked": "هذا الاسم غير مسموح، جرّب اسمًا آخر.",
@@ -1820,7 +1885,7 @@
       "life.title": "نفدت أرواحك",
       "life.sub": "أوشكت! يمكنك متابعة اللعب من حيث توقفت مع تجديد الوقت بمشاهدة إعلان قصير، أو إعادة المحاولة من البداية (إعادة المحاولة لا تمنحك روحًا).",
       "life.watchTitle": "+1 روح", "life.timerText": "ستمتلئ روح خلال {clock}",
-      "timeup.title": "انتهى الوقت", "timeup.sub": "خسرت روحًا. أعد بدء المستوى عندما تكون مستعدًا.",
+      "timeup.title": "انتهى الوقت", "timeup.sub": "خسرت روحًا، تبقّى لك {n}. أعد بدء المستوى عندما تكون مستعدًا.",
       "milestone.campaignDoneTitle": "اكتملت {n} مستوى!",
       "milestone.campaignDoneSub": "أنهيت جميع مستويات {n}. يبدأ الآن وضع اللانهاية.",
       "milestone.sub": "أكملت المستوى {n}. {praise}", "milestone.continueEndless": "الانتقال لوضع اللانهاية",
@@ -1901,7 +1966,8 @@
       "home.dailyDoneSub": "Diario de hoy completado ✓", "home.dailySub": "Diario · {n} / {total}",
       "home.modeSub": "{mode} · Nivel {n}",
       "rank.title": "Clasificación", "rank.nameLabel": "Tu apodo", "rank.namePh": "p. ej. Maestro del Cable",
-      "rank.save": "Guardar", "rank.saving": "Guardando…", "rank.saved": "Apodo guardado",
+      "win.rank": "🏆 Puesto mundial: #{n}", "win.rankUp": "🏆 Puesto mundial: #{n} (↑{d})", "win.rankJoin": "🏆 Únete a la clasificación mundial",
+      "rank.invite": "🏆 ¡Únete a la clasificación mundial! Elige un apodo para mostrar tus estrellas.", "rank.save": "Guardar", "rank.saving": "Guardando…", "rank.saved": "Apodo guardado",
       "rank.nameHint": "3–16 caracteres. Tu apodo y tus estrellas totales son públicos.",
       "rank.nameBad": "Ese nombre no se puede usar. Usa letras, números, espacios o _ . -",
       "rank.nameTaken": "Ese nombre ya está en uso, prueba otro.", "rank.nameBlocked": "Ese nombre no está permitido, prueba otro.",
@@ -1935,7 +2001,7 @@
       "life.title": "SIN VIDAS",
       "life.sub": "¡Casi lo logras! Mira un anuncio corto para continuar donde estabas con el tiempo renovado, o vuelve a intentar el nivel desde cero (reintentar no otorga una vida).",
       "life.watchTitle": "+1 vida", "life.timerText": "Una vida se recargará en {clock}",
-      "timeup.title": "SE ACABÓ EL TIEMPO", "timeup.sub": "Perdiste una vida. Reinicia el nivel cuando estés listo.",
+      "timeup.title": "SE ACABÓ EL TIEMPO", "timeup.sub": "Perdiste una vida, te quedan {n}. Reinicia el nivel cuando estés listo.",
       "milestone.campaignDoneTitle": "¡{n} NIVELES COMPLETOS!",
       "milestone.campaignDoneSub": "Terminaste los {n} niveles. Ahora comienza el Modo Infinito.",
       "milestone.sub": "Completaste el nivel {n}. {praise}", "milestone.continueEndless": "Ir al Modo Infinito",
@@ -2110,15 +2176,74 @@
       o.connect(g); g.connect(this._out() || ac.destination);
       o.start(t); o.stop(t + dur + 0.02);
     },
-    rotate: function () { this.blip(300 + rndInt(50), 0.055, "square", 0.09); },
-    locked: function () { this.blip(160, 0.13, "sawtooth", 0.11, 95); },
-    undo:   function () { this.blip(260, 0.05, "square", 0.07); },
-    boom:   function () { this.blip(190, 0.45, "sawtooth", 0.2, 38); this.blip(90, 0.6, "square", 0.14, 30); },
-    win:    function () {
-      var s = this, notes = [523, 659, 784, 1047];
-      notes.forEach(function (f, i) { setTimeout(function () { s.blip(f, 0.16, "triangle", 0.13); }, i * 70); });
+    // Efekt yapı taşları. o.at: gecikme (sn) — setTimeout yerine ses saatiyle planlanır, takılmaz.
+    // Rastgelelik Math.random: oyunun tohumlu RNG'sine (günlük mod) dokunmasın.
+    _ok: function () { return (!this.muted && this.vol > 0 && this.ensure()) || null; },
+    _tone: function (freq, dur, o) {
+      var ac = this._ok(); if (!ac) return;
+      var t = ac.currentTime + (o.at || 0), osc = ac.createOscillator(), g = ac.createGain(), end = g;
+      osc.type = o.type || "sine";
+      osc.frequency.setValueAtTime(freq, t);
+      if (o.slide) osc.frequency.exponentialRampToValueAtTime(o.slide, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(o.vol, t + (o.atk || 0.006));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(g);
+      if (o.lp) { end = ac.createBiquadFilter(); end.type = "lowpass"; end.frequency.value = o.lp; g.connect(end); }
+      end.connect(this._out());
+      osc.start(t); osc.stop(t + dur + 0.03);
     },
-    star:   function (i) { this.blip(680 + i * 240, 0.12, "triangle", 0.12); },
+    _nbuf: null,
+    _noiseBuf: function (ac) {   // 1 sn beyaz gürültü, bir kez üretilir (efektler + müzik şıkırtısı)
+      if (!this._nbuf) {
+        var n = ac.sampleRate | 0, d;
+        this._nbuf = ac.createBuffer(1, n, ac.sampleRate); d = this._nbuf.getChannelData(0);
+        for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+      }
+      return this._nbuf;
+    },
+    _noise: function (dur, o) {
+      var ac = this._ok(); if (!ac) return;
+      var t = ac.currentTime + (o.at || 0), src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+      src.buffer = this._noiseBuf(ac); src.loop = true;
+      f.type = o.band ? "bandpass" : "lowpass";
+      f.frequency.setValueAtTime(o.f, t);
+      if (o.fTo) f.frequency.exponentialRampToValueAtTime(o.fTo, t + dur);
+      if (o.q) f.Q.value = o.q;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(o.vol, t + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(f); f.connect(g); g.connect(this._out());
+      src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.03);
+    },
+    // Çan: temel + hafif uyumsuz üst ton (2.01x) -> metalik, cam gibi tını
+    _chime: function (freq, at, vol) {
+      this._tone(freq, 0.9, { at: at, vol: vol, atk: 0.004 });
+      this._tone(freq * 2.01, 0.4, { at: at, vol: vol * 0.3, atk: 0.004 });
+    },
+    // Döndürme: anahtar/düğme tıkı (kısa filtreli gürültü + küçük ton)
+    rotate: function () {
+      this._noise(0.035, { band: 1, f: 2600 + Math.random() * 600, q: 1.2, vol: 0.2 });
+      this._tone(480 + Math.random() * 60, 0.06, { slide: 360, vol: 0.06 });
+    },
+    // Kilitli parça: boğuk "tok" (sert testere yerine filtreli üçgen)
+    locked: function () {
+      this._tone(150, 0.16, { type: "triangle", slide: 95, vol: 0.2, lp: 700 });
+      this._noise(0.06, { f: 500, vol: 0.12 });
+    },
+    undo: function () { this._tone(380, 0.09, { type: "triangle", slide: 280, vol: 0.09, lp: 1800 }); },
+    // Kısa devre: kıvılcım cızırtıları + aşağı süzülen boğuk patlama
+    boom: function () {
+      this._noise(0.55, { f: 4000, fTo: 120, vol: 0.3 });
+      this._tone(130, 0.5, { type: "sawtooth", slide: 32, vol: 0.2, lp: 420 });
+      for (var i = 0; i < 4; i++) this._noise(0.025, { band: 1, f: 3000 + Math.random() * 3000, q: 2, vol: 0.12, at: 0.04 + i * 0.07 + Math.random() * 0.03 });
+    },
+    win: function () {
+      var s = this;
+      [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) { s._chime(f, i * 0.075, 0.11); });
+      this._chime(2093, 0.36, 0.035);   // sonda ince parıltı
+    },
+    star: function (i) { this._chime([1046.5, 1318.5, 1568][i] || 1568, 0, 0.12); },   // Do–Mi–Sol, sırayla yükselir
 
     // 🔊 HUD düğmesi — ana kısma: SES efektleri VE müzik birden.
     // "Ses çıkmıyor" (sessiz ya da düzey 0) durumunda tek dokunuş sesi geri getirir.
@@ -2140,8 +2265,9 @@
     /* --------------------------------------------------------------------
        ÜRETKEN MÜZİK — sakin ambient (WebAudio ile sentezlenir, dosya yok)
        --------------------------------------------------------------------
-       Yavaş bir pad akoru (~9 sn'de bir değişir) + üstünde seyrek arpej.
-       Notalar A minör pentatonikten seçilir -> hiçbiri diğeriyle çelişmez.
+       Am7–Fmaj7–Cadd9–G6 pad akorları (~7 sn'de bir değişir), yumuşak bas,
+       hafif ritim (davul + şıkırtı) ve akor seslerinden yükselip inen arpej.
+       Arpej yalnız o anki akorun seslerini çalar -> hiçbir nota çelişmez.
        "A Tale of Two Clocks" deseni: setInterval yalnız ileriyi PLANLAR,
        asıl zamanlama AudioContext saatiyle örneklenir -> takılma olmaz.
        Otomatik-oynatma politikası: ilk kullanıcı jestinde başlar (bkz. 12).
@@ -2150,14 +2276,12 @@
       timer: null, bus: null, step: 0, nextT: 0,
       waking: false,     // resume() bekleniyor mu (çift uyandırmayı önler)
       gen: 0,            // istek kuşağı — stopMusic artırır, bayat uyandırmayı geçersizler
-      STEP: 0.55,        // saniye / adım
+      STEP: 0.42,        // saniye / adım (sekizlik; ~71 BPM)
       AHEAD: 1.0,        // kaç saniye ileriye planla
-      // A minör pentatonik, üç oktav (Hz)
-      scale: [110.00, 130.81, 146.83, 164.81, 196.00,
-              220.00, 261.63, 293.66, 329.63, 392.00,
-              440.00, 523.25, 587.33, 659.25, 783.99],
-      roots: [0, 4, 1, 2]   // pad kök ilerlemesi (Am–G–C–D hissi)
+      // Akorlar MIDI nota no: [bas, pad sesleri...] — Am7, Fmaj7, Cadd9, G6 (vi–IV–I–V)
+      chords: [[45, 57, 60, 64, 67], [41, 53, 57, 60, 64], [48, 55, 60, 62, 64], [43, 55, 59, 62, 64]]
     },
+    _hz: function (n) { return 440 * Math.pow(2, (n - 69) / 12); },
 
     // Motoru başlat. muted / musicOn kapalıysa ya da AudioContext yoksa sessizce çıkar.
     // Idempotent: zaten çalışıyorsa hiçbir şey yapmaz (arka plandan dönüş, reklam bitişi).
@@ -2191,6 +2315,15 @@
       m.bus.gain.setValueAtTime(0.0001, ac.currentTime);
       m.bus.gain.exponentialRampToValueAtTime(0.2, ac.currentTime + 2.5);  // yumuşak giriş
       m.bus.connect(this._out() || ac.destination);
+      // Pad + arpej -> yumuşatıcı alçak geçiren -> bus. Arpejler ayrıca 1.5 adımlık yankıya da gider.
+      var lp = ac.createBiquadFilter(), echo = ac.createDelay(2), fb = ac.createGain(), wet = ac.createGain();
+      lp.type = "lowpass"; lp.frequency.value = 2600; lp.Q.value = 0.4;
+      echo.delayTime.value = m.STEP * 1.5;
+      fb.gain.value = 0.3; wet.gain.value = 0.35;
+      lp.connect(m.bus);
+      echo.connect(fb); fb.connect(echo); echo.connect(wet); wet.connect(lp);
+      m.in = lp; m.echo = echo;
+      m.nodes = [m.bus, lp, echo, fb, wet];   // stopMusic hepsini koparır (yankı döngüsü kendi kendine sönmez)
       m.step = 0;
       m.nextT = ac.currentTime + 0.15;
       m.timer = setInterval(function () { self._musTick(); }, 120);
@@ -2201,7 +2334,7 @@
       var m = this._mus, ac = this.ac;
       m.waking = false; m.gen++;   // bekleyen uyandırma varsa geçersizle
       if (m.timer) { clearInterval(m.timer); m.timer = null; }
-      var b = m.bus; m.bus = null;
+      var b = m.bus, ns = m.nodes; m.bus = m.in = m.echo = m.nodes = null;
       if (b && ac) {
         var t = ac.currentTime, tail = quick ? 0.18 : 1.2;
         try {
@@ -2209,7 +2342,7 @@
           b.gain.setValueAtTime(b.gain.value, t);
           b.gain.exponentialRampToValueAtTime(0.0001, t + tail);
         } catch (e) {}
-        setTimeout(function () { try { b.disconnect(); } catch (e) {} }, (tail + 0.2) * 1000);
+        setTimeout(function () { ns.forEach(function (n) { try { n.disconnect(); } catch (e) {} }); }, (tail + 0.2) * 1000);
       }
     },
 
@@ -2233,29 +2366,60 @@
     },
 
     _musStep: function (step, t) {
-      var m = this._mus, sc = m.scale;
-      // her 16 adımda (~8.8 sn) yeni pad akoru: kök (bir oktav altta) + pentatonik 3. + 5. derece
-      if (step % 16 === 0) {
-        var r = m.roots[((step / 16) | 0) % m.roots.length];
-        this._pad(sc[r] * 0.5, t);
-        this._pad(sc[r + 2], t);
-        this._pad(sc[r + 4], t);
+      var m = this._mus, s = step % 16, ch = m.chords[((step / 16) | 0) % m.chords.length], i;
+      // her 16 adımda (~6.7 sn) yeni pad akoru
+      if (s === 0) for (i = 1; i < ch.length; i++) this._pad(this._hz(ch[i]), t);
+      // bas: 1. ve 9. adımda, bazen 15.'de senkop
+      if (s === 0 || s === 8 || (s === 14 && rnd() < 0.5)) this._bass(this._hz(ch[0]), t);
+      // ritim: yarım ölçüde bir yumuşak davul, tek adımlarda şıkırtı (her ikincisi vurgulu)
+      if (s % 8 === 0) this._kick(t);
+      if (s % 2 === 1) this._hat(t, s % 4 === 3 ? 0.05 : 0.025);
+      // arpej: akor seslerinde iki oktav yukarı çıkıp iner (adım 0-7 çıkış, 8-15 iniş); ~%25 boşluk nefes verir
+      if (rnd() < 0.75) {
+        var j = s < 8 ? s : 15 - s, tones = ch.slice(1);
+        this._arp(this._hz(tones[j % tones.length] + (j < 4 ? 12 : 24)), t);
       }
-      // seyrek arpej: adımların ~yarısında tek yumuşak nota (nefes alsın diye atlanır)
-      if (rnd() < 0.55) {
-        var base = (step % 8 < 4) ? 5 : 9;          // orta / üst oktav arası dolaş
-        var n = sc[base + rndInt(5)];
-        this._arp(n, t + (rnd() < 0.28 ? m.STEP * 0.5 : 0));
-      }
+    },
+
+    _bass: function (freq, t) {
+      var ac = this.ac, m = this._mus, o = ac.createOscillator(), g = ac.createGain(), len = m.STEP * 3;
+      o.type = "triangle"; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      o.connect(g); g.connect(m.in);
+      o.start(t); o.stop(t + len + 0.05);
+    },
+    // Yumuşak davul: aşağı süzülen sinüs (tok "dum", sert vuruş değil)
+    _kick: function (t) {
+      var ac = this.ac, o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.setValueAtTime(110, t);
+      o.frequency.exponentialRampToValueAtTime(42, t + 0.18);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.32, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      o.connect(g); g.connect(this._mus.in);
+      o.start(t); o.stop(t + 0.32);
+    },
+    // Şıkırtı: tiz gürültü; alçak geçireni atlayıp doğrudan bus'a gider (yoksa süzülüp kaybolur)
+    _hat: function (t, vol) {
+      var ac = this.ac, src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+      src.buffer = this._noiseBuf(ac);
+      f.type = "highpass"; f.frequency.value = 7000;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.003);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+      src.connect(f); f.connect(g); g.connect(this._mus.bus);
+      src.start(t, Math.random() * 0.5); src.stop(t + 0.08);
     },
 
     _pad: function (freq, t) {
       var ac = this.ac, m = this._mus;
       var g = ac.createGain();
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(0.18, t + 1.8);    // yavaş atak
+      g.gain.exponentialRampToValueAtTime(0.13, t + 1.8);    // yavaş atak (4 ses birden çalar)
       g.gain.exponentialRampToValueAtTime(0.0001, t + 7.5);  // uzun kuyruk
-      g.connect(m.bus);
+      g.connect(m.in);
       var a = ac.createOscillator(), b = ac.createOscillator();
       a.type = "triangle"; a.frequency.value = freq;
       b.type = "sine";     b.frequency.value = freq * 1.006;  // hafif detune -> canlılık
@@ -2270,7 +2434,7 @@
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(0.15, t + 0.06);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
-      o.connect(g); g.connect(m.bus);
+      o.connect(g); g.connect(m.in); g.connect(m.echo);
       o.start(t); o.stop(t + 1.2);
     }
   };
@@ -3146,6 +3310,7 @@
   var soundBtn   = document.getElementById("soundBtn");
   var timeLabel   = document.getElementById("timeLabel");
   var timerFill   = document.getElementById("timerFill");
+  var subhud      = document.getElementById("subhud");
   var livesLabel  = document.getElementById("livesLabel");
   var heartEls    = livesLabel.querySelectorAll(".heart");
   var lifeOverlay = document.getElementById("lifeOverlay");
@@ -3159,9 +3324,9 @@
   var undoBtn     = document.getElementById("undoBtn");
   var resetBtn    = document.getElementById("resetBtn");
 
-  var MAX_LIVES = 2;   // toplam can hakkı; süre bitince 1 azalır, ödüllü reklamla 1 kazanılır
-  var BONUS_MAX_LIVES = 4; // artık aktif can ödülü yok; yalnız eski sürümden (MAX_LIVES=3) kalma kayıtlı canları aniden kesmemek için üst sınır
-  var LIFE_REGEN_MS = 20 * 60 * 1000; // can MAX_LIVES'ın altındayken her bu kadar sürede +1 (duvar saati; uygulama kapalıyken de işler)
+  var MAX_LIVES = 5;   // toplam can hakkı; süre bitince 1 azalır, ödüllü reklamla 1 kazanılır (eski sürümler: 2-3)
+  var BONUS_MAX_LIVES = 5; // eski kayıtlardaki fazla canları kesmemek için üst sınır; artık MAX_LIVES'la aynı (HUD'da 5 kalp slotu var)
+  var LIFE_REGEN_MS = 15 * 60 * 1000; // can MAX_LIVES'ın altındayken her bu kadar sürede +1 (tam dolum ~75 dk; uygulama kapalıyken de işler)
   var HINT_FREE_DAILY = 3;  // günde bu kadar ipucu reklamsız (gece yarısı todayKey() ile sıfırlanır); bitince ipucu reklam karşılığı sınırsız sürer
   var HINT_MAX_STARS = 2;   // ipucu kullanılan seviyede en çok bu kadar yıldız (3 yıldız = yardımsız)
 
@@ -3716,16 +3881,18 @@
     return Math.max(1, par);
   }
 
-  // Seviyenin süre hakkı (saniye) — tek kısıt (hamle hakkı kaldırıldı). Önce bu
-  // seviyenin TAHMİNİ ortalama çözüm süresi bulunur: ~10 sn tarama + par'ın
-  // kabaca 1.7 katı dokunuş, dokunuş başına ~1.6 sn (ampul başına biraz ek iz
-  // sürme, enerji başına ayırma payı). Süre hakkı = tahmin * 1.15 + 5 sn tampon ->
-  // ortalama oyuncu yetişir. (Telemetri yok; model yalnız par, ampul ve enerji
-  // sayısına dayanır.)
+  // Seviyenin süre hakkı (saniye); 0 = süresiz. Önce bu seviyenin TAHMİNİ ortalama
+  // çözüm süresi bulunur: ~10 sn tarama + par'ın kabaca 1.7 katı dokunuş, dokunuş
+  // başına ~1.6 sn (ampul başına biraz ek iz sürme, enerji başına ayırma payı).
+  // Süre baskı versin ama sık kaybettirmesin: Seviyeler 1-10 (öğrenme) ve Günlük
+  // (rahat alışkanlık) süresiz; payı Seviyeler 50'ye kadar x1.8, 150'ye doğru x1.4'e
+  // iner; Sonsuz hep x1.4. (Telemetri yok; model yalnız par, ampul, enerji sayısına dayanır.)
   function computeTimeLimit() {
+    var n = levelNo();
+    if (cfg.mode === "daily" || (cfg.mode === "campaign" && n <= 10)) return 0;
+    var k = cfg.mode === "endless" ? 1.4 : 1.8 - 0.4 * clamp01((n - 50) / 100);
     var avgSolve = 10 + game.par * 2.7 + (game.bulbCount - 1) * 2.5 + (game.colors - 1) * 6;
-    var t = avgSolve * 1.15 + 5;
-    return clampI(Math.round(t), 15, 180);
+    return clampI(Math.round(avgSolve * k + 10), 20, 240);
   }
 
   // Hamle sayısına göre yıldız (3/2/1). Par'a yakınlık ödüllendirilir.
@@ -3778,8 +3945,11 @@
     });
   }
 
-  // Aktif seviyeyi başlangıç karıştırmasına döndür (aynı bulmaca)
-  function resetLevel() {
+  // Aktif seviyeyi başlangıç karıştırmasına döndür (aynı bulmaca).
+  // keepTime: süre kaldığı yerden akar — oyuncunun kendi "Yeniden başla"sı ve kısa devre süreyi
+  // DOLDURMAZ (yoksa süre bitmeden yeniden başlatmak bedava süre olur, can hiç gitmez).
+  // Can kaybı / kazanma sonrası yeni denemede süre baştan başlar.
+  function resetLevel(keepTime) {
     if (menuOpen || game.phase === "dead" || game.phase === "milestone" || game.phase === "praise") return;
     for (var r = 0; r < game.rows; r++) {
       for (var c = 0; c < game.cols; c++) {
@@ -3798,7 +3968,7 @@
     game.phase = "play";
     game.phaseAt = performance.now();
     game.introAt = performance.now();
-    game.timeLeft = game.timeLimit;
+    if (!keepTime) game.timeLeft = game.timeLimit;
     updateTimerUI();
     // İpucuyla düzeltilen kablolar can kaybında / "Yeniden başla"da geri karışmasın (izlenen reklam boşa gitmesin).
     // Oyuncunun sonradan bozduğu bir kablo ipucu dışı kaldıysa bu düzeltmeler tahtayı çözülü bırakabilir
@@ -3980,7 +4150,8 @@
 
     // enerjili katman (glow oranında karışır)
     if (glow > 0.02) {
-      ctx.globalAlpha = glow;
+      var ga = ctx.globalAlpha;   // açılış dalgasının saydamlığını koru
+      ctx.globalAlpha = ga * glow;
 
       ctx.shadowColor = pal.wireGlow;
       // gölge bulanıklığı en pahalı canvas işlemi -> büyük ızgarada üst sınır koy
@@ -4004,7 +4175,7 @@
         ctx.setLineDash([]);
       }
 
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = ga;
     }
   }
 
@@ -4090,13 +4261,14 @@
     ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
     ctx.lineCap = "round";
+    var ga = ctx.globalAlpha;   // açılış dalgasının saydamlığını koru
     for (i = 0; i < c.d.length; i++) {
       var sd = c.d[i], k = c.sockets[sd], a = (sd - 1) * Math.PI / 2, pal = energyPal(k);
-      ctx.globalAlpha = c.fill[sd] ? 1 : 0.5;
+      ctx.globalAlpha = ga * (c.fill[sd] ? 1 : 0.5);
       ctx.strokeStyle = pal.wire;
       ctx.lineWidth = cell * 0.07;
       ctx.beginPath(); ctx.arc(0, 0, R, a - 0.6, a + 0.6); ctx.stroke();
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = ga;
       // renk körlüğü için noktalar: kaynak/ampuldeki sayıyla aynı
       ctx.fillStyle = pal.wire;
       for (p = 0; p <= k; p++) {
@@ -4188,6 +4360,13 @@
     ctx.save();
     ctx.translate(cx, cy);
 
+    // seviye açılışı: kareler merkezden dışa dalga hâlinde büyüyerek belirir (~0.5 sn)
+    if (!reduceMotion) {
+      var wd = Math.hypot(c.ci - (game.cols - 1) / 2, c.ri - (game.rows - 1) / 2);
+      var wp = clamp01((now - game.introAt - wd * 45) / 280);
+      if (wp < 1) { var ws = 0.6 + 0.4 * easeOutBack(wp); ctx.scale(ws, ws); ctx.globalAlpha *= wp; }
+    }
+
     // kilitli parçaya dokununca yatay titreme
     var sdt = now - c.shakeAt;
     if (sdt < 240) {
@@ -4226,10 +4405,11 @@
         ctx.fillStyle = T.node;
         ctx.beginPath(); ctx.arc(0, 0, lw * 0.62, 0, Math.PI * 2); ctx.fill();
         if (g > 0.02) {
-          ctx.globalAlpha = g;
+          var ga = ctx.globalAlpha;   // açılış dalgasının saydamlığını koru
+          ctx.globalAlpha = ga * g;
           ctx.fillStyle = game.colors > 1 ? pal.wire : T.nodeLit;
           ctx.beginPath(); ctx.arc(0, 0, lw * 0.62, 0, Math.PI * 2); ctx.fill();
-          ctx.globalAlpha = 1;
+          ctx.globalAlpha = ga;
         }
         // çıkmaz uç kapağı (tek bağlantılı, rol yok)
         if (c.d.length === 1) {
@@ -4309,7 +4489,7 @@
 
     // Süre sayacı: yalnızca oynanışta ve menü kapalıyken azalır.
     // Ödüllü reklam sürerken de akmaz (izlenen reklam yüzünden can kaybedilmesin, bkz. Ads.isShowing).
-    if (game.phase === "play" && !menuOpen && !Ads.isShowing()) {
+    if (game.phase === "play" && game.timeLimit > 0 && !menuOpen && !Ads.isShowing()) {
       game.timeLeft -= dt / 1000;
       if (game.timeLeft <= 0) {
         game.timeLeft = 0;
@@ -4333,7 +4513,7 @@
     if (game.phase === "win" && !menuOpen && now - game.phaseAt > WIN_CARD_DELAY + (game.fan ? FAN_WIN_MS : 0)) showWinCard();
 
     // Kısa devre: patlama bitince seviye baştan başlar (can gitmez, ipucuyla düzelenler korunur).
-    if (game.phase === "boom" && !menuOpen && now - game.phaseAt >= BOOM_MS) resetLevel();
+    if (game.phase === "boom" && !menuOpen && now - game.phaseAt >= BOOM_MS) resetLevel(true);
 
     // Ara övgü katmanı: PRAISE_HOLD kadar gösterildikten sonra kendiliğinden
     // kapanır ve bir sonraki seviyeye geçer (buton gerekmez, akışı kısa keser).
@@ -4598,8 +4778,9 @@
     if (idx >= targets.length || game.phase !== "play") return;
     var target = targets[idx];
     if (!hintSafe(target)) { applyHintChain(targets, idx + 1); return; }   // ilk düzeltme durumu değiştirmiş olabilir
-    game.undo.push({ c: target, from: target.rot });   // düzeltme geri-al yığınına yazılır (sayaç tutarlı kalır)
-    if (game.undo.length > 300) game.undo.shift();
+    // İpucu geri alınamaz: "Geri al" harcanan hakkı / izlenen reklamı boşa çıkarmasın. Bu kablonun
+    // eski dönüşleri de yığından düşer (yoksa geri alma onu ipucu öncesi yanlış yöne döndürürdü).
+    game.undo = game.undo.filter(function (u) { return u.c !== target; });
     target.rot = 0;                       // üreticinin "çözülmüş" yönü
     if (game.hintFixed.indexOf(target) === -1) game.hintFixed.push(target);   // resetLevel yeniden uygular
     target.animAt = performance.now();
@@ -4693,6 +4874,7 @@
   }
   // "Süre doldu" katmanı (can kaldı): düğmeye odaklanır ki Enter/Boşluk ile de başlatılabilsin
   function showTimeUpOverlay() {
+    byId("timeUpSub").textContent = t("timeup.sub", { n: game.lives });
     timeUpOverlay.classList.add("show");
     timeUpOverlay.setAttribute("aria-hidden", "false");
     setTimeout(function () {
@@ -4802,6 +4984,7 @@
     if (game.hinted) chips.appendChild(chipEl(t("chip.hintUsed", { n: HINT_MAX_STARS }), "", null));
     if (game.newBest) chips.appendChild(chipEl(t("chip.newBest"), "gold", null));
     if (game.starGain > 0) chips.appendChild(chipEl(t("chip.starGain", { n: game.starGain }), "gold", "star"));
+    showWinRank(isMilestoneWin(lv) && !daily);
 
     var nextLabel, menuLabel, menuIco;
     if (daily) {
@@ -4875,19 +5058,21 @@
   }
 
   // [Seviyeler | Ana menü]: sıradaki tahta hazır beklesin (menüdeki "Devam Et" doğru seviyeyi göstersin)
-  function winToMenu() {
+  // to: gidilecek ekran ("rank" = karttaki dünya sırası satırı); yoksa mod menüsü
+  function winToMenu(to) {
     if (game.phase !== "card") return;
+    if (typeof to !== "string") to = "";   // düğme dinleyicisinden olay nesnesi gelir
     hideWinCard();
     if (cfg.mode === "daily") {
       if (game.dailyDone) { game.phase = "done"; game.phaseAt = performance.now(); Ads.interstitialNow(); }
       else { game.dailyIdx++; buildLevel(); Ads.levelAdvanced(); }
-      showScreen("home");
+      showScreen(to || "home");
     } else {
       var m = cfg.mode;
       game.li++;                              // (kilometre taşı seviyelerinde bu düğme gizli)
       buildLevel();
       Ads.levelAdvanced();                    // menüye çıkan da seviye saymalı, yoksa reklam hiç çıkmaz
-      showScreen(m === "campaign" ? "levels" : "home");
+      showScreen(to || (m === "campaign" ? "levels" : "home"));
     }
   }
 
@@ -4956,13 +5141,25 @@
   // yalnız MAX_LIVES kadar slot görünür; 100 seviye ödülüyle can bunun
   // üstüne çıkarsa (bkz. BONUS_MAX_LIVES) fazladan kalp slotları da açığa
   // çıkar, can o seviyenin altına düşünce kendiliğinden tekrar gizlenir.
+  var _shownLives = -1;   // son çizilen can sayısı: değişim yönüne göre kalp animasyonu (ilk çizimde yok)
   function updateLives() {
-    var slotMax = Math.max(MAX_LIVES, game.lives);
+    var slotMax = Math.max(MAX_LIVES, game.lives), prev = _shownLives, n = game.lives;
     for (var i = 0; i < heartEls.length; i++) {
-      heartEls[i].classList.toggle("hide", i >= slotMax);
-      heartEls[i].classList.toggle("off", i >= game.lives);
+      var h = heartEls[i];
+      h.classList.toggle("hide", i >= slotMax);
+      h.classList.toggle("off", i >= n);
+      if (prev >= 0 && n !== prev && i >= Math.min(n, prev) && i < Math.max(n, prev)) {
+        h.classList.remove("lost", "gain");
+        void h.offsetWidth;   // aynı sınıf üst üste gelirse animasyon yeniden başlasın
+        h.classList.add(n < prev ? "lost" : "gain");
+      }
     }
-    livesLabel.setAttribute("aria-label", t("hud.livesAria") + ": " + game.lives + " / " + MAX_LIVES);
+    _shownLives = n;
+    var aria = t("hud.livesAria") + ": " + n + " / " + MAX_LIVES;
+    livesLabel.setAttribute("aria-label", aria);
+    byId("homeLivesN").textContent = n;
+    byId("homeLives").setAttribute("aria-label", aria);
+    if (prev >= 0 && n > prev) { var hl = byId("homeLives"); hl.classList.remove("gain"); void hl.offsetWidth; hl.classList.add("gain"); }
   }
 
   /* CAN — kalıcı + zamanla dolan. Store: lives.n (kalan can) ve lives.t (bir sonraki canın dolum
@@ -4995,7 +5192,9 @@
   // Açılışta kayıttan okur (bozuk/eksik kayıt -> tam can) ve kapalıyken dolan canları işler.
   function loadLives() {
     var n = Store.get("lives.n", MAX_LIVES);
-    game.lives = (typeof n === "number" && n >= 0) ? Math.min(BONUS_MAX_LIVES, Math.floor(n)) : MAX_LIVES;
+    // 1.6.0'da tavan 2 -> 5 oldu: eski sürümden gelenler bir kez tam canla başlasın (yoksa 45 dk beklerlerdi)
+    if (Store.get("lives.v", 0) < 2) { Store.set("lives.v", 2); n = MAX_LIVES; Store.set("lives.t", 0); }
+    game.lives =(typeof n === "number" && n >= 0) ? Math.min(BONUS_MAX_LIVES, Math.floor(n)) : MAX_LIVES;
     var t = Store.get("lives.t", 0);
     _lifeT = (typeof t === "number" && t > 0 && game.lives < MAX_LIVES) ? t : 0;
     if (game.lives < MAX_LIVES && !_lifeT) _lifeT = Date.now();
@@ -5018,14 +5217,19 @@
       if (game.phase === "dead") resumeAfterLifeGain(t("toast.lifeGainedTimer"));
       else if (screenNow === "game") showToast(t("toast.lifeGainedIdle"), 1400);
     }
-    var txt = (game.lives < MAX_LIVES && _lifeT)
-      ? t("life.timerText", { clock: lifeClock(_lifeT + LIFE_REGEN_MS - Date.now()) }) : "";
-    if (txt !== _lifeTimerTxt) { _lifeTimerTxt = txt; lifeTimerEl.textContent = txt; }
+    var clock = (game.lives < MAX_LIVES && _lifeT) ? lifeClock(_lifeT + LIFE_REGEN_MS - Date.now()) : "";
+    var txt = clock ? t("life.timerText", { clock: clock }) : "";
+    if (txt !== _lifeTimerTxt) {
+      _lifeTimerTxt = txt;
+      lifeTimerEl.textContent = txt;
+      byId("homeLivesT").textContent = clock ? "+1 " + clock : "";   // ana menü rozeti: bir sonraki can
+    }
   }
 
   // Süre çubuğunu + saniye metnini kalan süreye göre günceller
   var _timeTxt = "";
   function updateTimerUI() {
+    subhud.classList.toggle("untimed", !(game.timeLimit > 0));   // süresiz seviye: sayaç gizli, yalnız kalpler
     var secs = Math.max(0, Math.ceil(game.timeLeft));
     var txt = secs + "s";
     if (txt !== _timeTxt) { timeLabel.textContent = txt; _timeTxt = txt; }
@@ -5115,8 +5319,10 @@
     },
     // Gönderilmemiş yıldız varsa sessizce gönderir; çevrimdışıysa sonra yeniden dener. Hep çözülür.
     sync: function () {
+      if (this._syncP) return this._syncP;   // gönderim sürüyorsa aynısını bekle (kazanma + kart aynı anda çağırır)
       if (!this.name() || totalStarsAll() <= Store.get("online.sent", 0)) return Promise.resolve();
-      return this.submit(this.name()).catch(function () {});
+      var self = this;
+      return (this._syncP = this.submit(this.name()).catch(function () {}).then(function () { self._syncP = null; }));
     },
     load: function () {
       var named = !!this.name();
@@ -5124,6 +5330,46 @@
                           named ? this._rpc("around_me", { p_id: this.id() }) : []]);
     }
   };
+
+  // Takma adı BİR KEZ, oyuncu oyunu tanıdıktan sonra sor: Seviyeler'de 10. seviye bitince (eskiden
+  // geçmiş olanlara açılışta) ya da başka modlarda 15 yıldızda. Sıralama ekranının ad kartı açılır;
+  // geri düğmesi "şimdi değil" olur ve bir daha kendiliğinden sorulmaz (🏆'dan her zaman katılabilir).
+  function maybeAskName() {
+    if (Online.name() || Store.get("rank.asked", false)) return;
+    if (bestOf("campaign") < 11 && totalStarsAll() < 15) return;   // bestLevel = ulaşılan seviye: 11 -> 10 bitti
+    Store.set("rank.asked", true);
+    showScreen("rank");
+    showToast(t("rank.invite"), 3200);
+  }
+
+  // Kazanma kartında dünya sırası: "#12 (↑3)"; adı yoksa "katıl". Dokununca Sıralama açılır.
+  // Kilometre taşı kartında yalnız gösterilir, dokunulmaz (orada menüye çıkış yok, kutlama atlanmasın; bkz. winToMenu).
+  // Ağ yoksa satır görünmez.
+  var _winRankReq = 0;
+  function showWinRank(noTap) {
+    var b = byId("winRank"), req = ++_winRankReq;   // cevap geç gelirse sonraki kartın üstüne yazmasın
+    b.hidden = true;
+    b.disabled = !!noTap;
+    byId("winNear").hidden = true;
+    if (!Online.name()) { if (!noTap) { b.textContent = t("win.rankJoin"); b.hidden = false; } return; }
+    Online.sync().then(function () { return Online._rpc("around_me", { p_id: Online.id() }); }).then(function (rows) {
+      var i = rows ? rows.findIndex(function (e) { return e.me === true; }) : -1, me = rows && rows[i];
+      if (!me || game.phase !== "card" || req !== _winRankReq) return;
+      var prev = Store.get("online.rank", 0), up = prev > 0 && me.rank < prev ? prev - me.rank : 0;
+      Store.set("online.rank", me.rank);
+      b.textContent = t(up ? "win.rankUp" : "win.rank", { n: me.rank, d: up });
+      b.hidden = false;
+      // Oyuncu ve hemen üstü/altı: geçilecek rakip görünsün. Sunucudan gelen ad güvenilmez, yalnız textContent.
+      var ol = byId("winNear"); ol.textContent = "";
+      rows.slice(Math.max(0, i - 1), i + 2).forEach(function (e) {
+        var li = document.createElement("li"), p = document.createElement("span"), n = document.createElement("b"), sc = document.createElement("span");
+        li.className = e.me ? "me" : "";
+        p.textContent = e.rank + "."; n.textContent = e.name; sc.textContent = "★ " + e.score;
+        li.appendChild(p); li.appendChild(n); li.appendChild(sc); ol.appendChild(li);
+      });
+      ol.hidden = rows.length < 2;   // listede tek başınaysa satır yeter
+    }, function () {});
+  }
 
   var _rankReq = 0;
   function rankState(key, retry) {
@@ -5159,7 +5405,7 @@
     Online.sync().then(function () { return Online.load(); }).then(function (res) {
       if (req !== _rankReq || screenNow !== "rank") return;
       var top = res[0] || [], me = res[1] && res[1][0], seen = false;
-      top.forEach(function (e) { var isMe = !!me && e.name === me.name; seen = seen || isMe; ol.appendChild(rankRow(e, isMe)); });
+      top.forEach(function (e, i) { var isMe = !!me && e.name === me.name, li = rankRow(e, isMe); seen = seen || isMe; li.style.setProperty("--i", i); ol.appendChild(li); });
       // Oyuncu ilk 50'de değilse: "…" + çevresi (3 üstü, kendisi, 2 altı)
       if (me && !seen && me.score > 0) {
         var shown = top.map(function (e) { return e.name; });
@@ -5169,7 +5415,7 @@
           var gap = document.createElement("li"); gap.className = "rank-gap"; gap.textContent = "…"; gap.setAttribute("aria-hidden", "true");
           ol.appendChild(gap);
         }
-        near.forEach(function (e) { ol.appendChild(rankRow(e, e.me === true || e.name === me.name)); });
+        near.forEach(function (e) { var li = rankRow(e, e.me === true || e.name === me.name); li.style.setProperty("--i", 12); ol.appendChild(li); });
       }
       rankState(top.length ? "" : "rank.empty");
       if (me) {
@@ -5313,6 +5559,7 @@
       if (m === "daily") startDaily();
       else { game.li = idx; buildLevel(); }
     }
+    game.introAt = performance.now();   // seviye menünün arkasında hazır olabilir: açılış dalgası oyuncu görürken oynasın
     showScreen("game");
   }
   // Büyük "Oyna / Devam Et" düğmesi: geçerli modu sürdürür; günlük bittiyse Sonsuz'a (kilitliyse Seviyeler'e) geçer
@@ -5537,7 +5784,7 @@
   byId("pauseRestart").addEventListener("click", function () {
     if (game.moves === 0 || game.phase !== "play") return;
     showScreen("game");
-    resetLevel();
+    resetLevel(true);
   });
   byId("pauseHome").addEventListener("click", function () { showScreen("home"); });
   byId("pauseSound").addEventListener("click", function () { Sound.ensure(); Sound.toggle(); refreshSoundBtn(); syncMenu(); });
@@ -5549,7 +5796,8 @@
   screens.pause.addEventListener("click", function (e) { if (e.target === screens.pause) showScreen("game"); });
 
   // Kazanma kartı
-  byId("winNext").addEventListener("click", advanceAfterWin);
+  byId("winNext").addEventListener("click", function () { advanceAfterWin(); maybeAskName(); });
+  byId("winRank").addEventListener("click", function () { Store.set("rank.asked", true); winToMenu("rank"); });
   byId("winRetry").addEventListener("click", winRetry);
   byId("winMenu").addEventListener("click", winToMenu);
 
@@ -5615,7 +5863,7 @@
   hintBtn.addEventListener("click", useHint);
   resetBtn.addEventListener("click", function () {
     if (game.moves === 0) return;                 // pasif görünüyor: sıfırlanacak bir şey yok
-    resetLevel();
+    resetLevel(true);
   });
   soundBtn.addEventListener("click", function () {
     Sound.ensure();
@@ -5733,6 +5981,8 @@
   // oyuncu "Oyna / Devam Et"e basana kadar başlamaz; aynı tahta hazır bekler (bkz. playMode).
   // Açılış animasyonu (#intro, z-index 100) menüyü örttüğü için o kapanınca kendiliğinden görünür.
   showScreen("home");
+  // 10. seviyeyi bu sürümden önce geçmiş oyunculara adı açılışta sor (açılış animasyonu ~2.5 sn)
+  setTimeout(function () { if (screenNow === "home") maybeAskName(); }, 2800);
 
   requestAnimationFrame(function () { layout(); });  // ilk ölçüler hazır olunca
   requestAnimationFrame(frame);

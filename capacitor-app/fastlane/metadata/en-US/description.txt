@@ -17,12 +17,13 @@ The rule is simple and hard to put down: every tap rotates one piece. Don't wast
 • Four colors of energy: send each to its own bulb and keep them apart
 • Fan bulb: fill every socket in the center to spin the fan
 • Up to 3 stars per level — solve it in few moves and without hints
-• Every level is timed, and you have lives that refill over time
+• Timed levels and 5 lives that refill over time; the first 10 levels and the Daily are untimed
+• World leaderboard (optional): pick a nickname and see where your total stars rank — your rank shows after every level
 • Stuck? A hint fixes up to two wires. You get 3 free hints every day; after that, watch a short ad for more
-• Works offline — no internet needed
+• Works offline — internet is only needed for the leaderboard
 • Relaxing ambient music, haptic feedback and a clean dark design
 • Available in English, Türkçe, Español and العربية
-• No account, no sign-in, no registration
+• No account, no sign-in: just a nickname if you join the leaderboard
 
 ▸ REMINDERS
 With your permission, the game can send a gentle reminder when your daily puzzle is ready or you haven't played for a while. You can turn it off in Settings.

@@ -17,12 +17,13 @@ La regla es simple y difícil de soltar: cada toque gira una pieza. No malgastes
 • Cuatro colores de energía: lleva cada uno a su bombilla y mantenlos separados
 • Bombilla con ventilador: llena todos los depósitos del centro para que gire
 • Hasta 3 estrellas por nivel: resuélvelo con pocos movimientos y sin pistas
-• Cada nivel tiene tiempo límite y tienes vidas que se recuperan con el paso del tiempo
+• Niveles con tiempo y 5 vidas que se recuperan con el paso del tiempo; los 10 primeros niveles y el Diario no tienen tiempo
+• Clasificación mundial (opcional): elige un apodo y mira tu puesto según tus estrellas; aparece al terminar cada nivel
 • ¿Atascado? Una pista corrige hasta dos cables. Tienes 3 pistas gratis al día; después, puedes ver un anuncio breve para conseguir más
-• Funciona sin conexión: no necesitas internet
+• Funciona sin conexión: solo necesitas internet para la clasificación
 • Música ambiental relajante, respuesta háptica y un diseño oscuro y sencillo
 • Disponible en español, English, Türkçe y العربية
-• Sin cuenta, sin inicio de sesión, sin registro
+• Sin cuenta ni inicio de sesión: solo un apodo si te unes a la clasificación
 
 ▸ RECORDATORIOS
 Con tu permiso, el juego puede enviarte un aviso amable cuando tu puzle diario esté listo o si llevas un tiempo sin jugar. Puedes desactivarlo en Ajustes.
