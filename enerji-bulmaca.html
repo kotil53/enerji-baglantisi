@@ -813,6 +813,14 @@
   .name-msg { margin: 0; min-height: 1.3em; font-size: 12px; color: var(--e-muted); }
   .name-msg.bad { color: var(--e-danger); }
   .rank-me { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px; font-size: 14px; font-weight: 700; color: var(--e-ink-hi); }
+  .link-btn:disabled { cursor: default; }
+  /* kazanma kartı: dünya sıralamasında oyuncunun hemen üstü ve altı (Yörünge'deki oyun sonu listesi gibi) */
+  .mini-rank { list-style: none; margin: 0 auto 8px; padding: 4px; width: 100%; max-width: 280px; border-radius: 12px; background: var(--e-panel); border: 1px solid var(--e-border); }
+  .mini-rank[hidden] { display: none; }
+  .mini-rank li { display: grid; grid-template-columns: 2.8em 1fr auto; gap: 8px; align-items: center; padding: 3px 8px; border-radius: 8px;
+    font-size: 13px; color: var(--e-muted); font-variant-numeric: tabular-nums; text-align: start; }
+  .mini-rank li b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+  .mini-rank li.me { background: var(--e-panel-hi); color: var(--e-ink-hi); font-weight: 800; box-shadow: inset 0 0 0 1px var(--e-accent-a); }
   .link-btn { -webkit-appearance: none; appearance: none; border: 0; background: none; padding: 10px 4px; font: inherit; font-size: 13px; font-weight: 700; color: var(--e-accent-a); cursor: pointer; }
   .rank-state { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 0; font-size: 14px; color: var(--e-muted); text-align: center; }
   .rank-state p { margin: 0; }
@@ -1353,6 +1361,7 @@
       <p class="sub" id="winSub"></p>
       <div class="chips" id="winChips"></div>
       <button class="link-btn" id="winRank" type="button" hidden></button>
+      <ol class="mini-rank" id="winNear" hidden></ol>
       <div class="dlg-actions">
         <button class="cta gold" id="winNext" type="button" data-autofocus><span class="t"><b id="winNextLabel">Sonraki seviye</b></span><svg class="i" aria-hidden="true"><use href="#i-next"/></svg></button>
         <div class="btn-row">
@@ -5334,20 +5343,31 @@
   }
 
   // Kazanma kartında dünya sırası: "#12 (↑3)"; adı yoksa "katıl". Dokununca Sıralama açılır.
-  // Kilometre taşı kartında gizli (orada menüye çıkış da yok, bkz. winToMenu). Ağ yoksa satır görünmez.
+  // Kilometre taşı kartında yalnız gösterilir, dokunulmaz (orada menüye çıkış yok, kutlama atlanmasın; bkz. winToMenu).
+  // Ağ yoksa satır görünmez.
   var _winRankReq = 0;
-  function showWinRank(hide) {
+  function showWinRank(noTap) {
     var b = byId("winRank"), req = ++_winRankReq;   // cevap geç gelirse sonraki kartın üstüne yazmasın
     b.hidden = true;
-    if (hide) return;
-    if (!Online.name()) { b.textContent = t("win.rankJoin"); b.hidden = false; return; }
-    Online.sync().then(function () { return Online._rpc("my_rank", { p_id: Online.id() }); }).then(function (r) {
-      var me = r && r[0];
-      if (!me || !(me.score > 0) || game.phase !== "card" || req !== _winRankReq) return;
+    b.disabled = !!noTap;
+    byId("winNear").hidden = true;
+    if (!Online.name()) { if (!noTap) { b.textContent = t("win.rankJoin"); b.hidden = false; } return; }
+    Online.sync().then(function () { return Online._rpc("around_me", { p_id: Online.id() }); }).then(function (rows) {
+      var i = rows ? rows.findIndex(function (e) { return e.me === true; }) : -1, me = rows && rows[i];
+      if (!me || game.phase !== "card" || req !== _winRankReq) return;
       var prev = Store.get("online.rank", 0), up = prev > 0 && me.rank < prev ? prev - me.rank : 0;
       Store.set("online.rank", me.rank);
       b.textContent = t(up ? "win.rankUp" : "win.rank", { n: me.rank, d: up });
       b.hidden = false;
+      // Oyuncu ve hemen üstü/altı: geçilecek rakip görünsün. Sunucudan gelen ad güvenilmez, yalnız textContent.
+      var ol = byId("winNear"); ol.textContent = "";
+      rows.slice(Math.max(0, i - 1), i + 2).forEach(function (e) {
+        var li = document.createElement("li"), p = document.createElement("span"), n = document.createElement("b"), sc = document.createElement("span");
+        li.className = e.me ? "me" : "";
+        p.textContent = e.rank + "."; n.textContent = e.name; sc.textContent = "★ " + e.score;
+        li.appendChild(p); li.appendChild(n); li.appendChild(sc); ol.appendChild(li);
+      });
+      ol.hidden = rows.length < 2;   // listede tek başınaysa satır yeter
     }, function () {});
   }
 
