@@ -1352,6 +1352,7 @@
       <h2 id="winTitle">SEVİYE TAMAM</h2>
       <p class="sub" id="winSub"></p>
       <div class="chips" id="winChips"></div>
+      <button class="link-btn" id="winRank" type="button" hidden></button>
       <div class="dlg-actions">
         <button class="cta gold" id="winNext" type="button" data-autofocus><span class="t"><b id="winNextLabel">Sonraki seviye</b></span><svg class="i" aria-hidden="true"><use href="#i-next"/></svg></button>
         <div class="btn-row">
@@ -1607,6 +1608,7 @@
       "home.dailyDoneSub": "Bugünkü günlük tamam ✓", "home.dailySub": "Günlük · {n} / {total}",
       "home.modeSub": "{mode} · Seviye {n}",
       "rank.title": "Sıralama", "rank.nameLabel": "Takma adın", "rank.namePh": "örn. Kablo Ustası",
+      "win.rank": "🏆 Dünya sıralaması: #{n}", "win.rankUp": "🏆 Dünya sıralaması: #{n} (↑{d})", "win.rankJoin": "🏆 Dünya sıralamasına katıl",
       "rank.invite": "🏆 Dünya sıralamasına katıl! Takma adını yaz, yıldızların listede görünsün.", "rank.save": "Kaydet", "rank.saving": "Kaydediliyor…", "rank.saved": "Takma ad kaydedildi",
       "rank.nameHint": "3–16 karakter. Takma adın ve toplam yıldızın herkese görünür.",
       "rank.nameBad": "Bu ad kullanılamaz. Harf, rakam, boşluk ya da _ . - kullan.",
@@ -1722,6 +1724,7 @@
       "home.dailyDoneSub": "Today's daily complete ✓", "home.dailySub": "Daily · {n} / {total}",
       "home.modeSub": "{mode} · Level {n}",
       "rank.title": "Leaderboard", "rank.nameLabel": "Your nickname", "rank.namePh": "e.g. Wire Master",
+      "win.rank": "🏆 World rank: #{n}", "win.rankUp": "🏆 World rank: #{n} (↑{d})", "win.rankJoin": "🏆 Join the world leaderboard",
       "rank.invite": "🏆 Join the world leaderboard! Pick a nickname to show your stars.", "rank.save": "Save", "rank.saving": "Saving…", "rank.saved": "Nickname saved",
       "rank.nameHint": "3–16 characters. Your nickname and total stars are public.",
       "rank.nameBad": "That name can’t be used. Use letters, numbers, spaces or _ . -",
@@ -1838,6 +1841,7 @@
       "home.dailyDoneSub": "اكتملت لعبة اليوم اليومية ✓", "home.dailySub": "يومي · {n} / {total}",
       "home.modeSub": "{mode} · المستوى {n}",
       "rank.title": "لوحة المتصدرين", "rank.nameLabel": "اسمك المستعار", "rank.namePh": "مثال: Wire Master",
+      "win.rank": "🏆 ترتيبك العالمي: #{n}", "win.rankUp": "🏆 ترتيبك العالمي: #{n} (↑{d})", "win.rankJoin": "🏆 انضم إلى لوحة المتصدرين",
       "rank.invite": "🏆 انضم إلى لوحة المتصدرين العالمية! اختر اسمًا مستعارًا لتظهر نجومك.", "rank.save": "حفظ", "rank.saving": "جارٍ الحفظ…", "rank.saved": "تم حفظ الاسم المستعار",
       "rank.nameHint": "من 3 إلى 16 حرفًا. اسمك المستعار ومجموع نجومك مرئيان للجميع.",
       "rank.nameBad": "لا يمكن استخدام هذا الاسم. استخدم الحروف اللاتينية أو الأرقام أو المسافات أو _ . -",
@@ -1953,6 +1957,7 @@
       "home.dailyDoneSub": "Diario de hoy completado ✓", "home.dailySub": "Diario · {n} / {total}",
       "home.modeSub": "{mode} · Nivel {n}",
       "rank.title": "Clasificación", "rank.nameLabel": "Tu apodo", "rank.namePh": "p. ej. Maestro del Cable",
+      "win.rank": "🏆 Puesto mundial: #{n}", "win.rankUp": "🏆 Puesto mundial: #{n} (↑{d})", "win.rankJoin": "🏆 Únete a la clasificación mundial",
       "rank.invite": "🏆 ¡Únete a la clasificación mundial! Elige un apodo para mostrar tus estrellas.", "rank.save": "Guardar", "rank.saving": "Guardando…", "rank.saved": "Apodo guardado",
       "rank.nameHint": "3–16 caracteres. Tu apodo y tus estrellas totales son públicos.",
       "rank.nameBad": "Ese nombre no se puede usar. Usa letras, números, espacios o _ . -",
@@ -4966,6 +4971,7 @@
     if (game.hinted) chips.appendChild(chipEl(t("chip.hintUsed", { n: HINT_MAX_STARS }), "", null));
     if (game.newBest) chips.appendChild(chipEl(t("chip.newBest"), "gold", null));
     if (game.starGain > 0) chips.appendChild(chipEl(t("chip.starGain", { n: game.starGain }), "gold", "star"));
+    showWinRank(isMilestoneWin(lv) && !daily);
 
     var nextLabel, menuLabel, menuIco;
     if (daily) {
@@ -5039,19 +5045,21 @@
   }
 
   // [Seviyeler | Ana menü]: sıradaki tahta hazır beklesin (menüdeki "Devam Et" doğru seviyeyi göstersin)
-  function winToMenu() {
+  // to: gidilecek ekran ("rank" = karttaki dünya sırası satırı); yoksa mod menüsü
+  function winToMenu(to) {
     if (game.phase !== "card") return;
+    if (typeof to !== "string") to = "";   // düğme dinleyicisinden olay nesnesi gelir
     hideWinCard();
     if (cfg.mode === "daily") {
       if (game.dailyDone) { game.phase = "done"; game.phaseAt = performance.now(); Ads.interstitialNow(); }
       else { game.dailyIdx++; buildLevel(); Ads.levelAdvanced(); }
-      showScreen("home");
+      showScreen(to || "home");
     } else {
       var m = cfg.mode;
       game.li++;                              // (kilometre taşı seviyelerinde bu düğme gizli)
       buildLevel();
       Ads.levelAdvanced();                    // menüye çıkan da seviye saymalı, yoksa reklam hiç çıkmaz
-      showScreen(m === "campaign" ? "levels" : "home");
+      showScreen(to || (m === "campaign" ? "levels" : "home"));
     }
   }
 
@@ -5298,8 +5306,10 @@
     },
     // Gönderilmemiş yıldız varsa sessizce gönderir; çevrimdışıysa sonra yeniden dener. Hep çözülür.
     sync: function () {
+      if (this._syncP) return this._syncP;   // gönderim sürüyorsa aynısını bekle (kazanma + kart aynı anda çağırır)
       if (!this.name() || totalStarsAll() <= Store.get("online.sent", 0)) return Promise.resolve();
-      return this.submit(this.name()).catch(function () {});
+      var self = this;
+      return (this._syncP = this.submit(this.name()).catch(function () {}).then(function () { self._syncP = null; }));
     },
     load: function () {
       var named = !!this.name();
@@ -5317,6 +5327,24 @@
     Store.set("rank.asked", true);
     showScreen("rank");
     showToast(t("rank.invite"), 3200);
+  }
+
+  // Kazanma kartında dünya sırası: "#12 (↑3)"; adı yoksa "katıl". Dokununca Sıralama açılır.
+  // Kilometre taşı kartında gizli (orada menüye çıkış da yok, bkz. winToMenu). Ağ yoksa satır görünmez.
+  var _winRankReq = 0;
+  function showWinRank(hide) {
+    var b = byId("winRank"), req = ++_winRankReq;   // cevap geç gelirse sonraki kartın üstüne yazmasın
+    b.hidden = true;
+    if (hide) return;
+    if (!Online.name()) { b.textContent = t("win.rankJoin"); b.hidden = false; return; }
+    Online.sync().then(function () { return Online._rpc("my_rank", { p_id: Online.id() }); }).then(function (r) {
+      var me = r && r[0];
+      if (!me || !(me.score > 0) || game.phase !== "card" || req !== _winRankReq) return;
+      var prev = Store.get("online.rank", 0), up = prev > 0 && me.rank < prev ? prev - me.rank : 0;
+      Store.set("online.rank", me.rank);
+      b.textContent = t(up ? "win.rankUp" : "win.rank", { n: me.rank, d: up });
+      b.hidden = false;
+    }, function () {});
   }
 
   var _rankReq = 0;
@@ -5745,6 +5773,7 @@
 
   // Kazanma kartı
   byId("winNext").addEventListener("click", function () { advanceAfterWin(); maybeAskName(); });
+  byId("winRank").addEventListener("click", function () { Store.set("rank.asked", true); winToMenu("rank"); });
   byId("winRetry").addEventListener("click", winRetry);
   byId("winMenu").addEventListener("click", winToMenu);
 
