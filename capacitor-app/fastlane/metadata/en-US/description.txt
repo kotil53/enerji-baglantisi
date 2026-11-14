@@ -1,13 +1,13 @@
-⚡ ENERJİ BAĞLANTISI
+ENERJİ BAĞLANTISI
 
 Power flows from the source but never reaches the bulb. Rotate the wires one by one, reconnect the broken circuit and light up every bulb.
 
 The rule is simple and hard to put down: every tap rotates one piece. Don't waste moves — your stars depend on how few you use.
 
 ▸ HOW TO PLAY
-• Build a path from the source (⚡) to the bulbs (💡)
+• Build a path from the source to the bulbs
 • Tap pieces to rotate them
-• Locked pieces (🔒) never move — route the solution around them
+• Locked pieces never move — route the solution around them
 • The level is complete when every bulb is lit
 
 ▸ FEATURES
