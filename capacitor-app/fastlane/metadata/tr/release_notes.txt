@@ -1,4 +1,6 @@
 Yenilikler:
-• Zorluk baştan sona yeniden dengelendi: seviyeler artık küçük adımlarla, kolaydan zora doğru ilerliyor.
-• Pervaneli ampul artık 5. seviyeden başlıyor ve her 5 seviyede bir geliyor.
-• İleri seviyelerde süre, tahtanın büyüklüğüne göre uzatıldı.
+• Dünya sıralaması: takma adını seç, toplam yıldızınla dünyadaki yerini gör. Sıran her seviye sonunda görünür.
+• Yeni ses efektleri ve daha renkli müzik.
+• Yeni açılış ve akıcı animasyonlar.
+• Can 5'e çıktı, her 15 dakikada bir doluyor.
+• İlk 10 seviye ve Günlük bulmaca artık süresiz; süreler daha adil.

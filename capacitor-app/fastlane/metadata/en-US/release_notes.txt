@@ -1,4 +1,6 @@
 What's new:
-• Difficulty rebalanced from start to finish: levels now ramp up in small, fair steps from easy to hard.
-• The fan bulb now appears from level 5, every 5 levels.
-• Later levels give you more time, scaled to the size of the board.
+• World leaderboard: pick a nickname and see where your total stars rank worldwide. Your rank shows after every level.
+• New sound effects and more colorful music.
+• New intro and smoother animations.
+• Lives raised to 5, refilling one every 15 minutes.
+• The first 10 levels and the Daily puzzle are now untimed; timers are fairer.

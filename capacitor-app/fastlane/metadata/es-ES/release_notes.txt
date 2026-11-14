@@ -1,4 +1,6 @@
 Novedades:
-• Dificultad reequilibrada de principio a fin: los niveles avanzan ahora en pasos pequeños y justos, de fácil a difícil.
-• La bombilla con ventilador aparece desde el nivel 5, cada 5 niveles.
-• En los niveles avanzados tienes más tiempo, según el tamaño del tablero.
+• Clasificación mundial: elige un apodo y mira tu puesto en el mundo según tus estrellas. Tu puesto aparece al terminar cada nivel.
+• Nuevos efectos de sonido y música más colorida.
+• Nueva introducción y animaciones más fluidas.
+• Ahora tienes 5 vidas, y se recarga una cada 15 minutos.
+• Los 10 primeros niveles y el puzle diario ya no tienen tiempo; los tiempos son más justos.
