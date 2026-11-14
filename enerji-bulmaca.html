@@ -286,6 +286,7 @@
   }
   #timerFill.warn   { background: linear-gradient(90deg, #e8a83a, #ff9a1f); }
   #timerFill.danger { background: linear-gradient(90deg, #ff5c5c, #ff2e2e); }
+  #subhud.untimed #timeLabel, #subhud.untimed #timerWrap { visibility: hidden; }   /* yer korunur: kalpler kaymaz */
   #livesLabel { flex: 0 0 auto; display: flex; gap: 2px; }
   #livesLabel .heart {
     font-size: 14px;
@@ -296,6 +297,17 @@
   }
   #livesLabel .heart.off { color: #333c5c; opacity: 0.55; transform: scale(0.82); }
   #livesLabel .heart.hide { display: none; }   /* normal tavanın (MAX_LIVES) üstü: yalnız bonus canla açığa çıkar */
+  /* can kaybı: kalp büyüyüp sallanarak söner; can dolumu: kalp "pop" ile yanar (bkz. updateLives) */
+  #livesLabel .heart.lost { animation: heartLost .55s ease-out; }
+  #livesLabel .heart.gain, #homeLives.gain .hh { animation: heartGain .45s cubic-bezier(.2, 1.4, .4, 1); }
+  @keyframes heartLost { 0% { transform: scale(1.6); color: #ff5c7a; opacity: 1; } 25% { transform: scale(1.35) rotate(-14deg); } 50% { transform: scale(1.15) rotate(10deg); } 100% { transform: scale(.82); } }
+  @keyframes heartGain { 0% { transform: scale(.4); } 60% { transform: scale(1.4); } 100% { transform: scale(1); } }
+  #homeLives .hh { display: inline-block; color: #ff5c7a; font-size: 15px; }
+  #homeLives small { font-size: 11px; font-weight: 700; color: var(--e-muted); }
+  #homeLives small:empty { display: none; }
+  @media (prefers-reduced-motion: reduce) {
+    #livesLabel .heart.lost, #livesLabel .heart.gain, #homeLives.gain .hh { animation: none; }
+  }
 
   /* ---------- CAN BİTTİ / KUTLAMA / ARA ÖVGÜ KATMANLARI ---------- */
   #lifeOverlay, #timeUpOverlay, #milestoneOverlay, #praiseOverlay {
@@ -1158,7 +1170,7 @@
   <section id="home" class="screen" aria-label="Ana menü" data-i18n-attr="aria-label:home.ariaLabel">
     <div class="topbar">
       <button class="ibtn" id="homeSettingsBtn" type="button" aria-label="Ayarlar" title="Ayarlar" data-i18n-attr="aria-label:home.settingsAria;title:home.settingsAria"><svg class="i"><use href="#i-sliders"/></svg></button>
-      <span></span>
+      <span class="pill" id="homeLives" role="img" aria-label="Canlar"><span class="hh" aria-hidden="true">&#10084;</span><b id="homeLivesN">5</b><small id="homeLivesT" aria-hidden="true"></small></span>
       <button class="pill tap" id="homeRank" type="button" title="Sıralama" aria-label="Sıralama" data-i18n-attr="title:rank.title;aria-label:rank.title"><svg class="i cup" aria-hidden="true"><use href="#i-trophy"/></svg><svg class="i f" aria-hidden="true"><use href="#i-star"/></svg><b id="homeStars">0</b></button>
     </div>
     <div class="scroll">
@@ -1373,7 +1385,7 @@
     <div class="card">
       <div class="hearts">&#9200;</div>
       <h2 id="timeUpTitle" data-i18n="timeup.title">SÜRE DOLDU</h2>
-      <p class="sub" data-i18n="timeup.sub">Bir can kaybettin. Hazır olduğunda seviyeyi baştan başlat.</p>
+      <p class="sub" id="timeUpSub"></p>
       <button class="big" id="timeUpBtn" type="button" data-i18n="common.restart">Yeniden başla</button>
     </div>
   </div>
@@ -1629,7 +1641,7 @@
       "life.title": "CANLARIN BİTTİ",
       "life.sub": "Ramak kaldı! Kısa bir reklamla aynı yerden, süren yenilenerek devam edebilir ya da seviyeyi baştan deneyebilirsin (baştan denemek can kazandırmaz).",
       "life.watchTitle": "+1 can", "life.timerText": "Bir can {clock} sonra dolacak",
-      "timeup.title": "SÜRE DOLDU", "timeup.sub": "Bir can kaybettin. Hazır olduğunda seviyeyi baştan başlat.",
+      "timeup.title": "SÜRE DOLDU", "timeup.sub": "Bir can kaybettin, {n} can kaldı. Hazır olduğunda seviyeyi baştan başlat.",
       "milestone.campaignDoneTitle": "{n} SEVİYE TAMAM!",
       "milestone.campaignDoneSub": "Bütün {n} seviyeyi bitirdin. Şimdi Sonsuz Mod başlıyor.",
       "milestone.sub": "Seviye {n}'i tamamladın. {praise}", "milestone.continueEndless": "Sonsuz Moda Geç",
@@ -1744,7 +1756,7 @@
       "life.title": "OUT OF LIVES",
       "life.sub": "So close! Watch a short ad to continue right where you were with your time refreshed, or try the level again from scratch (retrying doesn't grant a life).",
       "life.watchTitle": "+1 life", "life.timerText": "A life refills in {clock}",
-      "timeup.title": "TIME'S UP", "timeup.sub": "You lost a life. Restart the level whenever you're ready.",
+      "timeup.title": "TIME'S UP", "timeup.sub": "You lost a life ({n} left). Restart the level whenever you're ready.",
       "milestone.campaignDoneTitle": "{n} LEVELS COMPLETE!",
       "milestone.campaignDoneSub": "You finished all {n} levels. Endless Mode starts now.",
       "milestone.sub": "You completed level {n}. {praise}", "milestone.continueEndless": "Go to Endless Mode",
@@ -1860,7 +1872,7 @@
       "life.title": "نفدت أرواحك",
       "life.sub": "أوشكت! يمكنك متابعة اللعب من حيث توقفت مع تجديد الوقت بمشاهدة إعلان قصير، أو إعادة المحاولة من البداية (إعادة المحاولة لا تمنحك روحًا).",
       "life.watchTitle": "+1 روح", "life.timerText": "ستمتلئ روح خلال {clock}",
-      "timeup.title": "انتهى الوقت", "timeup.sub": "خسرت روحًا. أعد بدء المستوى عندما تكون مستعدًا.",
+      "timeup.title": "انتهى الوقت", "timeup.sub": "خسرت روحًا، تبقّى لك {n}. أعد بدء المستوى عندما تكون مستعدًا.",
       "milestone.campaignDoneTitle": "اكتملت {n} مستوى!",
       "milestone.campaignDoneSub": "أنهيت جميع مستويات {n}. يبدأ الآن وضع اللانهاية.",
       "milestone.sub": "أكملت المستوى {n}. {praise}", "milestone.continueEndless": "الانتقال لوضع اللانهاية",
@@ -1975,7 +1987,7 @@
       "life.title": "SIN VIDAS",
       "life.sub": "¡Casi lo logras! Mira un anuncio corto para continuar donde estabas con el tiempo renovado, o vuelve a intentar el nivel desde cero (reintentar no otorga una vida).",
       "life.watchTitle": "+1 vida", "life.timerText": "Una vida se recargará en {clock}",
-      "timeup.title": "SE ACABÓ EL TIEMPO", "timeup.sub": "Perdiste una vida. Reinicia el nivel cuando estés listo.",
+      "timeup.title": "SE ACABÓ EL TIEMPO", "timeup.sub": "Perdiste una vida, te quedan {n}. Reinicia el nivel cuando estés listo.",
       "milestone.campaignDoneTitle": "¡{n} NIVELES COMPLETOS!",
       "milestone.campaignDoneSub": "Terminaste los {n} niveles. Ahora comienza el Modo Infinito.",
       "milestone.sub": "Completaste el nivel {n}. {praise}", "milestone.continueEndless": "Ir al Modo Infinito",
@@ -3284,6 +3296,7 @@
   var soundBtn   = document.getElementById("soundBtn");
   var timeLabel   = document.getElementById("timeLabel");
   var timerFill   = document.getElementById("timerFill");
+  var subhud      = document.getElementById("subhud");
   var livesLabel  = document.getElementById("livesLabel");
   var heartEls    = livesLabel.querySelectorAll(".heart");
   var lifeOverlay = document.getElementById("lifeOverlay");
@@ -3297,9 +3310,9 @@
   var undoBtn     = document.getElementById("undoBtn");
   var resetBtn    = document.getElementById("resetBtn");
 
-  var MAX_LIVES = 2;   // toplam can hakkı; süre bitince 1 azalır, ödüllü reklamla 1 kazanılır
-  var BONUS_MAX_LIVES = 4; // artık aktif can ödülü yok; yalnız eski sürümden (MAX_LIVES=3) kalma kayıtlı canları aniden kesmemek için üst sınır
-  var LIFE_REGEN_MS = 20 * 60 * 1000; // can MAX_LIVES'ın altındayken her bu kadar sürede +1 (duvar saati; uygulama kapalıyken de işler)
+  var MAX_LIVES = 5;   // toplam can hakkı; süre bitince 1 azalır, ödüllü reklamla 1 kazanılır (eski sürümler: 2-3)
+  var BONUS_MAX_LIVES = 5; // eski kayıtlardaki fazla canları kesmemek için üst sınır; artık MAX_LIVES'la aynı (HUD'da 5 kalp slotu var)
+  var LIFE_REGEN_MS = 15 * 60 * 1000; // can MAX_LIVES'ın altındayken her bu kadar sürede +1 (tam dolum ~75 dk; uygulama kapalıyken de işler)
   var HINT_FREE_DAILY = 3;  // günde bu kadar ipucu reklamsız (gece yarısı todayKey() ile sıfırlanır); bitince ipucu reklam karşılığı sınırsız sürer
   var HINT_MAX_STARS = 2;   // ipucu kullanılan seviyede en çok bu kadar yıldız (3 yıldız = yardımsız)
 
@@ -3854,16 +3867,18 @@
     return Math.max(1, par);
   }
 
-  // Seviyenin süre hakkı (saniye) — tek kısıt (hamle hakkı kaldırıldı). Önce bu
-  // seviyenin TAHMİNİ ortalama çözüm süresi bulunur: ~10 sn tarama + par'ın
-  // kabaca 1.7 katı dokunuş, dokunuş başına ~1.6 sn (ampul başına biraz ek iz
-  // sürme, enerji başına ayırma payı). Süre hakkı = tahmin * 1.15 + 5 sn tampon ->
-  // ortalama oyuncu yetişir. (Telemetri yok; model yalnız par, ampul ve enerji
-  // sayısına dayanır.)
+  // Seviyenin süre hakkı (saniye); 0 = süresiz. Önce bu seviyenin TAHMİNİ ortalama
+  // çözüm süresi bulunur: ~10 sn tarama + par'ın kabaca 1.7 katı dokunuş, dokunuş
+  // başına ~1.6 sn (ampul başına biraz ek iz sürme, enerji başına ayırma payı).
+  // Süre baskı versin ama sık kaybettirmesin: Seviyeler 1-10 (öğrenme) ve Günlük
+  // (rahat alışkanlık) süresiz; payı Seviyeler 50'ye kadar x1.8, 150'ye doğru x1.4'e
+  // iner; Sonsuz hep x1.4. (Telemetri yok; model yalnız par, ampul, enerji sayısına dayanır.)
   function computeTimeLimit() {
+    var n = levelNo();
+    if (cfg.mode === "daily" || (cfg.mode === "campaign" && n <= 10)) return 0;
+    var k = cfg.mode === "endless" ? 1.4 : 1.8 - 0.4 * clamp01((n - 50) / 100);
     var avgSolve = 10 + game.par * 2.7 + (game.bulbCount - 1) * 2.5 + (game.colors - 1) * 6;
-    var t = avgSolve * 1.15 + 5;
-    return clampI(Math.round(t), 15, 180);
+    return clampI(Math.round(avgSolve * k + 10), 20, 240);
   }
 
   // Hamle sayısına göre yıldız (3/2/1). Par'a yakınlık ödüllendirilir.
@@ -4457,7 +4472,7 @@
 
     // Süre sayacı: yalnızca oynanışta ve menü kapalıyken azalır.
     // Ödüllü reklam sürerken de akmaz (izlenen reklam yüzünden can kaybedilmesin, bkz. Ads.isShowing).
-    if (game.phase === "play" && !menuOpen && !Ads.isShowing()) {
+    if (game.phase === "play" && game.timeLimit > 0 && !menuOpen && !Ads.isShowing()) {
       game.timeLeft -= dt / 1000;
       if (game.timeLeft <= 0) {
         game.timeLeft = 0;
@@ -4841,6 +4856,7 @@
   }
   // "Süre doldu" katmanı (can kaldı): düğmeye odaklanır ki Enter/Boşluk ile de başlatılabilsin
   function showTimeUpOverlay() {
+    byId("timeUpSub").textContent = t("timeup.sub", { n: game.lives });
     timeUpOverlay.classList.add("show");
     timeUpOverlay.setAttribute("aria-hidden", "false");
     setTimeout(function () {
@@ -5104,13 +5120,25 @@
   // yalnız MAX_LIVES kadar slot görünür; 100 seviye ödülüyle can bunun
   // üstüne çıkarsa (bkz. BONUS_MAX_LIVES) fazladan kalp slotları da açığa
   // çıkar, can o seviyenin altına düşünce kendiliğinden tekrar gizlenir.
+  var _shownLives = -1;   // son çizilen can sayısı: değişim yönüne göre kalp animasyonu (ilk çizimde yok)
   function updateLives() {
-    var slotMax = Math.max(MAX_LIVES, game.lives);
+    var slotMax = Math.max(MAX_LIVES, game.lives), prev = _shownLives, n = game.lives;
     for (var i = 0; i < heartEls.length; i++) {
-      heartEls[i].classList.toggle("hide", i >= slotMax);
-      heartEls[i].classList.toggle("off", i >= game.lives);
+      var h = heartEls[i];
+      h.classList.toggle("hide", i >= slotMax);
+      h.classList.toggle("off", i >= n);
+      if (prev >= 0 && n !== prev && i >= Math.min(n, prev) && i < Math.max(n, prev)) {
+        h.classList.remove("lost", "gain");
+        void h.offsetWidth;   // aynı sınıf üst üste gelirse animasyon yeniden başlasın
+        h.classList.add(n < prev ? "lost" : "gain");
+      }
     }
-    livesLabel.setAttribute("aria-label", t("hud.livesAria") + ": " + game.lives + " / " + MAX_LIVES);
+    _shownLives = n;
+    var aria = t("hud.livesAria") + ": " + n + " / " + MAX_LIVES;
+    livesLabel.setAttribute("aria-label", aria);
+    byId("homeLivesN").textContent = n;
+    byId("homeLives").setAttribute("aria-label", aria);
+    if (prev >= 0 && n > prev) { var hl = byId("homeLives"); hl.classList.remove("gain"); void hl.offsetWidth; hl.classList.add("gain"); }
   }
 
   /* CAN — kalıcı + zamanla dolan. Store: lives.n (kalan can) ve lives.t (bir sonraki canın dolum
@@ -5143,7 +5171,9 @@
   // Açılışta kayıttan okur (bozuk/eksik kayıt -> tam can) ve kapalıyken dolan canları işler.
   function loadLives() {
     var n = Store.get("lives.n", MAX_LIVES);
-    game.lives = (typeof n === "number" && n >= 0) ? Math.min(BONUS_MAX_LIVES, Math.floor(n)) : MAX_LIVES;
+    // 1.6.0'da tavan 2 -> 5 oldu: eski sürümden gelenler bir kez tam canla başlasın (yoksa 45 dk beklerlerdi)
+    if (Store.get("lives.v", 0) < 2) { Store.set("lives.v", 2); n = MAX_LIVES; Store.set("lives.t", 0); }
+    game.lives =(typeof n === "number" && n >= 0) ? Math.min(BONUS_MAX_LIVES, Math.floor(n)) : MAX_LIVES;
     var t = Store.get("lives.t", 0);
     _lifeT = (typeof t === "number" && t > 0 && game.lives < MAX_LIVES) ? t : 0;
     if (game.lives < MAX_LIVES && !_lifeT) _lifeT = Date.now();
@@ -5166,14 +5196,19 @@
       if (game.phase === "dead") resumeAfterLifeGain(t("toast.lifeGainedTimer"));
       else if (screenNow === "game") showToast(t("toast.lifeGainedIdle"), 1400);
     }
-    var txt = (game.lives < MAX_LIVES && _lifeT)
-      ? t("life.timerText", { clock: lifeClock(_lifeT + LIFE_REGEN_MS - Date.now()) }) : "";
-    if (txt !== _lifeTimerTxt) { _lifeTimerTxt = txt; lifeTimerEl.textContent = txt; }
+    var clock = (game.lives < MAX_LIVES && _lifeT) ? lifeClock(_lifeT + LIFE_REGEN_MS - Date.now()) : "";
+    var txt = clock ? t("life.timerText", { clock: clock }) : "";
+    if (txt !== _lifeTimerTxt) {
+      _lifeTimerTxt = txt;
+      lifeTimerEl.textContent = txt;
+      byId("homeLivesT").textContent = clock ? "+1 " + clock : "";   // ana menü rozeti: bir sonraki can
+    }
   }
 
   // Süre çubuğunu + saniye metnini kalan süreye göre günceller
   var _timeTxt = "";
   function updateTimerUI() {
+    subhud.classList.toggle("untimed", !(game.timeLimit > 0));   // süresiz seviye: sayaç gizli, yalnız kalpler
     var secs = Math.max(0, Math.ceil(game.timeLeft));
     var txt = secs + "s";
     if (txt !== _timeTxt) { timeLabel.textContent = txt; _timeTxt = txt; }
