@@ -1607,7 +1607,7 @@
       "home.dailyDoneSub": "Bugünkü günlük tamam ✓", "home.dailySub": "Günlük · {n} / {total}",
       "home.modeSub": "{mode} · Seviye {n}",
       "rank.title": "Sıralama", "rank.nameLabel": "Takma adın", "rank.namePh": "örn. Kablo Ustası",
-      "rank.save": "Kaydet", "rank.saving": "Kaydediliyor…", "rank.saved": "Takma ad kaydedildi",
+      "rank.invite": "🏆 Dünya sıralamasına katıl! Takma adını yaz, yıldızların listede görünsün.", "rank.save": "Kaydet", "rank.saving": "Kaydediliyor…", "rank.saved": "Takma ad kaydedildi",
       "rank.nameHint": "3–16 karakter. Takma adın ve toplam yıldızın herkese görünür.",
       "rank.nameBad": "Bu ad kullanılamaz. Harf, rakam, boşluk ya da _ . - kullan.",
       "rank.nameTaken": "Bu ad alınmış, başka bir tane dene.", "rank.nameBlocked": "Bu ad uygun değil, başka bir ad dene.",
@@ -1722,7 +1722,7 @@
       "home.dailyDoneSub": "Today's daily complete ✓", "home.dailySub": "Daily · {n} / {total}",
       "home.modeSub": "{mode} · Level {n}",
       "rank.title": "Leaderboard", "rank.nameLabel": "Your nickname", "rank.namePh": "e.g. Wire Master",
-      "rank.save": "Save", "rank.saving": "Saving…", "rank.saved": "Nickname saved",
+      "rank.invite": "🏆 Join the world leaderboard! Pick a nickname to show your stars.", "rank.save": "Save", "rank.saving": "Saving…", "rank.saved": "Nickname saved",
       "rank.nameHint": "3–16 characters. Your nickname and total stars are public.",
       "rank.nameBad": "That name can’t be used. Use letters, numbers, spaces or _ . -",
       "rank.nameTaken": "That name is taken, try another.", "rank.nameBlocked": "That name isn’t allowed, try another.",
@@ -1838,7 +1838,7 @@
       "home.dailyDoneSub": "اكتملت لعبة اليوم اليومية ✓", "home.dailySub": "يومي · {n} / {total}",
       "home.modeSub": "{mode} · المستوى {n}",
       "rank.title": "لوحة المتصدرين", "rank.nameLabel": "اسمك المستعار", "rank.namePh": "مثال: Wire Master",
-      "rank.save": "حفظ", "rank.saving": "جارٍ الحفظ…", "rank.saved": "تم حفظ الاسم المستعار",
+      "rank.invite": "🏆 انضم إلى لوحة المتصدرين العالمية! اختر اسمًا مستعارًا لتظهر نجومك.", "rank.save": "حفظ", "rank.saving": "جارٍ الحفظ…", "rank.saved": "تم حفظ الاسم المستعار",
       "rank.nameHint": "من 3 إلى 16 حرفًا. اسمك المستعار ومجموع نجومك مرئيان للجميع.",
       "rank.nameBad": "لا يمكن استخدام هذا الاسم. استخدم الحروف اللاتينية أو الأرقام أو المسافات أو _ . -",
       "rank.nameTaken": "هذا الاسم مستخدم، جرّب اسمًا آخر.", "rank.nameBlocked": "هذا الاسم غير مسموح، جرّب اسمًا آخر.",
@@ -1953,7 +1953,7 @@
       "home.dailyDoneSub": "Diario de hoy completado ✓", "home.dailySub": "Diario · {n} / {total}",
       "home.modeSub": "{mode} · Nivel {n}",
       "rank.title": "Clasificación", "rank.nameLabel": "Tu apodo", "rank.namePh": "p. ej. Maestro del Cable",
-      "rank.save": "Guardar", "rank.saving": "Guardando…", "rank.saved": "Apodo guardado",
+      "rank.invite": "🏆 ¡Únete a la clasificación mundial! Elige un apodo para mostrar tus estrellas.", "rank.save": "Guardar", "rank.saving": "Guardando…", "rank.saved": "Apodo guardado",
       "rank.nameHint": "3–16 caracteres. Tu apodo y tus estrellas totales son públicos.",
       "rank.nameBad": "Ese nombre no se puede usar. Usa letras, números, espacios o _ . -",
       "rank.nameTaken": "Ese nombre ya está en uso, prueba otro.", "rank.nameBlocked": "Ese nombre no está permitido, prueba otro.",
@@ -5308,6 +5308,17 @@
     }
   };
 
+  // Takma adı BİR KEZ, oyuncu oyunu tanıdıktan sonra sor: Seviyeler'de 10. seviye bitince (eskiden
+  // geçmiş olanlara açılışta) ya da başka modlarda 15 yıldızda. Sıralama ekranının ad kartı açılır;
+  // geri düğmesi "şimdi değil" olur ve bir daha kendiliğinden sorulmaz (🏆'dan her zaman katılabilir).
+  function maybeAskName() {
+    if (Online.name() || Store.get("rank.asked", false)) return;
+    if (bestOf("campaign") < 11 && totalStarsAll() < 15) return;   // bestLevel = ulaşılan seviye: 11 -> 10 bitti
+    Store.set("rank.asked", true);
+    showScreen("rank");
+    showToast(t("rank.invite"), 3200);
+  }
+
   var _rankReq = 0;
   function rankState(key, retry) {
     byId("rankState").hidden = !key;
@@ -5733,7 +5744,7 @@
   screens.pause.addEventListener("click", function (e) { if (e.target === screens.pause) showScreen("game"); });
 
   // Kazanma kartı
-  byId("winNext").addEventListener("click", advanceAfterWin);
+  byId("winNext").addEventListener("click", function () { advanceAfterWin(); maybeAskName(); });
   byId("winRetry").addEventListener("click", winRetry);
   byId("winMenu").addEventListener("click", winToMenu);
 
@@ -5917,6 +5928,8 @@
   // oyuncu "Oyna / Devam Et"e basana kadar başlamaz; aynı tahta hazır bekler (bkz. playMode).
   // Açılış animasyonu (#intro, z-index 100) menüyü örttüğü için o kapanınca kendiliğinden görünür.
   showScreen("home");
+  // 10. seviyeyi bu sürümden önce geçmiş oyunculara adı açılışta sor (açılış animasyonu ~2.5 sn)
+  setTimeout(function () { if (screenNow === "home") maybeAskName(); }, 2800);
 
   requestAnimationFrame(function () { layout(); });  // ilk ölçüler hazır olunca
   requestAnimationFrame(frame);
