@@ -3936,8 +3936,11 @@
     });
   }
 
-  // Aktif seviyeyi başlangıç karıştırmasına döndür (aynı bulmaca)
-  function resetLevel() {
+  // Aktif seviyeyi başlangıç karıştırmasına döndür (aynı bulmaca).
+  // keepTime: süre kaldığı yerden akar — oyuncunun kendi "Yeniden başla"sı ve kısa devre süreyi
+  // DOLDURMAZ (yoksa süre bitmeden yeniden başlatmak bedava süre olur, can hiç gitmez).
+  // Can kaybı / kazanma sonrası yeni denemede süre baştan başlar.
+  function resetLevel(keepTime) {
     if (menuOpen || game.phase === "dead" || game.phase === "milestone" || game.phase === "praise") return;
     for (var r = 0; r < game.rows; r++) {
       for (var c = 0; c < game.cols; c++) {
@@ -3956,7 +3959,7 @@
     game.phase = "play";
     game.phaseAt = performance.now();
     game.introAt = performance.now();
-    game.timeLeft = game.timeLimit;
+    if (!keepTime) game.timeLeft = game.timeLimit;
     updateTimerUI();
     // İpucuyla düzeltilen kablolar can kaybında / "Yeniden başla"da geri karışmasın (izlenen reklam boşa gitmesin).
     // Oyuncunun sonradan bozduğu bir kablo ipucu dışı kaldıysa bu düzeltmeler tahtayı çözülü bırakabilir
@@ -4501,7 +4504,7 @@
     if (game.phase === "win" && !menuOpen && now - game.phaseAt > WIN_CARD_DELAY + (game.fan ? FAN_WIN_MS : 0)) showWinCard();
 
     // Kısa devre: patlama bitince seviye baştan başlar (can gitmez, ipucuyla düzelenler korunur).
-    if (game.phase === "boom" && !menuOpen && now - game.phaseAt >= BOOM_MS) resetLevel();
+    if (game.phase === "boom" && !menuOpen && now - game.phaseAt >= BOOM_MS) resetLevel(true);
 
     // Ara övgü katmanı: PRAISE_HOLD kadar gösterildikten sonra kendiliğinden
     // kapanır ve bir sonraki seviyeye geçer (buton gerekmez, akışı kısa keser).
@@ -4766,8 +4769,9 @@
     if (idx >= targets.length || game.phase !== "play") return;
     var target = targets[idx];
     if (!hintSafe(target)) { applyHintChain(targets, idx + 1); return; }   // ilk düzeltme durumu değiştirmiş olabilir
-    game.undo.push({ c: target, from: target.rot });   // düzeltme geri-al yığınına yazılır (sayaç tutarlı kalır)
-    if (game.undo.length > 300) game.undo.shift();
+    // İpucu geri alınamaz: "Geri al" harcanan hakkı / izlenen reklamı boşa çıkarmasın. Bu kablonun
+    // eski dönüşleri de yığından düşer (yoksa geri alma onu ipucu öncesi yanlış yöne döndürürdü).
+    game.undo = game.undo.filter(function (u) { return u.c !== target; });
     target.rot = 0;                       // üreticinin "çözülmüş" yönü
     if (game.hintFixed.indexOf(target) === -1) game.hintFixed.push(target);   // resetLevel yeniden uygular
     target.animAt = performance.now();
@@ -5760,7 +5764,7 @@
   byId("pauseRestart").addEventListener("click", function () {
     if (game.moves === 0 || game.phase !== "play") return;
     showScreen("game");
-    resetLevel();
+    resetLevel(true);
   });
   byId("pauseHome").addEventListener("click", function () { showScreen("home"); });
   byId("pauseSound").addEventListener("click", function () { Sound.ensure(); Sound.toggle(); refreshSoundBtn(); syncMenu(); });
@@ -5839,7 +5843,7 @@
   hintBtn.addEventListener("click", useHint);
   resetBtn.addEventListener("click", function () {
     if (game.moves === 0) return;                 // pasif görünüyor: sıfırlanacak bir şey yok
-    resetLevel();
+    resetLevel(true);
   });
   soundBtn.addEventListener("click", function () {
     Sound.ensure();
