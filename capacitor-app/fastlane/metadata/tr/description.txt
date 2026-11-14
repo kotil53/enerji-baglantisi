@@ -5,25 +5,29 @@ Elektrik kaynaktan çıkıyor ama ampule ulaşamıyor. Kabloları tek tek dönd�
 Basit bir kuralı var, bırakması zor: her dokunuşta bir parça döner. Fazladan hamle yapma — yıldızların hamle sayına bağlı.
 
 ▸ NASIL OYNANIR
-• Kaynağa (⚡) ve ampullere (💡) giden yolu kur
+• Kaynaktan (⚡) ampullere (💡) giden yolu kur
 • Parçalara dokunarak döndür
 • Kilitli parçalar (🔒) sabittir — çözümü onların etrafından geçir
 • Bütün ampuller yanınca seviye biter
 
 ▸ ÖZELLİKLER
-• Sonsuz mod — tükenmeyen, gitgide büyüyen bulmacalar
-• Günlük bulmaca — herkese aynı bölümler, her gün yenilenir
+• Seviyeler — 200 seviye, her oyuncu için aynı
+• Günlük — her gün yedi yeni bulmaca, herkese aynı
+• Sonsuz — tükenmeyen, gitgide zorlaşan bulmacalar; Seviyeler bitince açılır
 • Dört renkli enerji: her rengi kendi ampulüne götür, renkleri birbirine değdirme
-• Pervaneli ampul: bütün enerjileri ortadaki haznelere ulaştır, pervane dönsün
-• Her seviyede 3 yıldız — en az hamleyle çöz
-• Takıldığında ipucu: kısa bir reklam karşılığında bir kabloyu düzeltir
-• Çevrimdışı çalışır — internet gerekmez
-• Titreşimli geri bildirim, sade ve karanlık tasarım
-• Hesap yok, giriş yok, kayıt yok
+• Pervaneli ampul: ortadaki bütün haznelere enerji ulaştır, pervane dönsün
+• Her seviyede 3 yıldıza kadar — az hamleyle ve ipucusuz çöz
+• Süreli seviyeler ve zamanla dolan 5 can; ilk 10 seviye ve Günlük süresiz
+• Dünya sıralaması (isteğe bağlı): takma adını seç, toplam yıldızınla dünyadaki yerini gör — sıran her seviye sonunda görünür
+• Takıldın mı? İpucu iki kabloya kadar düzeltir. Her gün 3 ipucu bedava; sonrası kısa bir reklamla
+• Çevrimdışı çalışır — internet yalnızca sıralama için gerekir
+• Rahatlatan müzik, titreşimli geri bildirim, sade ve karanlık tasarım
+• Türkçe, English, Español ve العربية dillerinde
+• Hesap yok, giriş yok: sıralamaya katılırsan yalnızca bir takma ad
 
 ▸ HATIRLATICILAR
-İstersen günlük bulmacan hazır olduğunda ya da bir süredir oynamadığında nazik bir hatırlatma gönderir. Menüden kapatabilirsin.
+İzin verirsen günlük bulmacan hazır olduğunda ya da bir süredir oynamadığında nazik bir hatırlatma gönderir. Ayarlar'dan kapatabilirsin.
 
-Oyun ücretsizdir; seviyeler arasında ve ödül karşılığında reklam gösterir.
+Oyun ücretsizdir ve reklam gösterir: altta bir banner, seviyeler arasında kısa reklamlar ve ekstra ipucu ve can veren isteğe bağlı reklamlar.
 
 Kısa bir mola için de, uzun bir oturma için de: bir kablo daha döndür.
